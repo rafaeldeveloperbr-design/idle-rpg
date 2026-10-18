@@ -123,6 +123,32 @@ body {
   50% { transform: translateX(-1px) skewX(-5deg); }
 }
 
+@keyframes attack-bounce {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  20% { transform: translateX(3px) translateY(-2px); }
+  40% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes sword-swing {
+  0% { transform: rotate(-10deg); }
+  30% { transform: rotate(-60deg) translateX(4px); }
+  60% { transform: rotate(-10deg); }
+  100% { transform: rotate(-10deg); }
+}
+
+@keyframes hit-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes damage-float {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
 .animate-float {
   animation: float 2s ease-in-out infinite;
 }
@@ -141,6 +167,22 @@ body {
 
 .animate-leg-right {
   animation: leg-right 0.25s ease-in-out infinite;
+}
+
+.animate-attack {
+  animation: attack-bounce 0.6s ease-in-out infinite;
+}
+
+.animate-sword-swing {
+  animation: sword-swing 0.6s ease-in-out infinite;
+}
+
+.animate-hit {
+  animation: hit-shake 0.3s ease-in-out;
+}
+
+.animate-damage-float {
+  animation: damage-float 0.8s ease-out forwards;
 }
 
 .card-hover {

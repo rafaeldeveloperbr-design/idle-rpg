@@ -3,10 +3,15 @@ import React from 'react';
 interface GameViewportProps {
   heroX: number;
   enemyX: number;
+  enemyHp: number;
+  enemyMaxHp: number;
   isMoving: boolean;
+  isAttacking: boolean;
 }
 
-const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) => {
+const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, enemyHp, enemyMaxHp, isMoving, isAttacking }) => {
+  const enemyHpPercent = Math.max(0, Math.round((enemyHp / enemyMaxHp) * 100));
+
   return (
     <div className="flex-1 w-full relative overflow-hidden sky-gradient pixel-border rounded-md">
       {/* Enemy Name/HP Bar at top */}
@@ -14,11 +19,11 @@ const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) 
         <span className="text-[9px] text-red-300 tracking-wider">👹 Goblin Selvagem</span>
         <div className="relative w-40 h-3 bg-[#0f0f1a]/80 border border-red-900/50 rounded-sm overflow-hidden">
           <div
-            className="hp-bar h-full rounded-sm"
-            style={{ width: '65%' }}
+            className="hp-bar h-full rounded-sm transition-all duration-200"
+            style={{ width: `${enemyHpPercent}%` }}
           />
           <span className="absolute inset-0 flex items-center justify-center text-[7px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-            65/100
+            {Math.max(0, enemyHp)}/{enemyMaxHp}
           </span>
         </div>
       </div>
@@ -48,7 +53,7 @@ const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) 
 
       {/* Hero - positioned dynamically */}
       <div
-        className={`absolute bottom-16 ${isMoving ? 'animate-walk' : 'animate-float'}`}
+        className={`absolute bottom-16 ${isMoving ? 'animate-walk' : isAttacking ? 'animate-attack' : 'animate-float'}`}
         style={{ left: `${heroX}px` }}
       >
         <div className="flex flex-col items-center">
@@ -64,7 +69,7 @@ const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) 
                 <div className="absolute -top-1 left-0 right-0 h-2 bg-amber-700 rounded-t-sm" />
               </div>
               {/* Sword */}
-              <div className={`absolute -right-4 top-2 w-2 h-10 bg-gradient-to-b from-gray-300 to-gray-500 border border-gray-600 rounded-sm transition-transform duration-150 ${!isMoving ? 'rotate-[-10deg]' : ''}`}>
+              <div className={`absolute -right-4 top-2 w-2 h-10 bg-gradient-to-b from-gray-300 to-gray-500 border border-gray-600 rounded-sm transition-transform duration-150 ${isAttacking ? 'animate-sword-swing' : !isMoving ? 'rotate-[-10deg]' : ''}`}>
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-2 bg-amber-700 border border-amber-900 rounded-sm" />
               </div>
               {/* Shield */}
@@ -84,7 +89,7 @@ const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) 
 
       {/* Enemy - positioned dynamically */}
       <div
-        className="absolute bottom-16"
+        className={`absolute bottom-16 ${enemyHp <= 0 ? 'opacity-0' : ''} transition-opacity duration-500 ${isAttacking && enemyHp > 0 ? 'animate-hit' : ''}`}
         style={{ left: `${enemyX}px` }}
       >
         <div className="flex flex-col items-center">
@@ -117,6 +122,19 @@ const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) 
         </div>
       </div>
 
+      {/* Damage numbers (visual only - static for now) */}
+      {isAttacking && enemyHp > 0 && (
+        <div
+          className="absolute text-[10px] text-yellow-300 font-bold animate-damage-float pointer-events-none"
+          style={{
+            left: `${enemyX + 10}px`,
+            bottom: '100px',
+          }}
+        >
+          -{10}
+        </div>
+      )}
+
       {/* Ground/Floor */}
       <div className="absolute bottom-0 left-0 right-0 h-16 ground-texture">
         {/* Grass on top */}
@@ -138,10 +156,12 @@ const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) 
         <span className="text-[8px] text-gray-300">💀 Kills: 42</span>
       </div>
 
-      {/* Debug: distance indicator (visual only) */}
+      {/* Attack range indicator */}
       <div className="absolute bottom-[72px] left-0 right-0 pointer-events-none">
         <div
-          className="absolute h-[2px] border-t border-dashed border-purple-500/30"
+          className={`absolute h-[2px] border-t border-dashed transition-colors duration-200 ${
+            isAttacking ? 'border-red-500/50' : 'border-purple-500/30'
+          }`}
           style={{
             left: `${heroX + 24}px`,
             width: `${Math.max(0, enemyX - heroX - 48)}px`,
