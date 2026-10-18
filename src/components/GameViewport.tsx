@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { DamagePopup, Skill, ActiveBuff } from '../App';
 
 type GamePhase = 'approaching' | 'fighting' | 'waiting';
@@ -18,6 +18,122 @@ interface GameViewportProps {
   activeBuffs: ActiveBuff[];
   onUseSkill: (skillId: string) => void;
 }
+
+// === Skill Bar Sub-component with Tooltips ===
+interface SkillBarProps {
+  skills: Skill[];
+  activeBuffs: ActiveBuff[];
+  onUseSkill: (skillId: string) => void;
+}
+
+const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) => {
+  const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
+
+  return (
+    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+      {skills.map((skill) => {
+        const now = Date.now();
+        const cooldownMs = skill.cooldown * 1000;
+        const timeSinceUse = now - skill.lastUsed;
+        const isOnCooldown = timeSinceUse < cooldownMs;
+        const cooldownPercent = isOnCooldown
+          ? ((cooldownMs - timeSinceUse) / cooldownMs) * 100
+          : 0;
+        const cooldownRemaining = isOnCooldown
+          ? Math.ceil((cooldownMs - timeSinceUse) / 1000)
+          : 0;
+        const hasBuff = activeBuffs.some(b => b.skillId === skill.id);
+        const isHovered = hoveredSkill === skill.id;
+
+        return (
+          <div key={skill.id} className="relative">
+            {/* Tooltip - appears on hover */}
+            {isHovered && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md p-2 shadow-[0_0_15px_rgba(139,92,246,0.3)] pointer-events-none z-30">
+                {/* Arrow */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px]">
+                  <div className="w-2 h-2 bg-[#0f0f1a] border-r-2 border-b-2 border-purple-500/70 rotate-45 -translate-y-1" />
+                </div>
+                {/* Tooltip Content */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm">{skill.icon}</span>
+                    <span className="text-[9px] text-purple-200 font-bold">{skill.name}</span>
+                  </div>
+                  <div className="h-[1px] bg-purple-500/30 w-full" />
+                  <span className="text-[7px] text-gray-300 leading-relaxed">{skill.description}</span>
+                  <div className="flex flex-col gap-0.5 mt-0.5">
+                    <div className="flex justify-between text-[7px]">
+                      <span className="text-gray-400">Efeito:</span>
+                      <span className="text-yellow-300">
+                        {skill.effect === 'damage' && `${Math.round(skill.effectValue * 100)}% ATK`}
+                        {skill.effect === 'heal' && `${Math.round(skill.effectValue * 100)}% HP Max`}
+                        {skill.effect === 'buff' && `${Math.round(skill.effectValue * 100)}% ATK por ${skill.buffDuration}s`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[7px]">
+                      <span className="text-gray-400">Cooldown:</span>
+                      <span className={isOnCooldown ? 'text-red-400' : 'text-green-300'}>
+                        {isOnCooldown ? `${cooldownRemaining}s` : `${skill.cooldown}s`}
+                      </span>
+                    </div>
+                    {skill.autoCast && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="text-[6px] bg-green-900/50 text-green-300 px-1 rounded-sm border border-green-700/50">
+                          ⚡ AUTO-CAST ATIVO
+                        </span>
+                      </div>
+                    )}
+                    {hasBuff && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="text-[6px] bg-yellow-900/50 text-yellow-300 px-1 rounded-sm border border-yellow-700/50">
+                          🔥 BUFF ATIVO
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Skill Button */}
+            <button
+              onClick={() => onUseSkill(skill.id)}
+              disabled={isOnCooldown}
+              onMouseEnter={() => setHoveredSkill(skill.id)}
+              onMouseLeave={() => setHoveredSkill(null)}
+              className={`relative w-11 h-11 border-2 rounded-md flex items-center justify-center transition-all ${
+                isOnCooldown
+                  ? 'border-gray-600 bg-[#0a0a12]/80 cursor-not-allowed'
+                  : 'border-purple-500 bg-[#1a1a2e]/90 hover:border-purple-300 hover:shadow-[0_0_10px_rgba(139,92,246,0.5)] cursor-pointer'
+              } ${hasBuff ? 'ring-2 ring-yellow-400 animate-pulse-glow' : ''}`}
+            >
+              <span className="text-lg">{skill.icon}</span>
+              {/* Cooldown overlay */}
+              {isOnCooldown && (
+                <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
+                  <div
+                    className="absolute bottom-0 left-0 right-0 bg-purple-900/50"
+                    style={{ height: `${cooldownPercent}%` }}
+                  />
+                  <span className="text-[8px] text-white font-bold z-10">
+                    {cooldownRemaining}s
+                  </span>
+                </div>
+              )}
+              {/* Auto-cast indicator */}
+              {skill.autoCast && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border border-green-300 rounded-full flex items-center justify-center">
+                  <span className="text-[6px]">⚡</span>
+                </div>
+              )}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const GameViewport: React.FC<GameViewportProps> = ({
   heroX,
@@ -191,54 +307,12 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       </div>
 
-      {/* Skill Bar - Quick Access */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {skills.filter(s => s.unlocked).map((skill) => {
-          const now = Date.now();
-          const cooldownMs = skill.cooldown * 1000;
-          const timeSinceUse = now - skill.lastUsed;
-          const isOnCooldown = timeSinceUse < cooldownMs;
-          const cooldownPercent = isOnCooldown 
-            ? ((cooldownMs - timeSinceUse) / cooldownMs) * 100 
-            : 0;
-          const hasBuff = activeBuffs.some(b => b.skillId === skill.id);
-
-          return (
-            <button
-              key={skill.id}
-              onClick={() => onUseSkill(skill.id)}
-              disabled={isOnCooldown}
-              className={`relative w-10 h-10 border-2 rounded-md flex items-center justify-center transition-all ${
-                isOnCooldown
-                  ? 'border-gray-600 bg-[#0a0a12]/80 cursor-not-allowed'
-                  : 'border-purple-500 bg-[#1a1a2e]/90 hover:border-purple-300 hover:shadow-[0_0_10px_rgba(139,92,246,0.5)] cursor-pointer'
-              } ${hasBuff ? 'ring-2 ring-yellow-400 animate-pulse-glow' : ''}`}
-            >
-              <span className="text-lg">{skill.icon}</span>
-              {/* Cooldown overlay */}
-              {isOnCooldown && (
-                <div 
-                  className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center"
-                >
-                  <div 
-                    className="absolute bottom-0 left-0 right-0 bg-purple-900/50"
-                    style={{ height: `${cooldownPercent}%` }}
-                  />
-                  <span className="text-[8px] text-white font-bold z-10">
-                    {Math.ceil((cooldownMs - timeSinceUse) / 1000)}s
-                  </span>
-                </div>
-              )}
-              {/* Auto-cast indicator */}
-              {skill.autoCast && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border border-green-300 rounded-full flex items-center justify-center">
-                  <span className="text-[6px]">⚡</span>
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Skill Bar - Quick Access (positioned near the ground) */}
+      <SkillBar
+        skills={skills.filter(s => s.unlocked)}
+        activeBuffs={activeBuffs}
+        onUseSkill={onUseSkill}
+      />
 
       {/* Active Buffs Indicator */}
       {activeBuffs.length > 0 && (
