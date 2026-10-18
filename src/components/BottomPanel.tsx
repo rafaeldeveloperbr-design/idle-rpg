@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AttributesTab from './tabs/AttributesTab';
 import SkillsTab from './tabs/SkillsTab';
 import InventoryTab from './tabs/InventoryTab';
+import type { HeroAttributes, AttributeCosts } from '../App';
 
 type TabId = 'attributes' | 'skills' | 'inventory';
 
@@ -11,25 +12,49 @@ interface Tab {
   icon: string;
 }
 
+interface BottomPanelProps {
+  heroAttributes: HeroAttributes;
+  attributeCosts: AttributeCosts;
+  heroGold: number;
+  onUpgradeAttribute: (attribute: keyof HeroAttributes) => void;
+}
+
 const tabs: Tab[] = [
   { id: 'attributes', label: 'Atributos', icon: '📊' },
   { id: 'skills', label: 'Habilidades', icon: '⚡' },
   { id: 'inventory', label: 'Inventário', icon: '🎒' },
 ];
 
-const BottomPanel: React.FC = () => {
+const BottomPanel: React.FC<BottomPanelProps> = ({
+  heroAttributes,
+  attributeCosts,
+  heroGold,
+  onUpgradeAttribute,
+}) => {
   const [activeTab, setActiveTab] = useState<TabId>('attributes');
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'attributes':
-        return <AttributesTab />;
+        return (
+          <AttributesTab
+            heroAttributes={heroAttributes}
+            attributeCosts={attributeCosts}
+            heroGold={heroGold}
+            onUpgradeAttribute={onUpgradeAttribute}
+          />
+        );
       case 'skills':
         return <SkillsTab />;
       case 'inventory':
         return <InventoryTab />;
       default:
-        return <AttributesTab />;
+        return <AttributesTab
+          heroAttributes={heroAttributes}
+          attributeCosts={attributeCosts}
+          heroGold={heroGold}
+          onUpgradeAttribute={onUpgradeAttribute}
+        />;
     }
   };
 
