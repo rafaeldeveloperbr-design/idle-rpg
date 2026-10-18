@@ -1,6 +1,12 @@
 import React from 'react';
 
-const GameViewport: React.FC = () => {
+interface GameViewportProps {
+  heroX: number;
+  enemyX: number;
+  isMoving: boolean;
+}
+
+const GameViewport: React.FC<GameViewportProps> = ({ heroX, enemyX, isMoving }) => {
   return (
     <div className="flex-1 w-full relative overflow-hidden sky-gradient pixel-border rounded-md">
       {/* Enemy Name/HP Bar at top */}
@@ -24,9 +30,9 @@ const GameViewport: React.FC = () => {
             key={i}
             className="absolute w-[2px] h-[2px] bg-white/30 rounded-full animate-pulse-glow"
             style={{
-              top: `${Math.random() * 60}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
+              top: `${(i * 17 + 5) % 60}%`,
+              left: `${(i * 23 + 10) % 100}%`,
+              animationDelay: `${(i * 0.4) % 3}s`,
             }}
           />
         ))}
@@ -40,8 +46,11 @@ const GameViewport: React.FC = () => {
         </svg>
       </div>
 
-      {/* Hero (left side) */}
-      <div className="absolute bottom-16 left-[15%] animate-float">
+      {/* Hero - positioned dynamically */}
+      <div
+        className={`absolute bottom-16 ${isMoving ? 'animate-walk' : 'animate-float'}`}
+        style={{ left: `${heroX}px` }}
+      >
         <div className="flex flex-col items-center">
           {/* Hero Pixel Art */}
           <div className="relative">
@@ -55,7 +64,7 @@ const GameViewport: React.FC = () => {
                 <div className="absolute -top-1 left-0 right-0 h-2 bg-amber-700 rounded-t-sm" />
               </div>
               {/* Sword */}
-              <div className="absolute -right-4 top-2 w-2 h-10 bg-gradient-to-b from-gray-300 to-gray-500 border border-gray-600 rounded-sm">
+              <div className={`absolute -right-4 top-2 w-2 h-10 bg-gradient-to-b from-gray-300 to-gray-500 border border-gray-600 rounded-sm transition-transform duration-150 ${!isMoving ? 'rotate-[-10deg]' : ''}`}>
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-2 bg-amber-700 border border-amber-900 rounded-sm" />
               </div>
               {/* Shield */}
@@ -63,18 +72,21 @@ const GameViewport: React.FC = () => {
                 <div className="absolute inset-0.5 border border-blue-400/50 rounded-sm" />
               </div>
             </div>
-            {/* Legs */}
+            {/* Legs - animated when walking */}
             <div className="flex justify-center gap-0.5">
-              <div className="w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm" />
-              <div className="w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm" />
+              <div className={`w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm transition-transform duration-100 ${isMoving ? 'animate-leg-left' : ''}`} />
+              <div className={`w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm transition-transform duration-100 ${isMoving ? 'animate-leg-right' : ''}`} />
             </div>
           </div>
           <span className="text-[8px] text-green-300 mt-1 bg-black/50 px-1 rounded">Herói</span>
         </div>
       </div>
 
-      {/* Enemy (right side) */}
-      <div className="absolute bottom-16 right-[15%]">
+      {/* Enemy - positioned dynamically */}
+      <div
+        className="absolute bottom-16"
+        style={{ left: `${enemyX}px` }}
+      >
         <div className="flex flex-col items-center">
           {/* Enemy Pixel Art - Goblin */}
           <div className="relative">
@@ -124,6 +136,17 @@ const GameViewport: React.FC = () => {
       {/* Kill counter */}
       <div className="absolute top-3 right-3 bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1">
         <span className="text-[8px] text-gray-300">💀 Kills: 42</span>
+      </div>
+
+      {/* Debug: distance indicator (visual only) */}
+      <div className="absolute bottom-[72px] left-0 right-0 pointer-events-none">
+        <div
+          className="absolute h-[2px] border-t border-dashed border-purple-500/30"
+          style={{
+            left: `${heroX + 24}px`,
+            width: `${Math.max(0, enemyX - heroX - 48)}px`,
+          }}
+        />
       </div>
     </div>
   );
