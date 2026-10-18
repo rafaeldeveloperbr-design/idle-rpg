@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DamagePopup } from '../App';
+import type { DamagePopup, Skill, ActiveBuff } from '../App';
 
 type GamePhase = 'approaching' | 'fighting' | 'waiting';
 
@@ -14,6 +14,9 @@ interface GameViewportProps {
   damagePopups: DamagePopup[];
   heroHitFlash: boolean;
   enemyHitFlash: boolean;
+  skills: Skill[];
+  activeBuffs: ActiveBuff[];
+  onUseSkill: (skillId: string) => void;
 }
 
 const GameViewport: React.FC<GameViewportProps> = ({
@@ -27,6 +30,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
   damagePopups,
   heroHitFlash,
   enemyHitFlash,
+  skills,
+  activeBuffs,
+  onUseSkill,
 }) => {
   const enemyHpPercent = Math.max(0, Math.round((enemyHp / enemyMaxHp) * 100));
   const isMoving = gamePhase === 'approaching';
@@ -185,12 +191,81 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       </div>
 
+      {/* Skill Bar - Quick Access */}
+      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        {skills.filter(s => s.unlocked).map((skill) => {
+          const now = Date.now();
+          const cooldownMs = skill.cooldown * 1000;
+          const timeSinceUse = now - skill.lastUsed;
+          const isOnCooldown = timeSinceUse < cooldownMs;
+          const cooldownPercent = isOnCooldown 
+            ? ((cooldownMs - timeSinceUse) / cooldownMs) * 100 
+            : 0;
+          const hasBuff = activeBuffs.some(b => b.skillId === skill.id);
+
+          return (
+            <button
+              key={skill.id}
+              onClick={() => onUseSkill(skill.id)}
+              disabled={isOnCooldown}
+              className={`relative w-10 h-10 border-2 rounded-md flex items-center justify-center transition-all ${
+                isOnCooldown
+                  ? 'border-gray-600 bg-[#0a0a12]/80 cursor-not-allowed'
+                  : 'border-purple-500 bg-[#1a1a2e]/90 hover:border-purple-300 hover:shadow-[0_0_10px_rgba(139,92,246,0.5)] cursor-pointer'
+              } ${hasBuff ? 'ring-2 ring-yellow-400 animate-pulse-glow' : ''}`}
+            >
+              <span className="text-lg">{skill.icon}</span>
+              {/* Cooldown overlay */}
+              {isOnCooldown && (
+                <div 
+                  className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center"
+                >
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 bg-purple-900/50"
+                    style={{ height: `${cooldownPercent}%` }}
+                  />
+                  <span className="text-[8px] text-white font-bold z-10">
+                    {Math.ceil((cooldownMs - timeSinceUse) / 1000)}s
+                  </span>
+                </div>
+              )}
+              {/* Auto-cast indicator */}
+              {skill.autoCast && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border border-green-300 rounded-full flex items-center justify-center">
+                  <span className="text-[6px]">⚡</span>
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active Buffs Indicator */}
+      {activeBuffs.length > 0 && (
+        <div className="absolute top-12 left-3 flex flex-col gap-1">
+          {activeBuffs.map((buff) => {
+            const skill = skills.find(s => s.id === buff.skillId);
+            const timeLeft = Math.max(0, Math.ceil((buff.expiresAt - Date.now()) / 1000));
+            return (
+              <div key={buff.id} className="flex items-center gap-1 bg-yellow-900/40 border border-yellow-600/50 rounded-sm px-1.5 py-0.5 animate-pulse-glow">
+                <span className="text-[10px]">{skill?.icon}</span>
+                <span className="text-[7px] text-yellow-300">{timeLeft}s</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Damage Popups */}
       {damagePopups.map((popup) => (
         <div
           key={popup.id}
           className={`absolute pointer-events-none animate-damage-float font-bold ${
-            popup.isHeal
+            popup.isSkill
+              ? popup.isHeal
+                ? 'text-emerald-300 text-[14px]'
+                : 'text-orange-300 text-[14px]'
+              : popup.isHeal
               ? 'text-green-400 text-[11px]'
               : popup.isCrit
               ? 'text-orange-400 text-[13px]'
@@ -204,6 +279,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
         >
           {popup.isHeal ? '+' : '-'}{popup.value}
           {popup.isCrit && ' CRIT!'}
+          {popup.isSkill && !popup.isHeal && ' 💥'}
         </div>
       ))}
 

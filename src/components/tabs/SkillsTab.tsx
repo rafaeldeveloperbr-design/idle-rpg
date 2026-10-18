@@ -1,105 +1,125 @@
 import React from 'react';
+import type { Skill } from '../../App';
 
-const SkillsTab: React.FC = () => {
-  const skills = [
-    {
-      name: 'Golpe Poderoso',
-      icon: '💥',
-      level: 3,
-      maxLevel: 10,
-      description: 'Causa 150% de dano',
-      cooldown: '5s',
-      unlocked: true,
-    },
-    {
-      name: 'Escudo Mágico',
-      icon: '🔮',
-      level: 1,
-      maxLevel: 8,
-      description: 'Absorve 30 de dano',
-      cooldown: '10s',
-      unlocked: true,
-    },
-    {
-      name: 'Cura Menor',
-      icon: '✨',
-      level: 2,
-      maxLevel: 12,
-      description: 'Recupera 25 HP',
-      cooldown: '8s',
-      unlocked: true,
-    },
-    {
-      name: 'Fúria Berserker',
-      icon: '🔥',
-      level: 0,
-      maxLevel: 5,
-      description: 'Dobra o dano por 10s',
-      cooldown: '30s',
-      unlocked: false,
-      requirement: 'Nível 15',
-    },
-    {
-      name: 'Teleporte',
-      icon: '🌀',
-      level: 0,
-      maxLevel: 6,
-      description: 'Esquiva automática',
-      cooldown: '15s',
-      unlocked: false,
-      requirement: 'Nível 20',
-    },
-    {
-      name: 'Invocação',
-      icon: '👻',
-      level: 0,
-      maxLevel: 4,
-      description: 'Invoca aliado temporário',
-      cooldown: '45s',
-      unlocked: false,
-      requirement: 'Nível 30',
-    },
-  ];
+interface SkillsTabProps {
+  skills: Skill[];
+  heroGold: number;
+  onUpgradeSkill: (skillId: string) => void;
+  onToggleAutoCast: (skillId: string) => void;
+}
 
+const SkillsTab: React.FC<SkillsTabProps> = ({
+  skills,
+  heroGold,
+  onUpgradeSkill,
+  onToggleAutoCast,
+}) => {
   return (
     <div className="p-3">
       <h3 className="text-[10px] text-purple-300 mb-3 flex items-center gap-2">
         <span>⚡</span> Habilidades
       </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {skills.map((skill) => (
-          <div
-            key={skill.name}
-            className={`card-hover border rounded-md p-2.5 flex flex-col gap-1.5 ${
-              skill.unlocked
-                ? 'bg-[#0f0f1a] border-[#2d2d5e]'
-                : 'bg-[#0a0a12] border-[#1a1a2e] opacity-60'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-lg">{skill.icon}</span>
-              {skill.unlocked ? (
-                <span className="text-[7px] text-blue-300">
-                  {skill.level}/{skill.maxLevel}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        {skills.map((skill) => {
+          const now = Date.now();
+          const cooldownMs = skill.cooldown * 1000;
+          const timeSinceUse = now - skill.lastUsed;
+          const isOnCooldown = timeSinceUse < cooldownMs;
+          const cooldownRemaining = isOnCooldown
+            ? Math.ceil((cooldownMs - timeSinceUse) / 1000)
+            : 0;
+          const canAfford = heroGold >= skill.cost;
+          const isMaxLevel = skill.level >= skill.maxLevel;
+
+          return (
+            <div
+              key={skill.id}
+              className={`card-hover border rounded-md p-2.5 flex flex-col gap-1.5 ${
+                skill.unlocked
+                  ? 'bg-[#0f0f1a] border-[#2d2d5e]'
+                  : 'bg-[#0a0a12] border-[#1a1a2e] opacity-60'
+              }`}
+            >
+              {/* Header: Icon + Level */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg">{skill.icon}</span>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-gray-200">{skill.name}</span>
+                    <span className="text-[7px] text-blue-300">
+                      Nv. {skill.level}/{skill.maxLevel}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <span className="text-[7px] text-gray-500">{skill.description}</span>
+
+              {/* Stats */}
+              <div className="flex items-center gap-2 text-[7px]">
+                <span className="text-purple-300">CD: {skill.cooldown}s</span>
+                <span className="text-gray-400">|</span>
+                <span className="text-yellow-300">
+                  {skill.effect === 'damage' && `${Math.round(skill.effectValue * 100)}% dano`}
+                  {skill.effect === 'heal' && `${Math.round(skill.effectValue * 100)}% HP`}
+                  {skill.effect === 'buff' && `${Math.round(skill.effectValue * 100)}% ATK (${skill.buffDuration}s)`}
                 </span>
-              ) : (
-                <span className="text-[7px] text-gray-500">🔒</span>
+              </div>
+
+              {/* Cooldown Bar */}
+              {isOnCooldown && (
+                <div className="w-full h-1.5 bg-[#1a1a2e] rounded-sm overflow-hidden border border-[#2d2d5e]">
+                  <div
+                    className="h-full bg-purple-600 transition-all duration-300"
+                    style={{
+                      width: `${((cooldownMs - timeSinceUse) / cooldownMs) * 100}%`,
+                    }}
+                  />
+                </div>
               )}
-            </div>
-            <span className="text-[8px] text-gray-200">{skill.name}</span>
-            <span className="text-[7px] text-gray-500">{skill.description}</span>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-[7px] text-gray-500">CD: {skill.cooldown}</span>
-              {skill.unlocked ? (
-                <button className="pixel-btn text-[7px] text-blue-300 px-2 py-1 rounded-sm">
-                  Melhorar
+              {isOnCooldown && (
+                <span className="text-[7px] text-purple-300 text-center">
+                  ⏳ {cooldownRemaining}s
+                </span>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center justify-between mt-1 gap-1">
+                {/* Auto-cast toggle */}
+                <button
+                  onClick={() => onToggleAutoCast(skill.id)}
+                  className={`pixel-btn text-[7px] px-1.5 py-1 rounded-sm flex items-center gap-0.5 ${
+                    skill.autoCast
+                      ? 'text-green-300 border-green-500/50 bg-green-900/20'
+                      : 'text-gray-500'
+                  }`}
+                  title={skill.autoCast ? 'Auto-cast ATIVO' : 'Auto-cast DESATIVADO'}
+                >
+                  <span>⚡</span>
+                  <span>Auto</span>
                 </button>
-              ) : (
-                <span className="text-[7px] text-gray-600">{skill.requirement}</span>
-              )}
+
+                {/* Upgrade button */}
+                {skill.unlocked && !isMaxLevel ? (
+                  <button
+                    onClick={() => onUpgradeSkill(skill.id)}
+                    disabled={!canAfford}
+                    className={`pixel-btn text-[7px] px-2 py-1 rounded-sm ${
+                      canAfford
+                        ? 'text-yellow-300 hover:border-yellow-400'
+                        : 'text-gray-600 cursor-not-allowed opacity-50'
+                    }`}
+                  >
+                    🪙 {skill.cost}
+                  </button>
+                ) : isMaxLevel ? (
+                  <span className="text-[7px] text-purple-400 px-2 py-1">MAX</span>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

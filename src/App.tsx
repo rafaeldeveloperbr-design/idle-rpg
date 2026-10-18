@@ -30,7 +30,32 @@ export interface DamagePopup {
   y: number;
   isCrit: boolean;
   isHeal?: boolean;
+  isSkill?: boolean;
   timestamp: number;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  level: number;
+  maxLevel: number;
+  cooldown: number; // seconds
+  cost: number; // gold to unlock/upgrade
+  unlocked: boolean;
+  autoCast: boolean;
+  lastUsed: number; // timestamp
+  effect: 'damage' | 'heal' | 'buff';
+  effectValue: number;
+  buffDuration?: number; // seconds (for buffs)
+}
+
+export interface ActiveBuff {
+  id: string;
+  skillId: string;
+  expiresAt: number;
+  multiplier: number;
 }
 
 export default function App() {
@@ -63,6 +88,58 @@ export default function App() {
 
   // Combat timing (based on speed attribute)
   const heroAttackSpeed = Math.max(300, 1500 - heroAttributes.speed * 50);
+
+  // === Skills System ===
+  const [skills, setSkills] = useState<Skill[]>([
+    {
+      id: 'power_strike',
+      name: 'Golpe Potente',
+      icon: '💥',
+      description: 'Causa 250% de dano em um único golpe',
+      level: 1,
+      maxLevel: 10,
+      cooldown: 5,
+      cost: 100,
+      unlocked: true,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'damage',
+      effectValue: 2.5,
+    },
+    {
+      id: 'quick_heal',
+      name: 'Cura Rápida',
+      icon: '✨',
+      description: 'Restaura 30% da Vida Máxima',
+      level: 1,
+      maxLevel: 10,
+      cooldown: 10,
+      cost: 150,
+      unlocked: true,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'heal',
+      effectValue: 0.3,
+    },
+    {
+      id: 'fury',
+      name: 'Fúria',
+      icon: '🔥',
+      description: 'Aumenta Ataque em 100% por 5s',
+      level: 1,
+      maxLevel: 8,
+      cooldown: 12,
+      cost: 200,
+      unlocked: true,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'buff',
+      effectValue: 2.0,
+      buffDuration: 5,
+    },
+  ]);
+
+  const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>([]);
 
   // === Wave System ===
   const [wave, setWave] = useState(1);
@@ -128,20 +205,20 @@ export default function App() {
   useEffect(() => { waveRef.current = wave; }, [wave]);
 
   // === Spawn Damage Popup ===
-  const spawnDamagePopup = useCallback((value: number, targetX: number, isCrit: boolean, isHeal = false) => {
+  const spawnDamagePopup = useCallback((value: number, targetX: number, isCrit: boolean, isHeal = false, isSkill = false) => {
     const id = popupIdRef.current++;
     const popup: DamagePopup = {
       id,
       value,
-      x: targetX + (Math.random() * 20 - 10), // slight random offset
+      x: targetX + (Math.random() * 20 - 10),
       y: 0,
       isCrit,
       isHeal,
+      isSkill,
       timestamp: Date.now(),
     };
     setDamagePopups((prev) => [...prev, popup]);
 
-    // Remove popup after animation completes
     setTimeout(() => {
       setDamagePopups((prev) => prev.filter((p) => p.id !== id));
     }, 900);
@@ -195,6 +272,100 @@ export default function App() {
     }));
   }, [heroGold, attributeCosts]);
 
+  // === Use Skill Function ===
+  const useSkill = useCallback((skillId: string) => {
+    const skill = skills.find(s => s.id === skillId);
+    if (!skill || !skill.unlocked) return;
+
+    const now = Date.now();
+    const cooldownMs = skill.cooldown * 1000;
+    
+    // Check if on cooldown
+    if (now - skill.lastUsed < cooldownMs) return;
+
+    // Apply skill effect
+    switch (skill.effect) {
+      case 'damage': {
+        // Power Strike - deal extra damage to enemy
+        const baseDamage = heroAttributes.attack * skill.effectValue;
+        const isCrit = Math.random() * 100 < heroAttributes.critChance;
+        const damage = isCrit ? baseDamage * 2 : baseDamage;
+        
+        spawnDamagePopup(damage, enemyXRef.current, isCrit, false, true);
+        setEnemyHitFlash(true);
+        setTimeout(() => setEnemyHitFlash(false), 300);
+        
+        setEnemyHp((prev) => {
+          const newHp = prev - damage;
+          if (newHp <= 0) {
+            const currentWave = waveRef.current;
+            const goldReward = baseEnemyGold + (currentWave - 1) * 5;
+            const xpReward = baseEnemyXp + (currentWave - 1) * 8;
+            setHeroGold((g) => g + goldReward);
+            setHeroXp((x) => x + xpReward);
+            setGamePhase('waiting');
+            setTimeout(() => spawnNewEnemy(), waitDuration);
+            return 0;
+          }
+          return newHp;
+        });
+        break;
+      }
+      case 'heal': {
+        // Quick Heal - restore HP
+        const healAmount = Math.floor(heroAttributes.maxHp * skill.effectValue);
+        setHeroHp((prev) => Math.min(heroAttributes.maxHp, prev + healAmount));
+        spawnDamagePopup(healAmount, heroX, false, true, true);
+        break;
+      }
+      case 'buff': {
+        // Fury - temporary attack boost
+        const buff: ActiveBuff = {
+          id: `${skillId}_${now}`,
+          skillId,
+          expiresAt: now + (skill.buffDuration || 5) * 1000,
+          multiplier: skill.effectValue,
+        };
+        setActiveBuffs((prev) => [...prev, buff]);
+        break;
+      }
+    }
+
+    // Update last used time
+    setSkills((prev) => prev.map(s => 
+      s.id === skillId ? { ...s, lastUsed: now } : s
+    ));
+  }, [skills, heroAttributes, spawnDamagePopup, spawnNewEnemy]);
+
+  // === Upgrade Skill Function ===
+  const upgradeSkill = useCallback((skillId: string) => {
+    const skill = skills.find(s => s.id === skillId);
+    if (!skill || !skill.unlocked || heroGold < skill.cost) return;
+
+    setHeroGold((prev) => prev - skill.cost);
+    setSkills((prev) => prev.map(s => 
+      s.id === skillId 
+        ? { 
+            ...s, 
+            level: s.level + 1,
+            cost: Math.floor(s.cost * 1.5),
+            effectValue: s.effect === 'damage' 
+              ? s.effectValue + 0.25 
+              : s.effect === 'heal'
+              ? s.effectValue + 0.05
+              : s.effectValue + 0.2,
+          }
+        : s
+    ));
+  }, [skills, heroGold]);
+
+  // === Toggle Auto-Cast ===
+  const toggleAutoCast = useCallback((skillId: string) => {
+    setSkills((prev) => prev.map(s => 
+      s.id === skillId ? { ...s, autoCast: !s.autoCast } : s
+    ));
+  }, []);
+
   // === Main Game Loop ===
   useEffect(() => {
     const interval = setInterval(() => {
@@ -215,12 +386,29 @@ export default function App() {
           lastRegenRef.current = now;
         }
       } else if (currentPhase === 'fighting') {
+        // Clean up expired buffs
+        setActiveBuffs((prev) => prev.filter(buff => buff.expiresAt > now));
+
+        // Calculate attack multiplier from active buffs
+        const attackMultiplier = activeBuffs.reduce((mult, buff) => mult * buff.multiplier, 1);
+
+        // Auto-cast skills
+        skills.forEach(skill => {
+          if (skill.unlocked && skill.autoCast) {
+            const cooldownMs = skill.cooldown * 1000;
+            if (now - skill.lastUsed >= cooldownMs) {
+              useSkill(skill.id);
+            }
+          }
+        });
+
         // Hero attacks enemy
         if (now - lastHeroAttackRef.current >= heroAttackSpeed) {
           lastHeroAttackRef.current = now;
 
           const isCrit = Math.random() * 100 < currentAttrs.critChance;
-          const damage = isCrit ? currentAttrs.attack * 2 : currentAttrs.attack;
+          const baseDamage = currentAttrs.attack * attackMultiplier;
+          const damage = isCrit ? baseDamage * 2 : baseDamage;
 
           // Spawn damage popup on enemy
           spawnDamagePopup(damage, currentEnemyX, isCrit);
@@ -281,7 +469,7 @@ export default function App() {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
@@ -305,6 +493,9 @@ export default function App() {
         damagePopups={damagePopups}
         heroHitFlash={heroHitFlash}
         enemyHitFlash={enemyHitFlash}
+        skills={skills}
+        activeBuffs={activeBuffs}
+        onUseSkill={useSkill}
       />
 
       <BottomPanel
@@ -312,6 +503,9 @@ export default function App() {
         attributeCosts={attributeCosts}
         heroGold={heroGold}
         onUpgradeAttribute={upgradeAttribute}
+        skills={skills}
+        onUpgradeSkill={upgradeSkill}
+        onToggleAutoCast={toggleAutoCast}
       />
     </div>
   );
