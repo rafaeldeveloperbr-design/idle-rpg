@@ -125,23 +125,31 @@ body {
 
 @keyframes attack-bounce {
   0%, 100% { transform: translateX(0) translateY(0); }
-  20% { transform: translateX(3px) translateY(-2px); }
-  40% { transform: translateX(0) translateY(0); }
+  15% { transform: translateX(-2px) translateY(0); }
+  35% { transform: translateX(4px) translateY(-1px); }
+  55% { transform: translateX(1px) translateY(0); }
+  75% { transform: translateX(0) translateY(0); }
 }
 
 @keyframes sword-swing {
-  0% { transform: rotate(-10deg); }
-  30% { transform: rotate(-60deg) translateX(4px); }
-  60% { transform: rotate(-10deg); }
-  100% { transform: rotate(-10deg); }
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-45deg); }
+  35% { transform: rotate(30deg) translateX(3px); }
+  55% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.sword-swing {
+  transform-origin: 50% 100%;
 }
 
 @keyframes hit-shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-3px); }
-  40% { transform: translateX(3px); }
-  60% { transform: translateX(-2px); }
-  80% { transform: translateX(2px); }
+  0%, 100% { transform: translateX(0); filter: brightness(1); }
+  10% { transform: translateX(-3px); filter: brightness(1.5); }
+  20% { transform: translateX(3px); filter: brightness(1); }
+  30% { transform: translateX(-2px); filter: brightness(1.3); }
+  40% { transform: translateX(2px); filter: brightness(1); }
+  50% { transform: translateX(0); }
 }
 
 @keyframes damage-float {
@@ -178,7 +186,7 @@ body {
 }
 
 .animate-hit {
-  animation: hit-shake 0.3s ease-in-out;
+  animation: hit-shake 1s ease-in-out infinite;
 }
 
 .animate-damage-float {
