@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import "tailwindcss";
+
+:root {
+  --color-primary: #8b5cf6;
+  --color-hp: #ef4444;
+  --color-xp: #3b82f6;
+  --color-gold: #f59e0b;
+  --color-bg-dark: #0f0f1a;
+  --color-bg-panel: #1a1a2e;
+  --color-bg-card: #16213e;
+  --color-border: #2d2d5e;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Press Start 2P', cursive;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text);
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+.pixel-border {
+  border: 3px solid var(--color-border);
+  box-shadow: 
+    inset 0 0 0 1px rgba(139, 92, 246, 0.3),
+    0 0 10px rgba(139, 92, 246, 0.1);
+}
+
+.pixel-btn {
+  border: 2px solid var(--color-border);
+  background: linear-gradient(180deg, #2d2d5e 0%, #1a1a2e 100%);
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pixel-btn:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.pixel-btn:active {
+  transform: translateY(1px);
+}
+
+.tab-active {
+  background: linear-gradient(180deg, #2d2d5e 0%, #1a1a2e 100%);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+.hp-bar {
+  background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f87171 100%);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.xp-bar {
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+.ground-texture {
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      #3d2b1f 0px,
+      #4a3728 4px,
+      #3d2b1f 8px
+    );
+  border-top: 4px solid #5c4033;
+}
+
+.sky-gradient {
+  background: linear-gradient(180deg, 
+    #0a0a1a 0%, 
+    #1a1a3e 40%, 
+    #2a1a4e 70%, 
+    #3a2a5e 100%
+  );
+}
+
+.hero-sprite {
+  image-rendering: pixelated;
+}
+
+.enemy-sprite {
+  image-rendering: pixelated;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes walk-bounce {
+  0%, 100% { transform: translateY(0px); }
+  25% { transform: translateY(-3px) rotate(-1deg); }
+  75% { transform: translateY(-3px) rotate(1deg); }
+}
+
+@keyframes leg-left {
+  0%, 100% { transform: translateX(-1px) skewX(-5deg); }
+  50% { transform: translateX(1px) skewX(5deg); }
+}
+
+@keyframes leg-right {
+  0%, 100% { transform: translateX(1px) skewX(5deg); }
+  50% { transform: translateX(-1px) skewX(-5deg); }
+}
+
+@keyframes attack-bounce {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  15% { transform: translateX(-2px) translateY(0); }
+  35% { transform: translateX(4px) translateY(-1px); }
+  55% { transform: translateX(1px) translateY(0); }
+  75% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes sword-swing {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-45deg); }
+  35% { transform: rotate(30deg) translateX(3px); }
+  55% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.sword-swing {
+  transform-origin: 50% 100%;
+}
+
+@keyframes hit-shake {
+  0%, 100% { transform: translateX(0); filter: brightness(1); }
+  10% { transform: translateX(-3px); filter: brightness(1.5); }
+  20% { transform: translateX(3px); filter: brightness(1); }
+  30% { transform: translateX(-2px); filter: brightness(1.3); }
+  40% { transform: translateX(2px); filter: brightness(1); }
+  50% { transform: translateX(0); }
+}
+
+@keyframes damage-float {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-walk {
+  animation: walk-bounce 0.3s ease-in-out infinite;
+}
+
+.animate-leg-left {
+  animation: leg-left 0.25s ease-in-out infinite;
+}
+
+.animate-leg-right {
+  animation: leg-right 0.25s ease-in-out infinite;
+}
+
+.animate-attack {
+  animation: attack-bounce 0.6s ease-in-out infinite;
+}
+
+.animate-sword-swing {
+  animation: sword-swing 0.6s ease-in-out infinite;
+}
+
+.animate-hit {
+  animation: hit-shake 1s ease-in-out infinite;
+}
+
+.animate-damage-float {
+  animation: damage-float 0.8s ease-out forwards;
+}
+
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: scale(1.02);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
