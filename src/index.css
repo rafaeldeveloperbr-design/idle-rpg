@@ -153,8 +153,35 @@ body {
 }
 
 @keyframes damage-float {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-30px); }
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  15% { opacity: 1; transform: translateY(-5px) scale(1.2); }
+  30% { transform: translateY(-12px) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+}
+
+@keyframes hero-hit-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-4px) rotate(-2deg); }
+  30% { transform: translateX(4px) rotate(2deg); }
+  45% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-1px); }
+}
+
+@keyframes flash-red {
+  0% { opacity: 0.7; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0; }
+}
+
+@keyframes waiting-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(1.03); opacity: 0.9; }
+}
+
+@keyframes waiting-bar {
+  0% { width: 0%; }
+  100% { width: 100%; }
 }
 
 .animate-float {
@@ -190,7 +217,23 @@ body {
 }
 
 .animate-damage-float {
-  animation: damage-float 0.8s ease-out forwards;
+  animation: damage-float 0.9s ease-out forwards;
+}
+
+.animate-hero-hit {
+  animation: hero-hit-shake 0.3s ease-in-out;
+}
+
+.animate-flash {
+  animation: flash-red 0.2s ease-out forwards;
+}
+
+.animate-waiting-pulse {
+  animation: waiting-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-waiting-bar {
+  animation: waiting-bar 2s linear forwards;
 }
 
 .card-hover {
