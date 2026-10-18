@@ -58,6 +58,25 @@ export interface ActiveBuff {
   multiplier: number;
 }
 
+export type ItemRarity = 'common' | 'rare' | 'epic';
+export type EquipmentSlot = 'weapon' | 'armor' | 'accessory';
+
+export interface Item {
+  id: string;
+  name: string;
+  icon: string;
+  slot: EquipmentSlot;
+  rarity: ItemRarity;
+  bonuses: Partial<HeroAttributes>;
+  sellValue: number;
+}
+
+export interface Equipment {
+  weapon: Item | null;
+  armor: Item | null;
+  accessory: Item | null;
+}
+
 export default function App() {
   // === Hero State (fixed position) ===
   const heroX = 150;
@@ -140,6 +159,30 @@ export default function App() {
   ]);
 
   const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>([]);
+
+  // === Inventory System ===
+  const [inventory, setInventory] = useState<Item[]>([]);
+  const [equipment, setEquipment] = useState<Equipment>({
+    weapon: null,
+    armor: null,
+    accessory: null,
+  });
+
+  // === Item Database ===
+  const itemDatabase: Omit<Item, 'id'>[] = [
+    // Weapons
+    { name: 'Espada de Ferro', icon: '🗡️', slot: 'weapon', rarity: 'common', bonuses: { attack: 5 }, sellValue: 20 },
+    { name: 'Machado de Guerra', icon: '🪓', slot: 'weapon', rarity: 'rare', bonuses: { attack: 12, critChance: 2 }, sellValue: 50 },
+    { name: 'Lâmina Élfica', icon: '⚔️', slot: 'weapon', rarity: 'epic', bonuses: { attack: 25, critChance: 5, speed: 3 }, sellValue: 150 },
+    // Armor
+    { name: 'Escudo de Madeira', icon: '🛡️', slot: 'armor', rarity: 'common', bonuses: { defense: 4, maxHp: 10 }, sellValue: 15 },
+    { name: 'Armadura de Couro', icon: '🦺', slot: 'armor', rarity: 'rare', bonuses: { defense: 10, maxHp: 25 }, sellValue: 60 },
+    { name: 'Peitoral de Aço', icon: '⛓️', slot: 'armor', rarity: 'epic', bonuses: { defense: 20, maxHp: 50, regen: 2 }, sellValue: 180 },
+    // Accessories
+    { name: 'Anel de Vida', icon: '💍', slot: 'accessory', rarity: 'common', bonuses: { maxHp: 15, regen: 1 }, sellValue: 25 },
+    { name: 'Amuleto de Velocidade', icon: '📿', slot: 'accessory', rarity: 'rare', bonuses: { speed: 5, critChance: 3 }, sellValue: 70 },
+    { name: 'Coroa do Rei', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 10, defense: 10, maxHp: 30, speed: 5 }, sellValue: 200 },
+  ];
 
   // === Wave System ===
   const [wave, setWave] = useState(1);
@@ -304,6 +347,13 @@ export default function App() {
             setHeroGold((g) => g + goldReward);
             setHeroXp((x) => x + xpReward);
             setGamePhase('waiting');
+            
+            // Generate item drop
+            const droppedItem = generateItemDrop();
+            if (droppedItem) {
+              setInventory((prev) => [...prev, droppedItem]);
+            }
+            
             setTimeout(() => spawnNewEnemy(), waitDuration);
             return 0;
           }
@@ -366,6 +416,122 @@ export default function App() {
     ));
   }, []);
 
+  // === Generate Random Item Drop ===
+  const generateItemDrop = useCallback((): Item | null => {
+    // 30% chance to drop an item
+    if (Math.random() > 0.3) return null;
+
+    // Rarity weights: common 60%, rare 30%, epic 10%
+    const rarityRoll = Math.random();
+    let targetRarity: ItemRarity;
+    if (rarityRoll < 0.6) targetRarity = 'common';
+    else if (rarityRoll < 0.9) targetRarity = 'rare';
+    else targetRarity = 'epic';
+
+    // Filter items by rarity
+    const availableItems = itemDatabase.filter(item => item.rarity === targetRarity);
+    if (availableItems.length === 0) return null;
+
+    // Pick random item from filtered list
+    const template = availableItems[Math.floor(Math.random() * availableItems.length)];
+    
+    // Scale bonuses based on wave
+    const waveBonus = Math.floor((wave - 1) * 0.1); // +10% per wave
+    const scaledBonuses: Partial<HeroAttributes> = {};
+    Object.entries(template.bonuses).forEach(([key, value]) => {
+      if (value !== undefined) {
+        scaledBonuses[key as keyof HeroAttributes] = value + Math.floor(value * waveBonus);
+      }
+    });
+
+    return {
+      ...template,
+      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      bonuses: scaledBonuses,
+      sellValue: Math.floor(template.sellValue * (1 + waveBonus)),
+    };
+  }, [wave]);
+
+  // === Equip Item ===
+  const equipItem = useCallback((itemId: string) => {
+    const item = inventory.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Remove from inventory
+    setInventory((prev) => prev.filter(i => i.id !== itemId));
+
+    // If there's already an item in that slot, unequip it first
+    const currentEquipped = equipment[item.slot];
+    if (currentEquipped) {
+      setInventory((prev) => [...prev, currentEquipped]);
+    }
+
+    // Equip new item
+    setEquipment((prev) => ({
+      ...prev,
+      [item.slot]: item,
+    }));
+  }, [inventory, equipment]);
+
+  // === Unequip Item ===
+  const unequipItem = useCallback((slot: EquipmentSlot) => {
+    const item = equipment[slot];
+    if (!item) return;
+
+    // Move to inventory
+    setInventory((prev) => [...prev, item]);
+    
+    // Clear slot
+    setEquipment((prev) => ({
+      ...prev,
+      [slot]: null,
+    }));
+  }, [equipment]);
+
+  // === Sell Item ===
+  const sellItem = useCallback((itemId: string) => {
+    const item = inventory.find(i => i.id === itemId);
+    if (!item) return;
+
+    setHeroGold((prev) => prev + item.sellValue);
+    setInventory((prev) => prev.filter(i => i.id !== itemId));
+  }, [inventory]);
+
+  // === Calculate Equipment Bonuses ===
+  const getEquipmentBonuses = useCallback((): HeroAttributes => {
+    const totalBonuses: Record<keyof HeroAttributes, number> = {
+      attack: 0,
+      defense: 0,
+      maxHp: 0,
+      speed: 0,
+      critChance: 0,
+      regen: 0,
+    };
+    
+    Object.values(equipment).forEach((item) => {
+      if (item) {
+        (Object.entries(item.bonuses) as [keyof HeroAttributes, number][]).forEach(([key, value]) => {
+          if (typeof value === 'number') {
+            totalBonuses[key] += value;
+          }
+        });
+      }
+    });
+    
+    return totalBonuses;
+  }, [equipment]);
+
+  // Get effective attributes (base + equipment bonuses)
+  const equipmentBonuses = getEquipmentBonuses();
+  const effectiveAttributes: HeroAttributes = {
+    attack: heroAttributes.attack + equipmentBonuses.attack,
+    defense: heroAttributes.defense + equipmentBonuses.defense,
+    maxHp: heroAttributes.maxHp + equipmentBonuses.maxHp,
+    speed: heroAttributes.speed + equipmentBonuses.speed,
+    critChance: heroAttributes.critChance + equipmentBonuses.critChance,
+    regen: heroAttributes.regen + equipmentBonuses.regen,
+  };
+
   // === Main Game Loop ===
   useEffect(() => {
     const interval = setInterval(() => {
@@ -374,6 +540,8 @@ export default function App() {
       const distance = currentEnemyX - heroX;
       const now = Date.now();
       const currentAttrs = heroAttributesRef.current;
+      // Use effective attributes (base + equipment bonuses) for combat
+      const combatAttrs = effectiveAttributes;
 
       if (currentPhase === 'approaching') {
         if (distance > attackRange) {
@@ -406,8 +574,8 @@ export default function App() {
         if (now - lastHeroAttackRef.current >= heroAttackSpeed) {
           lastHeroAttackRef.current = now;
 
-          const isCrit = Math.random() * 100 < currentAttrs.critChance;
-          const baseDamage = currentAttrs.attack * attackMultiplier;
+          const isCrit = Math.random() * 100 < combatAttrs.critChance;
+          const baseDamage = combatAttrs.attack * attackMultiplier;
           const damage = isCrit ? baseDamage * 2 : baseDamage;
 
           // Spawn damage popup on enemy
@@ -429,6 +597,12 @@ export default function App() {
               setHeroXp((x) => x + xpReward);
               setGamePhase('waiting');
 
+              // Generate item drop
+              const droppedItem = generateItemDrop();
+              if (droppedItem) {
+                setInventory((prev) => [...prev, droppedItem]);
+              }
+
               setTimeout(() => {
                 spawnNewEnemy();
               }, waitDuration);
@@ -444,7 +618,7 @@ export default function App() {
           lastEnemyAttackRef.current = now;
           const currentWave = waveRef.current;
           const currentEnemyAttack = baseEnemyAttack + Math.floor((currentWave - 1) * 2);
-          const damage = Math.max(1, currentEnemyAttack - currentAttrs.defense);
+          const damage = Math.max(1, currentEnemyAttack - combatAttrs.defense);
           
           // Spawn damage popup on hero
           spawnDamagePopup(damage, heroX, false);
@@ -459,9 +633,9 @@ export default function App() {
         // HP Regeneration (every 2 seconds)
         if (now - lastRegenRef.current >= 2000) {
           lastRegenRef.current = now;
-          if (currentAttrs.regen > 0 && heroHpRef.current < currentAttrs.maxHp) {
-            const healAmount = currentAttrs.regen;
-            setHeroHp((prev) => Math.min(currentAttrs.maxHp, prev + healAmount));
+          if (combatAttrs.regen > 0 && heroHpRef.current < combatAttrs.maxHp) {
+            const healAmount = combatAttrs.regen;
+            setHeroHp((prev) => Math.min(combatAttrs.maxHp, prev + healAmount));
             spawnDamagePopup(healAmount, heroX, false, true);
           }
         }
@@ -469,7 +643,7 @@ export default function App() {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
@@ -506,6 +680,11 @@ export default function App() {
         skills={skills}
         onUpgradeSkill={upgradeSkill}
         onToggleAutoCast={toggleAutoCast}
+        inventory={inventory}
+        equipment={equipment}
+        onEquipItem={equipItem}
+        onUnequipItem={unequipItem}
+        onSellItem={sellItem}
       />
     </div>
   );

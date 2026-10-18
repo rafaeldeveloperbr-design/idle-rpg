@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AttributesTab from './tabs/AttributesTab';
 import SkillsTab from './tabs/SkillsTab';
 import InventoryTab from './tabs/InventoryTab';
-import type { HeroAttributes, AttributeCosts, Skill } from '../App';
+import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../App';
 
 type TabId = 'attributes' | 'skills' | 'inventory';
 
@@ -20,6 +20,11 @@ interface BottomPanelProps {
   skills: Skill[];
   onUpgradeSkill: (skillId: string) => void;
   onToggleAutoCast: (skillId: string) => void;
+  inventory: Item[];
+  equipment: Equipment;
+  onEquipItem: (itemId: string) => void;
+  onUnequipItem: (slot: keyof Equipment) => void;
+  onSellItem: (itemId: string) => void;
 }
 
 const tabs: Tab[] = [
@@ -36,6 +41,11 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   skills,
   onUpgradeSkill,
   onToggleAutoCast,
+  inventory,
+  equipment,
+  onEquipItem,
+  onUnequipItem,
+  onSellItem,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('attributes');
 
@@ -60,7 +70,15 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
           />
         );
       case 'inventory':
-        return <InventoryTab />;
+        return (
+          <InventoryTab
+            inventory={inventory}
+            equipment={equipment}
+            onEquipItem={onEquipItem}
+            onUnequipItem={onUnequipItem}
+            onSellItem={onSellItem}
+          />
+        );
       default:
         return (
           <AttributesTab

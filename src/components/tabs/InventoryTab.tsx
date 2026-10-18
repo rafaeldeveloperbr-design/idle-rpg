@@ -1,25 +1,108 @@
-import React from 'react';
+import React, { useState } from 'react';
+import type { Item, Equipment, HeroAttributes } from '../../App';
 
-const InventoryTab: React.FC = () => {
-  const equipment = [
-    { slot: 'Arma', name: 'Espada de Ferro', icon: '🗡️', rarity: 'Comum', stat: '+10 ATK', color: 'text-gray-300' },
-    { slot: 'Armadura', name: 'Peitoral de Couro', icon: '🦺', rarity: 'Comum', stat: '+8 DEF', color: 'text-gray-300' },
-    { slot: 'Elmo', name: 'Capacete de Bronze', icon: '⛑️', rarity: 'Incomum', stat: '+5 DEF', color: 'text-green-400' },
-    { slot: 'Botas', name: 'Botas Ágeis', icon: '👢', rarity: 'Raro', stat: '+3 SPD', color: 'text-blue-400' },
-    { slot: 'Anel', name: 'Anel de Fogo', icon: '💍', rarity: 'Épico', stat: '+15% CRIT', color: 'text-purple-400' },
-    { slot: 'Amuleto', name: '— Vazio —', icon: '📿', rarity: '', stat: '', color: 'text-gray-600' },
-  ];
+interface InventoryTabProps {
+  inventory: Item[];
+  equipment: Equipment;
+  onEquipItem: (itemId: string) => void;
+  onUnequipItem: (slot: keyof Equipment) => void;
+  onSellItem: (itemId: string) => void;
+}
 
-  const items = [
-    { name: 'Poção de Vida', icon: '🧪', qty: 5, color: 'text-red-400' },
-    { name: 'Poção de Mana', icon: '🫧', qty: 3, color: 'text-blue-400' },
-    { name: 'Chave Antiga', icon: '🗝️', qty: 1, color: 'text-yellow-400' },
-    { name: 'Gema Bruta', icon: '💎', qty: 12, color: 'text-cyan-400' },
-    { name: 'Pergaminho', icon: '📜', qty: 2, color: 'text-amber-300' },
-    { name: 'Osso de Monstro', icon: '🦴', qty: 28, color: 'text-gray-400' },
-    { name: 'Erva Rara', icon: '🌿', qty: 7, color: 'text-green-400' },
-    { name: 'Cristal Sombrio', icon: '🔮', qty: 4, color: 'text-purple-400' },
-  ];
+const rarityColors: Record<string, string> = {
+  common: 'border-gray-500 bg-gray-900/30',
+  rare: 'border-blue-500 bg-blue-900/20',
+  epic: 'border-purple-500 bg-purple-900/20',
+};
+
+const rarityTextColors: Record<string, string> = {
+  common: 'text-gray-300',
+  rare: 'text-blue-300',
+  epic: 'text-purple-300',
+};
+
+const rarityLabels: Record<string, string> = {
+  common: 'Comum',
+  rare: 'Raro',
+  epic: 'Épico',
+};
+
+const slotLabels: Record<string, string> = {
+  weapon: '⚔️ Arma',
+  armor: '🛡️ Armadura',
+  accessory: '💍 Acessório',
+};
+
+const attributeLabels: Record<keyof HeroAttributes, string> = {
+  attack: 'Ataque',
+  defense: 'Defesa',
+  maxHp: 'Vida Max',
+  speed: 'Velocidade',
+  critChance: 'Crítico',
+  regen: 'Regen',
+};
+
+const attributeIcons: Record<keyof HeroAttributes, string> = {
+  attack: '⚔️',
+  defense: '🛡️',
+  maxHp: '❤️',
+  speed: '💨',
+  critChance: '🎯',
+  regen: '💚',
+};
+
+// === Tooltip Component ===
+const ItemTooltip: React.FC<{ item: Item; action?: string }> = ({ item, action }) => (
+  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md p-2 shadow-[0_0_15px_rgba(139,92,246,0.3)] pointer-events-none z-50">
+    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px]">
+      <div className="w-2 h-2 bg-[#0f0f1a] border-r-2 border-b-2 border-purple-500/70 rotate-45 -translate-y-1" />
+    </div>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm">{item.icon}</span>
+        <span className={`text-[9px] font-bold ${rarityTextColors[item.rarity]}`}>
+          {item.name}
+        </span>
+      </div>
+      <div className="h-[1px] bg-purple-500/30 w-full" />
+      <span className={`text-[7px] ${rarityTextColors[item.rarity]}`}>
+        {rarityLabels[item.rarity]} • {slotLabels[item.slot]}
+      </span>
+      <div className="flex flex-col gap-0.5 mt-0.5">
+        {Object.entries(item.bonuses).map(([key, value]) => (
+          <div key={key} className="flex justify-between text-[7px]">
+            <span className="text-gray-400">
+              {attributeIcons[key as keyof HeroAttributes]} {attributeLabels[key as keyof HeroAttributes]}:
+            </span>
+            <span className="text-green-300">+{value}</span>
+          </div>
+        ))}
+      </div>
+      <div className="h-[1px] bg-purple-500/30 w-full mt-0.5" />
+      <div className="flex justify-between text-[7px]">
+        <span className="text-gray-400">Valor de venda:</span>
+        <span className="text-yellow-300">🪙 {item.sellValue}</span>
+      </div>
+      {action && (
+        <span className="text-[6px] text-center text-purple-300 mt-0.5 italic">
+          {action}
+        </span>
+      )}
+    </div>
+  </div>
+);
+
+const InventoryTab: React.FC<InventoryTabProps> = ({
+  inventory,
+  equipment,
+  onEquipItem,
+  onUnequipItem,
+  onSellItem,
+}) => {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
+
+  const slots: (keyof Equipment)[] = ['weapon', 'armor', 'accessory'];
 
   return (
     <div className="p-3">
@@ -27,49 +110,94 @@ const InventoryTab: React.FC = () => {
         <span>🎒</span> Inventário & Equipamentos
       </h3>
 
-      {/* Equipment Slots */}
-      <div className="mb-4">
+      {/* Equipment Slots (Paperdoll) */}
+      <div className="mb-3">
         <span className="text-[8px] text-gray-400 mb-2 block">Equipamentos:</span>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {equipment.map((eq) => (
-            <div
-              key={eq.slot}
-              className="card-hover bg-[#0f0f1a] border border-[#2d2d5e] rounded-md p-2 flex flex-col items-center gap-1"
-            >
-              <span className="text-lg">{eq.icon}</span>
-              <span className="text-[7px] text-gray-500">{eq.slot}</span>
-              <span className={`text-[7px] ${eq.color}`}>{eq.name}</span>
-              {eq.stat && <span className="text-[6px] text-gray-400">{eq.stat}</span>}
-            </div>
-          ))}
+        <div className="grid grid-cols-3 gap-2">
+          {slots.map((slot) => {
+            const item = equipment[slot];
+            const isHovered = hoveredSlot === slot;
+
+            return (
+              <div key={slot} className="relative">
+                {isHovered && item && (
+                  <ItemTooltip item={item} action="Clique para desequipar" />
+                )}
+                <button
+                  onClick={() => item && onUnequipItem(slot)}
+                  onMouseEnter={() => setHoveredSlot(slot)}
+                  onMouseLeave={() => setHoveredSlot(null)}
+                  className={`w-full border-2 rounded-md p-2 flex flex-col items-center gap-1 transition-all min-h-[70px] ${
+                    item
+                      ? `${rarityColors[item.rarity]} cursor-pointer hover:brightness-125`
+                      : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
+                  }`}
+                >
+                  <span className="text-[7px] text-gray-500">{slotLabels[slot]}</span>
+                  {item ? (
+                    <>
+                      <span className="text-lg">{item.icon}</span>
+                      <span className={`text-[7px] ${rarityTextColors[item.rarity]} text-center`}>
+                        {item.name}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[8px] text-gray-700 mt-2">— Vazio —</span>
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Items Grid */}
+      {/* Inventory Grid */}
       <div>
-        <span className="text-[8px] text-gray-400 mb-2 block">Itens:</span>
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-1.5">
-          {items.map((item) => (
-            <div
-              key={item.name}
-              className="card-hover bg-[#0f0f1a] border border-[#2d2d5e] rounded-md p-1.5 flex flex-col items-center gap-0.5 relative"
-            >
-              <span className="text-base">{item.icon}</span>
-              <span className={`text-[6px] ${item.color} text-center leading-tight`}>
-                {item.name}
-              </span>
-              <span className="absolute top-0.5 right-0.5 text-[7px] text-yellow-400 bg-black/60 px-0.5 rounded">
-                {item.qty}
-              </span>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[8px] text-gray-400">Itens ({inventory.length}/20):</span>
+        </div>
+        <div className="grid grid-cols-5 md:grid-cols-10 gap-1.5">
+          {inventory.map((item) => {
+            const isHovered = hoveredItem === item.id;
+            return (
+              <div key={item.id} className="relative">
+                {isHovered && (
+                  <ItemTooltip item={item} action="Clique para equipar" />
+                )}
+                <div className="relative group">
+                  <button
+                    onClick={() => onEquipItem(item.id)}
+                    onMouseEnter={() => setHoveredItem(item.id)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    className={`w-full aspect-square border-2 rounded-md flex flex-col items-center justify-center gap-0.5 transition-all hover:brightness-125 ${rarityColors[item.rarity]}`}
+                  >
+                    <span className="text-base">{item.icon}</span>
+                    <span className={`text-[5px] ${rarityTextColors[item.rarity]} text-center leading-tight px-0.5`}>
+                      {item.name}
+                    </span>
+                  </button>
+                  {/* Sell button overlay */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSellItem(item.id);
+                    }}
+                    className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-600 border border-red-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    title={`Vender por 🪙 ${item.sellValue}`}
+                  >
+                    <span className="text-[6px] text-white">💰</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
           {/* Empty slots */}
-          {[...Array(8)].map((_, i) => (
+          {[...Array(Math.max(0, 20 - inventory.length))].map((_, i) => (
             <div
               key={`empty-${i}`}
-              className="bg-[#0a0a12] border border-[#1a1a2e] rounded-md p-1.5 flex items-center justify-center min-h-[50px]"
+              className="aspect-square bg-[#0a0a12] border border-[#1a1a2e] rounded-md flex items-center justify-center"
             >
-              <span className="text-[8px] text-gray-700">—</span>
+              <span className="text-[8px] text-gray-800">·</span>
             </div>
           ))}
         </div>
