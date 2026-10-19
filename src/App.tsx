@@ -6,7 +6,9 @@ import CharacterCreationModal from './components/modals/CharacterCreationModal';
 import SettingsModal from './components/modals/SettingsModal';
 import MerchantShop from './components/modals/MerchantShop';
 import PathChoiceModal from './components/modals/PathChoiceModal';
+import NPCDialogueModal from './components/modals/NPCDialogueModal';
 import ToastContainer from './components/ToastContainer';
+import { questsData, type Quest } from './data/questsData';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
 type GamePhase = 'approaching' | 'fighting' | 'respawning';
@@ -386,6 +388,13 @@ export default function App() {
   ]);
 
   const [activeConsumables, setActiveConsumables] = useState<ActiveConsumable[]>([]);
+
+  // === Quest System ===
+  const [quests, setQuests] = useState<Quest[]>(
+    questsData.map(q => ({ ...q, completed: false, active: false, progress: 0 }))
+  );
+  const [currentNPCQuest, setCurrentNPCQuest] = useState<Quest | null>(null);
+  const lastNPCSpawnWave = useRef(0);
 
   // === Shop Items (Equipment Catalog) ===
   const shopItems: Item[] = [
@@ -1079,6 +1088,96 @@ export default function App() {
     }
   }, [heroAttributes.maxHp, wave, biomeKills, enemySpawnX, spawnRandomEnemy, addToast]);
 
+  // === Quest System Functions ===
+  const checkAndSpawnNPC = useCallback(() => {
+    // Check if we should spawn an NPC (every 5 waves)
+    if (wave - lastNPCSpawnWave.current < 5) return;
+    
+    // 30% chance to encounter NPC
+    if (Math.random() > 0.3) return;
+    
+    // Find available quests (not completed, not active, level requirement met)
+    const availableQuests = quests.filter(q => 
+      !q.completed && 
+      !q.active && 
+      heroLevel >= q.unlockedAtLevel
+    );
+    
+    if (availableQuests.length === 0) return;
+    
+    // Pick random quest
+    const randomQuest = availableQuests[Math.floor(Math.random() * availableQuests.length)];
+    
+    // Show NPC dialogue
+    setCurrentNPCQuest(randomQuest);
+    lastNPCSpawnWave.current = wave;
+  }, [wave, quests, heroLevel]);
+
+  const acceptQuest = useCallback((quest: Quest) => {
+    setQuests(prev => prev.map(q => 
+      q.id === quest.id ? { ...q, active: true } : q
+    ));
+    setCurrentNPCQuest(null);
+    addToast(`📜 Quest aceita: ${quest.title}`, 'info');
+  }, [addToast]);
+
+  const declineQuest = useCallback(() => {
+    setCurrentNPCQuest(null);
+  }, []);
+
+  const completeQuest = useCallback((questId: string) => {
+    const quest = quests.find(q => q.id === questId);
+    if (!quest || !quest.active || quest.progress < quest.objectiveTarget) return;
+    
+    // Mark as completed
+    setQuests(prev => prev.map(q => 
+      q.id === questId ? { ...q, completed: true, active: false } : q
+    ));
+    
+    // Give rewards
+    setHeroGold(prev => prev + quest.reward.gold);
+    setHeroXp(prev => prev + quest.reward.xp);
+    
+    // Add item reward if exists
+    if (quest.reward.item) {
+      const newItem: Item = {
+        ...quest.reward.item,
+        id: `quest_item_${Date.now()}_${Math.random()}`,
+      };
+      setInventory(prev => [...prev, newItem]);
+    }
+    
+    addToast(`✅ Quest concluída: ${quest.title}!`, 'info');
+    addToast(`💰 +${quest.reward.gold} ouro, +${quest.reward.xp} XP`, 'info');
+  }, [quests, addToast]);
+
+  // Update quest progress based on game events
+  const updateQuestProgress = useCallback(() => {
+    setQuests(prev => prev.map(quest => {
+      if (!quest.active || quest.completed) return quest;
+      
+      let newProgress = quest.progress;
+      
+      switch (quest.objectiveType) {
+        case 'kill_monsters':
+          newProgress = totalKills;
+          break;
+        case 'reach_wave':
+          newProgress = wave;
+          break;
+        case 'collect_gold':
+          newProgress = heroGold;
+          break;
+        case 'defeat_boss':
+          // Track boss kills (every 10 kills is a boss)
+          newProgress = Math.floor(totalKills / 10);
+          break;
+      }
+      
+      return { ...quest, progress: newProgress };
+    }));
+  }, [totalKills, wave, heroGold]);
+
   const spawnNewEnemy = useCallback(() => {
     const newWave = wave + 1;
     setWave(newWave);
@@ -1665,10 +1764,16 @@ export default function App() {
         // Do nothing during respawn - hero is recovering
         // The setTimeout in handleHeroDeath will handle the respawn logic
       }
+      
+      // Update quest progress
+      updateQuestProgress();
+      
+      // Check for NPC encounters
+      checkAndSpawnNPC();
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC]);
 
   // === Consistency Check ===
   useEffect(() => {
@@ -1747,6 +1852,8 @@ export default function App() {
         onUnequipItem={unequipItem}
         onSellItem={sellItem}
         onResetGame={resetGame}
+        quests={quests}
+        onCompleteQuest={completeQuest}
       />
 
       {/* Character Creation Modal (First Time) */}
@@ -1785,6 +1892,15 @@ export default function App() {
       {/* Path Choice Modal */}
       {showPathChoice && (
         <PathChoiceModal onChoose={handlePathChoice} />
+      )}
+
+      {/* NPC Dialogue Modal */}
+      {currentNPCQuest && (
+        <NPCDialogueModal
+          quest={currentNPCQuest}
+          onAccept={() => acceptQuest(currentNPCQuest)}
+          onDecline={declineQuest}
+        />
       )}
     </div>
   );

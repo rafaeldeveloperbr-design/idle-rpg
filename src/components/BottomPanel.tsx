@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import AttributesTab from './tabs/AttributesTab';
 import SkillsTab from './tabs/SkillsTab';
 import InventoryTab from './tabs/InventoryTab';
+import QuestsTab from './tabs/QuestsTab';
 import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../App';
+import type { Quest } from '../data/questsData';
 
-type TabId = 'attributes' | 'skills' | 'inventory';
+type TabId = 'attributes' | 'skills' | 'inventory' | 'quests';
 
 interface Tab {
   id: TabId;
@@ -28,12 +30,15 @@ interface BottomPanelProps {
   onUnequipItem: (slot: keyof Equipment) => void;
   onSellItem: (itemId: string) => void;
   onResetGame: () => void;
+  quests: Quest[];
+  onCompleteQuest: (questId: string) => void;
 }
 
 const tabs: Tab[] = [
   { id: 'attributes', label: 'Atributos', icon: '📊' },
   { id: 'skills', label: 'Habilidades', icon: '⚡' },
   { id: 'inventory', label: 'Inventário', icon: '🎒' },
+  { id: 'quests', label: 'Quests', icon: '📜' },
 ];
 
 const BottomPanel: React.FC<BottomPanelProps> = ({
@@ -52,6 +57,8 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   onUnequipItem,
   onSellItem,
   onResetGame,
+  quests,
+  onCompleteQuest,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('attributes');
 
@@ -85,6 +92,13 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
             onEquipItem={onEquipItem}
             onUnequipItem={onUnequipItem}
             onSellItem={onSellItem}
+          />
+        );
+      case 'quests':
+        return (
+          <QuestsTab
+            quests={quests}
+            onCompleteQuest={onCompleteQuest}
           />
         );
       default:
