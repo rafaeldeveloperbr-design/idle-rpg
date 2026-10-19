@@ -207,56 +207,237 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       </div>
 
-      {/* Stars/Particles in background (slow parallax) */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ transform: `translateX(${-(scrollOffset * 0.1) % 200}px)` }}
-      >
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-[2px] h-[2px] bg-white/30 rounded-full animate-pulse-glow"
-            style={{
-              top: `${(i * 17 + 5) % 60}%`,
-              left: `${(i * 23 + 10) % 120}%`,
-              animationDelay: `${(i * 0.4) % 3}s`,
-            }}
-          />
-        ))}
-      </div>
+      {/* === PARALLAX LAYER 1: Background (10% speed) === */}
+      {currentBiome.id === 'forest' && (
+        <div
+          className="absolute bottom-16 left-0 w-[200%] h-32 pointer-events-none opacity-40"
+          style={{ transform: `translateX(${-(scrollOffset * 0.1) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
+            <polygon points="0,200 100,80 200,120 300,60 400,100 500,40 600,90 700,50 800,110 900,70 1000,130 1100,50 1200,100 1300,60 1400,120 1500,80 1600,200" fill="#1a1a3e" />
+          </svg>
+        </div>
+      )}
+      {currentBiome.id === 'cave' && (
+        <div
+          className="absolute top-0 left-0 w-[200%] h-24 pointer-events-none opacity-50"
+          style={{ transform: `translateX(${-(scrollOffset * 0.1) % 800}px)` }}
+        >
+          <div className="w-full h-full bg-gradient-to-b from-stone-950 via-stone-900 to-transparent" />
+        </div>
+      )}
+      {currentBiome.id === 'castle' && (
+        <div
+          className="absolute bottom-16 left-0 w-[200%] h-40 pointer-events-none opacity-30"
+          style={{ transform: `translateX(${-(scrollOffset * 0.1) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 300" preserveAspectRatio="none">
+            <rect x="100" y="100" width="80" height="200" fill="#2a1a1a" />
+            <rect x="400" y="80" width="60" height="220" fill="#2a1a1a" />
+            <rect x="700" y="120" width="70" height="180" fill="#2a1a1a" />
+            <rect x="1000" y="90" width="65" height="210" fill="#2a1a1a" />
+            <rect x="1300" y="110" width="75" height="190" fill="#2a1a1a" />
+          </svg>
+        </div>
+      )}
 
-      {/* Mountains/Background decoration (medium parallax) */}
-      <div
-        className="absolute bottom-16 left-0 pointer-events-none"
-        style={{
-          transform: `translateX(${-(scrollOffset * 0.3) % 400}px)`,
-          width: '200%',
-        }}
-      >
-        <svg className="w-full h-24 opacity-30" viewBox="0 0 1600 100" preserveAspectRatio="none">
-          <polygon points="0,100 100,40 200,80 300,20 400,70 500,30 600,60 700,25 800,90 900,40 1000,80 1100,20 1200,70 1300,30 1400,60 1500,25 1600,100" fill="#2a1a4e" />
-          <polygon points="0,100 150,60 250,85 350,50 500,80 650,45 800,100 950,60 1050,85 1150,50 1300,80 1450,45 1600,100" fill="#1a1a3e" />
-        </svg>
-      </div>
+      {/* === PARALLAX LAYER 2: Midground (30% speed) === */}
+      {currentBiome.id === 'forest' && (
+        <div
+          className="absolute bottom-16 left-0 w-[200%] h-28 pointer-events-none opacity-50"
+          style={{ transform: `translateX(${-(scrollOffset * 0.3) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
+            {[...Array(20)].map((_, i) => (
+              <polygon key={i} points={`${i * 80},200 ${i * 80 + 20},100 ${i * 80 + 40},200`} fill="#0a1a0a" />
+            ))}
+          </svg>
+        </div>
+      )}
+      {currentBiome.id === 'cave' && (
+        <div
+          className="absolute top-0 left-0 w-[200%] h-20 pointer-events-none opacity-60"
+          style={{ transform: `translateX(${-(scrollOffset * 0.3) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 150" preserveAspectRatio="none">
+            {[...Array(30)].map((_, i) => (
+              <polygon key={i} points={`${i * 50 + 10},0 ${i * 50 + 25},${40 + (i % 3) * 20} ${i * 50 + 40},0`} fill="#1a1a1a" />
+            ))}
+          </svg>
+        </div>
+      )}
+      {currentBiome.id === 'castle' && (
+        <div
+          className="absolute bottom-16 left-0 w-[200%] h-32 pointer-events-none opacity-40"
+          style={{ transform: `translateX(${-(scrollOffset * 0.3) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 250" preserveAspectRatio="none">
+            <rect x="0" y="50" width="1600" height="200" fill="#1a0a0a" />
+            {[...Array(10)].map((_, i) => (
+              <rect key={i} x={i * 160} y="30" width="40" height="220" fill="#2a1a1a" />
+            ))}
+          </svg>
+        </div>
+      )}
 
-      {/* Ground/Floor with scrolling (full parallax) */}
+      {/* === PARALLAX LAYER 3: Foreground (50% speed) === */}
+      {currentBiome.id === 'forest' && (
+        <div
+          className="absolute bottom-16 left-0 w-[200%] h-24 pointer-events-none opacity-60"
+          style={{ transform: `translateX(${-(scrollOffset * 0.5) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
+            {[...Array(15)].map((_, i) => (
+              <g key={i}>
+                <rect x={i * 100 + 30} y="100" width="15" height="100" fill="#2a1a0a" />
+                <polygon points={`${i * 100},100 ${i * 100 + 37},20 ${i * 100 + 75},100`} fill="#0a2a0a" />
+              </g>
+            ))}
+          </svg>
+        </div>
+      )}
+      {currentBiome.id === 'cave' && (
+        <div
+          className="absolute bottom-16 left-0 w-[200%] h-20 pointer-events-none opacity-70"
+          style={{ transform: `translateX(${-(scrollOffset * 0.5) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 150" preserveAspectRatio="none">
+            {[...Array(20)].map((_, i) => (
+              <g key={i}>
+                <circle cx={i * 80 + 20} cy={100 + (i % 2) * 20} r="8" fill="#4a2a6a" opacity="0.6" />
+                <circle cx={i * 80 + 50} cy={120 + (i % 3) * 10} r="5" fill="#6a4a8a" opacity="0.5" />
+              </g>
+            ))}
+          </svg>
+        </div>
+      )}
+      {currentBiome.id === 'castle' && (
+        <div
+          className="absolute bottom-16 left-0 w-[200%] h-24 pointer-events-none opacity-50"
+          style={{ transform: `translateX(${-(scrollOffset * 0.5) % 800}px)` }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
+            {[...Array(12)].map((_, i) => (
+              <g key={i}>
+                <rect x={i * 130} y="80" width="30" height="120" fill="#1a0a0a" />
+                <circle cx={i * 130 + 15} cy="60" r="15" fill="#ff4400" opacity="0.3" />
+              </g>
+            ))}
+          </svg>
+        </div>
+      )}
+
+      {/* === GROUND WITH TEXTURES === */}
       <div
-        className="absolute bottom-0 left-0 h-16 ground-texture"
-        style={{
-          width: '200%',
-          transform: `translateX(${-(scrollOffset * 0.8) % 400}px)`,
-          background: `repeating-linear-gradient(90deg, ${currentBiome.theme.groundColor.includes('green') ? '#3d2b1f' : currentBiome.theme.groundColor.includes('stone') ? '#4a4a4a' : '#4a1a1a'} 0px, ${currentBiome.theme.groundColor.includes('green') ? '#4a3728' : currentBiome.theme.groundColor.includes('stone') ? '#5a5a5a' : '#5a2a2a'} 4px, ${currentBiome.theme.groundColor.includes('green') ? '#3d2b1f' : currentBiome.theme.groundColor.includes('stone') ? '#4a4a4a' : '#4a1a1a'} 8px)`,
-        }}
+        className="absolute bottom-0 left-0 w-[200%] h-20"
+        style={{ transform: `translateX(${-(scrollOffset * 0.8) % 800}px)` }}
       >
-        <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-b ${currentBiome.theme.groundColor} opacity-80`} />
-        {[0, 400, 800, 1200].map((offset) => (
-          <React.Fragment key={offset}>
-            <div className="absolute top-3 w-3 h-1 bg-amber-900/40 rounded-full" style={{ left: `${offset + 40}px` }} />
-            <div className="absolute top-5 w-2 h-1 bg-amber-900/30 rounded-full" style={{ left: `${offset + 120}px` }} />
-            <div className="absolute top-4 w-4 h-1 bg-amber-900/40 rounded-full" style={{ left: `${offset + 240}px` }} />
-            <div className="absolute top-6 w-2 h-1 bg-amber-900/30 rounded-full" style={{ left: `${offset + 320}px` }} />
-          </React.Fragment>
-        ))}
+        {/* Forest Ground */}
+        {currentBiome.id === 'forest' && (
+          <>
+            {/* Grass top layer */}
+            <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-green-600 via-green-700 to-green-800" />
+            {/* Grass texture */}
+            <div className="absolute top-0 left-0 right-0 h-3 opacity-60">
+              <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
+                {[...Array(100)].map((_, i) => (
+                  <line key={i} x1={i * 8} y1="20" x2={i * 8 + 2} y2="5" stroke="#2a5a2a" strokeWidth="1" />
+                ))}
+              </svg>
+            </div>
+            {/* Dirt middle layer */}
+            <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-amber-900 to-amber-950" />
+            {/* Roots texture */}
+            <div className="absolute top-3 left-0 right-0 h-4 opacity-40">
+              <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                {[...Array(20)].map((_, i) => (
+                  <path key={i} d={`M${i * 40},0 Q${i * 40 + 10},15 ${i * 40 + 20},30`} stroke="#3a2a1a" strokeWidth="2" fill="none" />
+                ))}
+              </svg>
+            </div>
+            {/* Dark base */}
+            <div className="absolute bottom-0 left-0 right-0 h-13 bg-gradient-to-b from-stone-950 to-black" />
+          </>
+        )}
+
+        {/* Cave Ground */}
+        {currentBiome.id === 'cave' && (
+          <>
+            {/* Rock top layer */}
+            <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-stone-600 via-stone-700 to-stone-800" />
+            {/* Rock texture */}
+            <div className="absolute top-0 left-0 right-0 h-3 opacity-50">
+              <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
+                {[...Array(50)].map((_, i) => (
+                  <circle key={i} cx={i * 16} cy={10 + (i % 3) * 3} r="3" fill="#2a2a2a" />
+                ))}
+              </svg>
+            </div>
+            {/* Dark rock middle */}
+            <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-stone-900 to-stone-950" />
+            {/* Crystal cracks */}
+            <div className="absolute top-3 left-0 right-0 h-4 opacity-60">
+              <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                {[...Array(15)].map((_, i) => (
+                  <g key={i}>
+                    <line x1={i * 50 + 10} y1="5" x2={i * 50 + 20} y2="25" stroke="#6a4a8a" strokeWidth="1" />
+                    <circle cx={i * 50 + 15} cy="15" r="2" fill="#8a6aaa" opacity="0.7" />
+                  </g>
+                ))}
+              </svg>
+            </div>
+            {/* Dark base */}
+            <div className="absolute bottom-0 left-0 right-0 h-13 bg-black" />
+          </>
+        )}
+
+        {/* Castle Ground */}
+        {currentBiome.id === 'castle' && (
+          <>
+            {/* Stone tiles top */}
+            <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-stone-500 via-stone-600 to-stone-700" />
+            {/* Tile pattern */}
+            <div className="absolute top-0 left-0 right-0 h-3 opacity-70">
+              <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
+                {[...Array(40)].map((_, i) => (
+                  <rect key={i} x={i * 20} y="0" width="18" height="18" fill="none" stroke="#1a1a1a" strokeWidth="1" />
+                ))}
+              </svg>
+            </div>
+            {/* Brick middle */}
+            <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-stone-800 to-stone-900" />
+            {/* Brick pattern */}
+            <div className="absolute top-3 left-0 right-0 h-4 opacity-50">
+              <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                {[...Array(20)].map((_, i) => (
+                  <g key={i}>
+                    <rect x={i * 40} y="0" width="38" height="14" fill="none" stroke="#0a0a0a" strokeWidth="1" />
+                    <rect x={i * 40 + 20} y="15" width="38" height="14" fill="none" stroke="#0a0a0a" strokeWidth="1" />
+                  </g>
+                ))}
+              </svg>
+            </div>
+            {/* Fire glow cracks */}
+            <div className="absolute top-3 left-0 right-0 h-4 opacity-40">
+              <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                {[...Array(10)].map((_, i) => (
+                  <circle key={i} cx={i * 80 + 40} cy="15" r="3" fill="#ff4400" opacity="0.6" />
+                ))}
+              </svg>
+            </div>
+            {/* Dark base */}
+            <div className="absolute bottom-0 left-0 right-0 h-13 bg-gradient-to-b from-stone-950 to-black" />
+          </>
+        )}
+
+        {/* Pebbles texture overlay (all biomes) */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <svg className="w-full h-full" viewBox="0 0 800 80" preserveAspectRatio="none">
+            {[...Array(100)].map((_, i) => (
+              <circle key={i} cx={(i * 37) % 800} cy={(i * 23) % 80} r={1 + (i % 2)} fill="#000" />
+            ))}
+          </svg>
+        </div>
       </div>
 
       {/* Hero - FIXED position (responsive) */}
@@ -266,6 +447,8 @@ const GameViewport: React.FC<GameViewportProps> = ({
         } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
         style={{ left: `max(60px, min(${heroX}px, 20%))` }}
       >
+        {/* Hero shadow on ground */}
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/40 rounded-full blur-sm" />
         <div className="relative">
           {/* Hero Name - Above head */}
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-green-500/60 rounded-sm z-20 pointer-events-none">
@@ -277,6 +460,8 @@ const GameViewport: React.FC<GameViewportProps> = ({
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
             )}
             <div className="w-10 h-14 sm:w-12 sm:h-16 bg-gradient-to-b from-blue-500 to-blue-700 border-2 border-blue-300 rounded-t-lg relative">
+              {/* Shading overlay for depth */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 rounded-t-lg pointer-events-none" />
               {/* Head */}
               <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-200 to-amber-400 border-2 border-amber-600 rounded-sm">
                 <div className="absolute top-2 left-1 w-1.5 h-1.5 bg-gray-900 rounded-full" />
@@ -316,6 +501,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
           left: `${enemyX}px`,
         }}
       >
+        {/* Enemy shadow on ground */}
+        <div 
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-black/40 rounded-full blur-sm"
+          style={{ transform: `translateX(-50%) scale(${currentEnemy.scale})` }}
+        />
         <div className="relative">
           {/* Enemy Name - Above head (inside scaled container) */}
           <div 
@@ -344,6 +534,8 @@ const GameViewport: React.FC<GameViewportProps> = ({
             )}
             {/* Enemy Body */}
             <div className={`w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border-2 ${currentEnemy.sprite.accentColor} rounded-t-md relative`}>
+              {/* Shading overlay for depth */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 rounded-t-md pointer-events-none" />
               {/* Head */}
               <div className={`absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b ${currentEnemy.sprite.headColor} border-2 ${currentEnemy.sprite.accentColor} rounded-sm`}>
                 {/* Eyes */}
