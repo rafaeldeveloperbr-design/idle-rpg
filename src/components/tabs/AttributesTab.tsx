@@ -78,22 +78,22 @@ const AttributesTab: React.FC<AttributesTabProps> = ({
           return (
             <div
               key={attr.key}
-              className="card-hover bg-[#0f0f1a] border border-[#2d2d5e] rounded-md p-3 flex flex-col gap-2"
+              className="bg-[#0f0f1a] border border-[#2d2d5e] border-b-2 border-b-purple-900/50 rounded-md p-3 flex flex-col gap-2 hover:border-purple-500 hover:bg-[#16213e]/40 transition-colors"
             >
               <div className="flex items-center justify-between">
                 <span className="text-base">{attr.icon}</span>
-                <span className="text-[10px] text-gray-400">{attr.value}</span>
+                <span className="text-xs text-gray-400">{attr.value}</span>
               </div>
-              <span className="text-[11px] text-gray-200">{attr.name}</span>
-              <span className="text-[9px] text-gray-500">{attr.description}</span>
+              <span className="text-sm text-gray-200">{attr.name}</span>
+              <span className="text-xs text-gray-500">{attr.description}</span>
               <div className="flex items-center justify-between mt-2">
-                <span className={`text-[9px] ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
+                <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
                   🪙 {cost}
                 </span>
                 <button
                   onClick={() => onUpgradeAttribute(attr.key)}
                   disabled={!canAfford}
-                  className={`pixel-btn text-[9px] px-3 py-1.5 rounded-sm ${
+                  className={`pixel-btn text-sm px-3 py-1.5 rounded-sm ${
                     canAfford 
                       ? 'text-green-300 hover:border-green-400' 
                       : 'text-gray-600 cursor-not-allowed opacity-50'
