@@ -91,6 +91,7 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
           <InventoryTab
             inventory={inventory}
             equipment={equipment}
+            inventoryCapacity={inventoryCapacity}
             onEquipItem={onEquipItem}
             onUnequipItem={onUnequipItem}
             onSellItem={onSellItem}

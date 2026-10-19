@@ -3,11 +3,7 @@ import type { Biome } from '../App';
 import { GoldIcon } from '../App';
 
 interface PlayerStatusProps {
-  hp: number;
-  maxHp: number;
   level: number;
-  xp: number;
-  maxXp: number;
   gold: number;
   diamonds: number;
   currentBiome: Biome;
@@ -22,11 +18,7 @@ interface PlayerStatusProps {
 }
 
 const PlayerStatus: React.FC<PlayerStatusProps> = ({
-  hp,
-  maxHp,
   level,
-  xp,
-  maxXp,
   gold,
   diamonds,
   currentBiome,
@@ -39,84 +31,53 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   onOpenDiamondShop,
   onChangeBiome,
 }) => {
-  const hpPercent = Math.round((hp / maxHp) * 100);
-  const xpPercent = Math.round((xp / maxXp) * 100);
   const [showBiomeSelector, setShowBiomeSelector] = useState(false);
 
   return (
     <header className="w-full px-2 sm:px-4 py-2 sm:py-3 bg-[#1a1a2e] border-b-2 border-[#2d2d5e]">
-      {/* Mobile Layout: 2 rows */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        {/* Row 1: HP and Level/XP */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          {/* HP Bar */}
-          <div className="flex items-center gap-2 flex-1 min-w-[120px] sm:min-w-[150px]">
-            <span className="text-[10px] sm:text-[11px] text-red-400 whitespace-nowrap">❤️ HP</span>
-            <div className="relative flex-1 h-5 sm:h-6 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
-              <div
-                className="hp-bar h-full transition-all duration-300 rounded-sm"
-                style={{ width: `${hpPercent}%` }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-[9px] sm:text-[10px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                {Math.floor(hp)}/{Math.floor(maxHp)}
-              </span>
-            </div>
-          </div>
-
-          {/* Level & XP Bar */}
-          <div className="flex items-center gap-2 flex-1 min-w-[120px] sm:min-w-[150px]">
-            <span className="text-[10px] sm:text-[11px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm">
-              LV.{level}
-            </span>
-            <div className="relative flex-1 h-5 sm:h-6 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
-              <div
-                className="xp-bar h-full transition-all duration-300 rounded-sm"
-                style={{ width: `${xpPercent}%` }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-[9px] sm:text-[10px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                XP {Math.floor(xp)}/{Math.floor(maxXp)}
-              </span>
-            </div>
-          </div>
+      {/* Single Row Layout */}
+      <div className="flex items-center gap-2 sm:gap-3 justify-between">
+        {/* Left: Level */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] sm:text-[11px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm font-bold">
+            LV.{level}
+          </span>
         </div>
 
-        {/* Row 2: Gold and Biome (on mobile) / Right side (on desktop) */}
-        <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end flex-shrink-0">
+        {/* Center: Gold and Diamonds */}
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Gold Counter */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-3 sm:px-4 py-1.5 sm:py-2 border border-[#2d2d5e] rounded-sm">
-              <GoldIcon size="md" />
-              <span className="text-[10px] sm:text-[11px] text-yellow-400 font-bold">{Math.floor(gold).toLocaleString()}</span>
-            </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm">
+            <GoldIcon size="sm" />
+            <span className="text-[9px] sm:text-[10px] text-yellow-400 font-bold">{Math.floor(gold).toLocaleString()}</span>
           </div>
 
           {/* Diamond Counter */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-3 sm:px-4 py-1.5 sm:py-2 border border-[#2d2d5e] rounded-sm">
-              <span className="text-sm sm:text-base">💎</span>
-              <span className="text-[10px] sm:text-[11px] text-cyan-300 font-bold">{Math.floor(diamonds).toLocaleString()}</span>
-            </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm">
+            <span className="text-xs sm:text-sm">💎</span>
+            <span className="text-[9px] sm:text-[10px] text-cyan-300 font-bold">{Math.floor(diamonds).toLocaleString()}</span>
           </div>
 
           {/* Diamond Shop Button */}
           <button
             onClick={onOpenDiamondShop}
-            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-cyan-600 to-blue-700 border border-cyan-400 rounded-sm hover:from-cyan-500 hover:to-blue-600 transition-colors shadow-[0_0_10px_rgba(34,211,238,0.3)]"
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-cyan-600 to-blue-700 border border-cyan-400 rounded-sm hover:from-cyan-500 hover:to-blue-600 transition-colors shadow-[0_0_8px_rgba(34,211,238,0.3)]"
             title="Loja de Diamantes"
           >
-            <span className="text-sm sm:text-base">💎</span>
+            <span className="text-xs sm:text-sm">💎</span>
           </button>
+        </div>
 
-          {/* Biome Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowBiomeSelector(!showBiomeSelector)}
-              className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-3 sm:px-4 py-1.5 sm:py-2 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
-            >
-              <span className="text-sm sm:text-base">{currentBiome.icon}</span>
-              <span className="text-[10px] sm:text-[11px] text-purple-300">{currentBiome.name}</span>
-              <span className="text-[9px] sm:text-[10px] text-gray-500">▼</span>
-            </button>
+        {/* Right: Biome Selector */}
+        <div className="relative">
+          <button
+            onClick={() => setShowBiomeSelector(!showBiomeSelector)}
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
+          >
+            <span className="text-xs sm:text-sm">{currentBiome.icon}</span>
+            <span className="text-[9px] sm:text-[10px] text-purple-300 hidden sm:inline">{currentBiome.name}</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-500">▼</span>
+          </button>
 
             {/* Biome Dropdown */}
             {showBiomeSelector && (
@@ -193,24 +154,26 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
                 </div>
               </div>
             )}
-          </div>
+        </div>
 
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
           {/* Merchant Shop Button */}
           <button
             onClick={onOpenMerchant}
-            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-yellow-500 transition-colors"
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-yellow-500 transition-colors"
             title="Mercado"
           >
-            <span className="text-base sm:text-lg">🏪</span>
+            <span className="text-sm sm:text-base">🏪</span>
           </button>
 
           {/* Settings Button */}
           <button
             onClick={onOpenSettings}
-            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
             title="Configurações"
           >
-            <span className="text-base sm:text-lg">⚙️</span>
+            <span className="text-sm sm:text-base">⚙️</span>
           </button>
         </div>
       </div>

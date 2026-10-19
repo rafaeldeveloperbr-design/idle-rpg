@@ -324,7 +324,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
       {/* Inventory Grid */}
       <div>
         <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <span className="text-xs text-gray-400">Itens ({inventory.length}/20):</span>
+          <span className="text-xs text-gray-400">Itens ({inventory.length}/{inventoryCapacity}):</span>
         </div>
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {inventory.map((item) => {
@@ -364,7 +364,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
             );
           })}
           {/* Empty slots */}
-          {[...Array(Math.max(0, 20 - inventory.length))].map((_, i) => (
+          {[...Array(Math.max(0, inventoryCapacity - inventory.length))].map((_, i) => (
             <div
               key={`empty-${i}`}
               className="aspect-square bg-[#0a0a12] border border-[#1a1a2e] rounded-md flex items-center justify-center"

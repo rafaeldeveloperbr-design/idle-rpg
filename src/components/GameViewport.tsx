@@ -6,6 +6,10 @@ type GamePhase = 'approaching' | 'fighting' | 'respawning';
 interface GameViewportProps {
   heroX: number;
   heroName: string;
+  heroHp: number;
+  heroMaxHp: number;
+  heroXp: number;
+  heroMaxXp: number;
   enemyX: number;
   enemyHp: number;
   enemyMaxHp: number;
@@ -36,7 +40,7 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
 
   return (
-    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-20">
+    <div className="flex gap-1.5 sm:gap-2">
       {skills.map((skill) => {
         const now = Date.now();
         const cooldownMs = skill.cooldown * 1000;
@@ -144,6 +148,10 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
 const GameViewport: React.FC<GameViewportProps> = ({
   heroX,
   heroName,
+  heroHp,
+  heroMaxHp,
+  heroXp,
+  heroMaxXp,
   enemyX,
   enemyHp,
   enemyMaxHp,
@@ -565,12 +573,43 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       </div>
 
-      {/* Skill Bar - Quick Access (positioned near the ground) */}
-      <SkillBar
-        skills={skills.filter(s => equippedSkillIds.includes(s.id))}
-        activeBuffs={activeBuffs}
-        onUseSkill={onUseSkill}
-      />
+      {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+        {/* HP Bar - Left of Skills */}
+        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5">
+          <span className="text-[9px] text-red-400 whitespace-nowrap">❤️</span>
+          <div className="relative w-20 sm:w-24 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+            <div
+              className="hp-bar h-full transition-all duration-300 rounded-sm"
+              style={{ width: `${Math.max(0, Math.round((heroHp / heroMaxHp) * 100))}%` }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {Math.floor(heroHp)}/{Math.floor(heroMaxHp)}
+            </span>
+          </div>
+        </div>
+
+        {/* Skill Bar - Center */}
+        <SkillBar
+          skills={skills.filter(s => equippedSkillIds.includes(s.id))}
+          activeBuffs={activeBuffs}
+          onUseSkill={onUseSkill}
+        />
+
+        {/* XP Bar - Right of Skills */}
+        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5">
+          <span className="text-[9px] text-blue-400 whitespace-nowrap">⭐</span>
+          <div className="relative w-20 sm:w-24 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+            <div
+              className="xp-bar h-full transition-all duration-300 rounded-sm"
+              style={{ width: `${Math.max(0, Math.round((heroXp / heroMaxXp) * 100))}%` }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {Math.floor(heroXp)}/{Math.floor(heroMaxXp)}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Active Buffs Indicator */}
       {activeBuffs.length > 0 && (

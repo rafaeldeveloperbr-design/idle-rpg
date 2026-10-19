@@ -217,6 +217,7 @@ export default function App() {
   const [showPathChoice, setShowPathChoice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false); // Pause state for modals
 
   // === Reset Control Flag ===
   const isResetting = useRef(false);
@@ -1271,8 +1272,25 @@ export default function App() {
 
   // === Open Shop from Path Choice ===
   const handleOpenShopFromPath = useCallback(() => {
+    setIsPaused(true); // Pause game when opening shop from path choice
     setShowMerchantShop(true);
   }, []);
+
+  // === Close Merchant Shop ===
+  const handleCloseMerchantShop = useCallback(() => {
+    setShowMerchantShop(false);
+    // Only unpause if we're not in a path choice (which should keep game paused)
+    if (!showPathChoice) {
+      setIsPaused(false);
+    }
+  }, [showPathChoice]);
+
+  // === Pause Game When Modals Are Open ===
+  useEffect(() => {
+    // Pause game when important modals are open
+    const shouldPause = showSettings || showDiamondShop || showMerchantShop || showPathChoice || currentNPCQuest !== null;
+    setIsPaused(shouldPause);
+  }, [showSettings, showDiamondShop, showMerchantShop, showPathChoice, currentNPCQuest]);
 
   // === Quest System Functions ===
   const checkAndSpawnNPC = useCallback(() => {
@@ -1963,8 +1981,8 @@ export default function App() {
 
   // === Main Game Loop ===
   useEffect(() => {
-    // Don't run game loop if game hasn't started yet
-    if (!isGameStarted) return;
+    // Don't run game loop if game hasn't started yet or is paused
+    if (!isGameStarted || isPaused) return;
     
     const interval = setInterval(() => {
       const currentPhase = gamePhaseRef.current;
@@ -2138,7 +2156,7 @@ export default function App() {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused]);
 
   // === Consistency Check ===
   useEffect(() => {
@@ -2172,11 +2190,7 @@ export default function App() {
       )}
 
       <PlayerStatus
-        hp={heroHp}
-        maxHp={heroAttributes.maxHp}
         level={heroLevel}
-        xp={heroXp}
-        maxXp={xpToNextLevel}
         gold={heroGold}
         diamonds={heroDiamonds}
         currentBiome={currentBiome}
@@ -2195,6 +2209,10 @@ export default function App() {
       <GameViewport
         heroX={heroX}
         heroName={heroName}
+        heroHp={heroHp}
+        heroMaxHp={heroAttributes.maxHp}
+        heroXp={heroXp}
+        heroMaxXp={xpToNextLevel}
         enemyX={enemyX}
         enemyHp={enemyHp}
         enemyMaxHp={enemyMaxHp}
@@ -2226,6 +2244,7 @@ export default function App() {
         onEquipSkill={equipSkill}
         inventory={inventory}
         equipment={equipment}
+        inventoryCapacity={inventoryCapacity}
         onEquipItem={equipItem}
         onUnequipItem={unequipItem}
         onSellItem={sellItem}
@@ -2264,7 +2283,7 @@ export default function App() {
           onBuyConsumable={buyConsumable}
           onBuyItem={buyShopItem}
           onEquipSkill={equipSkill}
-          onClose={() => setShowMerchantShop(false)}
+          onClose={handleCloseMerchantShop}
         />
       )}
 
