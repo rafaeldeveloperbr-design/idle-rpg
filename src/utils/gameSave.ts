@@ -29,6 +29,7 @@ export interface GameSaveData {
   
   // Event Management
   wavesSinceLastEvent: number;
+  completedQuestsSinceLastPath: number;
   
   // Metadata
   savedAt: number;

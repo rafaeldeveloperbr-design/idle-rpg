@@ -415,7 +415,9 @@ export default function App() {
   const [currentNPCQuest, setCurrentNPCQuest] = useState<Quest | null>(null);
   const lastNPCSpawnWave = useRef(0);
   const [wavesSinceLastEvent, setWavesSinceLastEvent] = useState(0);
+  const [completedQuestsSinceLastPath, setCompletedQuestsSinceLastPath] = useState(0);
   const MIN_WAVES_BETWEEN_EVENTS = 10; // Minimum waves between events
+  const QUESTS_UNTIL_PATH = 2; // Number of quests to complete before forcing a path choice
 
   // === Path Difficulty System ===
   const [pathDifficultyMultiplier, setPathDifficultyMultiplier] = useState<{
@@ -886,6 +888,7 @@ export default function App() {
       
       // Restore event management
       setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
+      setCompletedQuestsSinceLastPath(savedData.completedQuestsSinceLastPath || 0);
       
       // Restore current enemy (spawn random enemy for the biome)
       const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
@@ -930,6 +933,7 @@ export default function App() {
         totalKills,
         wave,
         wavesSinceLastEvent,
+        completedQuestsSinceLastPath,
       });
     }, 5000); // Save every 5 seconds
 
@@ -954,6 +958,7 @@ export default function App() {
         totalKills,
         wave,
         wavesSinceLastEvent,
+        completedQuestsSinceLastPath,
       });
     };
 
@@ -1094,6 +1099,7 @@ export default function App() {
   const handlePathChoice = useCallback((choice: 'safe' | 'challenging' | 'deadly') => {
     setShowPathChoice(false);
     setWavesSinceLastEvent(0); // Reset event counter after path choice
+    setCompletedQuestsSinceLastPath(0); // Reset quest completion counter
     
     // Apply difficulty multiplier based on choice
     switch (choice) {
@@ -1227,9 +1233,21 @@ export default function App() {
       setInventory(prev => [...prev, newItem]);
     }
     
+    // Increment quest completion counter
+    const newQuestCount = completedQuestsSinceLastPath + 1;
+    setCompletedQuestsSinceLastPath(newQuestCount);
+    
     addToast(`✅ Quest concluída: ${quest.title}!`, 'info');
     addToast(`💰 +${quest.reward.gold} ouro, +${quest.reward.xp} XP`, 'info');
-  }, [quests, addToast]);
+    
+    // Check if we should force a path choice (after completing QUESTS_UNTIL_PATH quests)
+    if (newQuestCount >= QUESTS_UNTIL_PATH) {
+      // Heal hero to 100% when showing path choice
+      setHeroHp(heroAttributes.maxHp);
+      setShowPathChoice(true);
+      addToast(`🛤️ Bifurcação disponível! Escolha seu caminho.`, 'info');
+    }
+  }, [quests, addToast, completedQuestsSinceLastPath, heroAttributes.maxHp]);
 
   // Update quest progress based on game events
   const updateQuestProgress = useCallback(() => {
@@ -1295,16 +1313,8 @@ export default function App() {
       return; // Already showing path choice, don't spawn enemy yet
     }
     
-    // SPACING CHECK: Ensure minimum waves between events for path choice
-    const shouldShowPathChoice = (newWave % 10 === 0 && newWave > 0) || (nextIsBoss && newBiomeKills % 10 === 9);
-    
-    if (shouldShowPathChoice && wavesSinceLastEvent >= MIN_WAVES_BETWEEN_EVENTS) {
-      // Heal hero to 100% when showing path choice
-      setHeroHp(heroAttributes.maxHp);
-      setShowPathChoice(true);
-      setWavesSinceLastEvent(0); // Reset event counter
-      return; // Don't spawn enemy yet, wait for choice
-    }
+    // Path choice is now triggered by quest completion, not by wave count
+    // The completeQuest function will handle showing the path choice modal
     
     // Spawn random enemy based on boss status
     spawnRandomEnemy(nextIsBoss);
