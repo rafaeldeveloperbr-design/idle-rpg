@@ -1162,13 +1162,25 @@ export default function App() {
   }, [wave, quests, heroLevel, showPathChoice, currentNPCQuest, wavesSinceLastEvent]);
 
   const acceptQuest = useCallback((quest: Quest) => {
+    // Store reference values when quest is accepted
+    const questWithReference = {
+      ...quest,
+      active: true,
+      progress: 0, // Reset progress to 0
+      // Store current values as reference points
+      currentGoldAtAccept: quest.objectiveType === 'collect_gold' ? heroGold : undefined,
+      currentWaveAtAccept: quest.objectiveType === 'reach_wave' ? wave : undefined,
+      currentKillsAtAccept: quest.objectiveType === 'kill_monsters' ? totalKills : undefined,
+      currentBossKillsAtAccept: quest.objectiveType === 'defeat_boss' ? Math.floor(totalKills / 10) : undefined,
+    };
+    
     setQuests(prev => prev.map(q => 
-      q.id === quest.id ? { ...q, active: true } : q
+      q.id === quest.id ? questWithReference : q
     ));
     setCurrentNPCQuest(null);
     setWavesSinceLastEvent(0); // Reset event counter after quest event
     addToast(`📜 Quest aceita: ${quest.title}`, 'info');
-  }, [addToast]);
+  }, [addToast, heroGold, wave, totalKills]);
 
   const declineQuest = useCallback(() => {
     setCurrentNPCQuest(null);
@@ -1206,21 +1218,25 @@ export default function App() {
     setQuests(prev => prev.map(quest => {
       if (!quest.active || quest.completed) return quest;
       
-      let newProgress = quest.progress;
+      let newProgress = 0;
       
       switch (quest.objectiveType) {
         case 'kill_monsters':
-          newProgress = totalKills;
+          // Calculate kills since quest was accepted
+          newProgress = Math.max(0, totalKills - (quest.currentKillsAtAccept || 0));
           break;
         case 'reach_wave':
-          newProgress = wave;
+          // Calculate waves since quest was accepted
+          newProgress = Math.max(0, wave - (quest.currentWaveAtAccept || 0));
           break;
         case 'collect_gold':
-          newProgress = heroGold;
+          // Calculate gold earned since quest was accepted
+          newProgress = Math.max(0, heroGold - (quest.currentGoldAtAccept || 0));
           break;
         case 'defeat_boss':
-          // Track boss kills (every 10 kills is a boss)
-          newProgress = Math.floor(totalKills / 10);
+          // Calculate boss kills since quest was accepted (every 10 kills is a boss)
+          const currentBossKills = Math.floor(totalKills / 10);
+          newProgress = Math.max(0, currentBossKills - (quest.currentBossKillsAtAccept || 0));
           break;
       }
       

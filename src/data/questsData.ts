@@ -19,6 +19,11 @@ export interface Quest {
   completed: boolean;
   active: boolean;
   progress: number;
+  // Reference values stored when quest is accepted
+  currentGoldAtAccept?: number;
+  currentWaveAtAccept?: number;
+  currentKillsAtAccept?: number;
+  currentBossKillsAtAccept?: number;
 }
 
 export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [
@@ -27,7 +32,7 @@ export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [
     title: 'O Pedido do Ferreiro',
     npcName: 'Ferreiro Grimbold',
     npcIcon: '🔨',
-    dialogue: 'Aventureiro! Preciso de ajuda para limpar a floresta desses goblins. Eles estão atacando minhas caravanas de suprimentos. Se você derrotar 15 monstros, vou te recompensar com ouro e uma espada especial!',
+    dialogue: 'Aventureiro! Preciso de ajuda para limpar a floresta desses goblins. Eles estão atacando minhas caravanas de suprimentos. Derrote mais 15 monstros a partir de agora e vou te recompensar com ouro e uma espada especial!',
     objectiveType: 'kill_monsters',
     objectiveTarget: 15,
     reward: {
@@ -49,7 +54,7 @@ export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [
     title: 'A Aldeã em Perigo',
     npcName: 'Aldeã Maria',
     npcIcon: '👵',
-    dialogue: 'Por favor, aventureiro! Meu filho foi capturado pelos monstros da caverna. Se você chegar à wave 10, prometo que te darei todas as minhas economias e um amuleto de proteção!',
+    dialogue: 'Por favor, aventureiro! Meu filho foi capturado pelos monstros da caverna. Avance mais 10 waves a partir de agora e prometo que te darei todas as minhas economias e um amuleto de proteção!',
     objectiveType: 'reach_wave',
     objectiveTarget: 10,
     reward: {
@@ -71,7 +76,7 @@ export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [
     title: 'Fortuna do Mercador',
     npcName: 'Mercador Rico',
     npcIcon: '💰',
-    dialogue: 'Ei, aventureiro! Estou procurando alguém para acumular uma fortuna. Se você conseguir juntar 500 de ouro, vou te dar uma armadura épica em troca!',
+    dialogue: 'Ei, aventureiro! Estou procurando alguém para acumular uma fortuna. Consiga mais 500 de ouro a partir de agora e vou te dar uma armadura épica em troca!',
     objectiveType: 'collect_gold',
     objectiveTarget: 500,
     reward: {
@@ -93,7 +98,7 @@ export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [
     title: 'Caçador de Chefes',
     npcName: 'Caçador Veterano',
     npcIcon: '🏹',
-    dialogue: 'Ouvi dizer que você é corajoso! Prove seu valor derrotando 3 chefes. Em troca, vou te dar um anel lendário que aumentará muito seu poder!',
+    dialogue: 'Ouvi dizer que você é corajoso! Prove seu valor derrotando mais 3 chefes a partir de agora. Em troca, vou te dar um anel lendário que aumentará muito seu poder!',
     objectiveType: 'defeat_boss',
     objectiveTarget: 3,
     reward: {
@@ -115,7 +120,7 @@ export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [
     title: 'Legado do Guerreiro',
     npcName: 'Espírito Ancestral',
     npcIcon: '👻',
-    dialogue: 'Guerreiro... sinto seu potencial. Derrote 50 monstros e prove que você é digno de portar minha lâmina ancestral, forjada pelos deuses antigos!',
+    dialogue: 'Guerreiro... sinto seu potencial. Derrote mais 50 monstros a partir de agora e prove que você é digno de portar minha lâmina ancestral, forjada pelos deuses antigos!',
     objectiveType: 'kill_monsters',
     objectiveTarget: 50,
     reward: {
