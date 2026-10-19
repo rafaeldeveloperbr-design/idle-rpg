@@ -4,7 +4,7 @@ import GameViewport from './components/GameViewport';
 import BottomPanel from './components/BottomPanel';
 import { saveGameData, loadGameData, clearSaveData } from './utils/gameSave';
 
-type GamePhase = 'approaching' | 'fighting' | 'waiting';
+type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
 
 export interface HeroAttributes {
   attack: number;
@@ -756,6 +756,27 @@ export default function App() {
     regen: heroAttributes.regen + equipmentBonuses.regen,
   };
 
+  // === Hero Death Handler ===
+  const handleHeroDeath = useCallback(() => {
+    console.log('[Death] Hero has been defeated!');
+    setGamePhase('respawning');
+    
+    // Apply penalty: if died to boss, reduce wave by 1
+    if (isBossWave) {
+      console.log('[Death] Died to boss - reducing wave by 1');
+      setWave((prev) => Math.max(1, prev - 1));
+      setIsBossWave(false);
+    }
+    
+    // Reset enemy position after 2 seconds and restore HP
+    setTimeout(() => {
+      setHeroHp(effectiveAttributes.maxHp);
+      setEnemyX(enemySpawnX);
+      setGamePhase('approaching');
+      console.log('[Respawn] Hero respawned with full HP');
+    }, 2000);
+  }, [isBossWave, effectiveAttributes.maxHp, enemySpawnX]);
+
   // === Main Game Loop ===
   useEffect(() => {
     const interval = setInterval(() => {
@@ -851,7 +872,16 @@ export default function App() {
           setHeroHitFlash(true);
           setTimeout(() => setHeroHitFlash(false), 200);
           
-          setHeroHp((prev) => Math.max(0, prev - damage));
+          setHeroHp((prev) => {
+            const newHp = Math.max(0, prev - damage);
+            
+            // Check if hero died
+            if (newHp <= 0) {
+              handleHeroDeath();
+            }
+            
+            return newHp;
+          });
         }
 
         // HP Regeneration (every 2 seconds)
@@ -863,11 +893,14 @@ export default function App() {
             spawnDamagePopup(healAmount, heroX, false, true);
           }
         }
+      } else if (currentPhase === 'respawning') {
+        // Do nothing during respawn - hero is recovering
+        // The setTimeout in handleHeroDeath will handle the respawn logic
       }
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath]);
 
   // === Consistency Check ===
   useEffect(() => {

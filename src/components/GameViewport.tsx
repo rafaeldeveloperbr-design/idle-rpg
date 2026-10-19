@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { DamagePopup, Skill, ActiveBuff, Biome } from '../App';
 
-type GamePhase = 'approaching' | 'fighting' | 'waiting';
+type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
 
 interface GameViewportProps {
   heroX: number;
@@ -404,6 +404,20 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       )}
 
+      {/* Respawning phase indicator */}
+      {gamePhase === 'respawning' && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse-glow">
+          <div className="bg-black/80 border-2 border-red-500/70 rounded-md px-6 py-4 flex flex-col items-center gap-2 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+            <span className="text-[14px] text-red-400 font-bold">💀 DERROTADO!</span>
+            <span className="text-[10px] text-gray-300">Recuando para treinar...</span>
+            <div className="w-32 h-1.5 bg-[#0f0f1a] border border-red-900/50 rounded-sm overflow-hidden mt-1">
+              <div className="h-full bg-red-500 animate-waiting-bar" style={{ animationDuration: '2s' }} />
+            </div>
+            <span className="text-[8px] text-gray-400">Recuperando HP...</span>
+          </div>
+        </div>
+      )}
+
       {/* Zone and Wave indicators moved to top container */}
 
       {/* Boss Wave Banner */}
@@ -420,10 +434,12 @@ const GameViewport: React.FC<GameViewportProps> = ({
         <span className={`text-[9px] ${
           gamePhase === 'approaching' ? 'text-cyan-300' :
           gamePhase === 'fighting' ? (isBossWave ? 'text-red-400' : 'text-red-300') :
+          gamePhase === 'respawning' ? 'text-red-500' :
           'text-yellow-300'
         }`}>
           {gamePhase === 'approaching' ? (isBossWave ? '💀 Chefão se aproximando' : '🚶 Aproximando') :
            gamePhase === 'fighting' ? (isBossWave ? '💀 COMBATE DE CHEFÃO' : '⚔️ Combate') :
+           gamePhase === 'respawning' ? '💀 DERROTADO - Recuperação' :
            '💤 Aguardando'}
         </span>
       </div>
