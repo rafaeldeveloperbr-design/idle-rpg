@@ -51,6 +51,31 @@ const attributeIcons: Record<keyof HeroAttributes, string> = {
   regen: '💚',
 };
 
+const slotIcons: Record<string, string> = {
+  weapon: '⚔️',
+  armor: '🛡️',
+  accessory: '💍',
+};
+
+// === Utility Functions ===
+const calculateTotalBonus = (item: Item | null): number => {
+  if (!item) return 0;
+  return Object.values(item.bonuses).reduce((sum, value) => sum + (value as number), 0);
+};
+
+const isUpgrade = (item: Item, equipment: Equipment): boolean => {
+  const equippedItem = equipment[item.slot];
+  
+  // If slot is empty, any item is an upgrade
+  if (!equippedItem) return true;
+  
+  // Compare total bonuses
+  const itemTotal = calculateTotalBonus(item);
+  const equippedTotal = calculateTotalBonus(equippedItem);
+  
+  return itemTotal > equippedTotal;
+};
+
 // === Item Modal Component ===
 interface ItemModalProps {
   item: Item;
@@ -273,12 +298,26 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
         </div>
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {inventory.map((item) => {
+            const isItemUpgrade = isUpgrade(item, equipment);
+            
             return (
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item, null)}
-                className={`w-full aspect-square border-2 rounded-md flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors hover:border-purple-500 ${rarityColors[item.rarity]}`}
+                className={`w-full aspect-square border-2 rounded-md flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors hover:border-purple-500 relative ${rarityColors[item.rarity]}`}
               >
+                {/* Slot Badge - Bottom Left */}
+                <div className="absolute bottom-0.5 left-0.5 text-[8px] sm:text-[9px] bg-black/60 rounded px-0.5">
+                  {slotIcons[item.slot]}
+                </div>
+                
+                {/* Upgrade Indicator - Top Right */}
+                {isItemUpgrade && (
+                  <div className="absolute top-0.5 right-0.5 text-[10px] sm:text-xs animate-bounce-subtle">
+                    ⬆️
+                  </div>
+                )}
+                
                 <span className="text-lg sm:text-xl">{item.icon}</span>
                 <span className={`text-[9px] sm:text-xs ${rarityTextColors[item.rarity]} text-center leading-tight px-0.5 sm:px-1`}>
                   {item.name}
