@@ -169,6 +169,9 @@ export default function App() {
   const [showPathChoice, setShowPathChoice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
 
+  // === Reset Control Flag ===
+  const isResetting = useRef(false);
+
   // === Toast Notifications ===
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -853,6 +856,9 @@ export default function App() {
   // === Auto-Save System ===
   useEffect(() => {
     const saveInterval = setInterval(() => {
+      // Prevent save during reset
+      if (isResetting.current) return;
+      
       saveGameData({
         heroName,
         heroHp,
@@ -873,6 +879,9 @@ export default function App() {
 
     // Save on page close/refresh
     const handleBeforeUnload = () => {
+      // Prevent save during reset
+      if (isResetting.current) return;
+      
       saveGameData({
         heroName,
         heroHp,
@@ -901,7 +910,13 @@ export default function App() {
 
   // === Reset Game ===
   const resetGame = useCallback(() => {
-    clearSaveData();
+    // Set reset flag to prevent auto-save during reset
+    isResetting.current = true;
+    
+    // Clear localStorage immediately
+    localStorage.removeItem('idle_rpg_save_v1');
+    
+    // Force reload to reset all state
     window.location.reload();
   }, []);
 
