@@ -33,7 +33,7 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
 
   return (
-    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-20">
       {skills.map((skill) => {
         const now = Date.now();
         const cooldownMs = skill.cooldown * 1000;
@@ -105,13 +105,13 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
               disabled={isOnCooldown}
               onMouseEnter={() => setHoveredSkill(skill.id)}
               onMouseLeave={() => setHoveredSkill(null)}
-              className={`relative w-12 h-12 border-2 rounded-md flex items-center justify-center transition-all ${
+              className={`relative w-10 h-10 sm:w-12 sm:h-12 border-2 rounded-md flex items-center justify-center transition-all ${
                 isOnCooldown
                   ? 'border-gray-600 bg-[#0a0a12]/80 cursor-not-allowed'
                   : 'border-purple-500 bg-[#1a1a2e]/90 hover:border-purple-300 hover:shadow-[0_0_10px_rgba(139,92,246,0.5)] cursor-pointer'
               } ${hasBuff ? 'ring-2 ring-yellow-400 animate-pulse-glow' : ''}`}
             >
-              <span className="text-xl">{skill.icon}</span>
+              <span className="text-lg sm:text-xl">{skill.icon}</span>
               {/* Cooldown overlay */}
               {isOnCooldown && (
                 <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
@@ -164,19 +164,41 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
   return (
     <div className={`flex-1 w-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient} pixel-border rounded-md`}>
-      {/* Enemy Name/HP Bar at top */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5">
-        <span className="text-[11px] text-red-300 tracking-wider">
-          {isBossWave ? '💀' : '👹'} {isBossWave ? 'CHEFÃO' : 'Goblin Selvagem'} <span className="text-purple-300">[Wave {wave}]</span>
-        </span>
-        <div className={`relative ${isBossWave ? 'w-64' : 'w-48'} h-4 bg-[#0f0f1a]/80 border ${isBossWave ? 'border-red-500' : 'border-red-900/50'} rounded-sm overflow-hidden`}>
-          <div
-            className={`h-full rounded-sm transition-all duration-200 ${isBossWave ? 'bg-gradient-to-r from-red-600 via-orange-500 to-red-600' : 'hp-bar'}`}
-            style={{ width: `${enemyHpPercent}%` }}
-          />
-          <span className="absolute inset-0 flex items-center justify-center text-[9px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-            {Math.max(0, enemyHp)}/{enemyMaxHp}
+      {/* Top Info Container - Reorganized for mobile */}
+      <div className="absolute top-2 left-2 right-2 z-10 flex flex-col gap-2">
+        {/* Line 1: Biome & Wave Info */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Zone indicator */}
+          <div className="bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1 flex-shrink-0">
+            <span className="text-[9px] sm:text-[10px] text-purple-300">{currentBiome.icon} {currentBiome.name}</span>
+          </div>
+          
+          {/* Wave counter & Boss indicator */}
+          <div className="bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1 flex flex-col items-end gap-0.5 flex-shrink-0">
+            <span className="text-[9px] sm:text-[10px] text-gray-300">💀 Wave: {wave}</span>
+            <span className="text-[8px] sm:text-[9px] text-purple-400">Kills: {biomeKills}</span>
+            {biomeKills > 0 && biomeKills % 10 < 3 && (
+              <span className="text-[8px] sm:text-[9px] text-red-400 animate-pulse-glow">
+                ⚠️ Boss em {10 - (biomeKills % 10)}!
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Line 2: Enemy Name/HP Bar */}
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[10px] sm:text-[11px] text-red-300 tracking-wider">
+            {isBossWave ? '💀' : '👹'} {isBossWave ? 'CHEFÃO' : 'Goblin Selvagem'} <span className="text-purple-300">[Wave {wave}]</span>
           </span>
+          <div className={`relative ${isBossWave ? 'w-48 sm:w-64' : 'w-40 sm:w-48'} h-3 sm:h-4 bg-[#0f0f1a]/80 border ${isBossWave ? 'border-red-500' : 'border-red-900/50'} rounded-sm overflow-hidden`}>
+            <div
+              className={`h-full rounded-sm transition-all duration-200 ${isBossWave ? 'bg-gradient-to-r from-red-600 via-orange-500 to-red-600' : 'hp-bar'}`}
+              style={{ width: `${enemyHpPercent}%` }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-[8px] sm:text-[9px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {Math.max(0, enemyHp)}/{enemyMaxHp}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -232,12 +254,12 @@ const GameViewport: React.FC<GameViewportProps> = ({
         ))}
       </div>
 
-      {/* Hero - FIXED position */}
+      {/* Hero - FIXED position (responsive) */}
       <div
         className={`absolute bottom-16 ${
           isMoving ? 'animate-walk' : isAttacking ? 'animate-attack' : 'animate-float'
         } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
-        style={{ left: `${heroX}px` }}
+        style={{ left: `max(60px, min(${heroX}px, 20%))` }}
       >
         <div className="flex flex-col items-center">
           <div className="relative">
@@ -245,9 +267,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
             {heroHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
             )}
-            <div className="w-12 h-16 bg-gradient-to-b from-blue-500 to-blue-700 border-2 border-blue-300 rounded-t-lg relative">
+            <div className="w-10 h-14 sm:w-12 sm:h-16 bg-gradient-to-b from-blue-500 to-blue-700 border-2 border-blue-300 rounded-t-lg relative">
               {/* Head */}
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-gradient-to-b from-amber-200 to-amber-400 border-2 border-amber-600 rounded-sm">
+              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-200 to-amber-400 border-2 border-amber-600 rounded-sm">
                 <div className="absolute top-2 left-1 w-1.5 h-1.5 bg-gray-900 rounded-full" />
                 <div className="absolute top-2 right-1 w-1.5 h-1.5 bg-gray-900 rounded-full" />
                 <div className="absolute -top-1 left-0 right-0 h-2 bg-amber-700 rounded-t-sm" />
@@ -295,9 +317,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
             {enemyHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
             )}
-            <div className="w-10 h-14 bg-gradient-to-b from-green-600 to-green-800 border-2 border-green-400 rounded-t-md relative">
+            <div className="w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b from-green-600 to-green-800 border-2 border-green-400 rounded-t-md relative">
               {/* Head */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-7 h-7 bg-gradient-to-b from-green-400 to-green-600 border-2 border-green-800 rounded-sm">
+              <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b from-green-400 to-green-600 border-2 border-green-800 rounded-sm">
                 <div className="absolute top-1.5 left-1 w-2 h-2 bg-red-500 rounded-full" />
                 <div className="absolute top-1.5 right-1 w-2 h-2 bg-red-500 rounded-full" />
                 <div className="absolute -left-2 top-0 w-2 h-3 bg-green-500 border border-green-800 rounded-sm rotate-[-15deg]" />
@@ -382,21 +404,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       )}
 
-      {/* Zone indicator */}
-      <div className="absolute top-4 left-4 bg-black/60 border border-[#2d2d5e] rounded-sm px-3 py-1.5">
-        <span className="text-[10px] text-purple-300">{currentBiome.icon} {currentBiome.name}</span>
-      </div>
-
-      {/* Wave counter & Boss indicator */}
-      <div className="absolute top-4 right-4 bg-black/60 border border-[#2d2d5e] rounded-sm px-3 py-1.5 flex flex-col gap-1">
-        <span className="text-[10px] text-gray-300">💀 Wave: {wave}</span>
-        <span className="text-[9px] text-purple-400">Kills no bioma: {biomeKills}</span>
-        {biomeKills > 0 && biomeKills % 10 < 3 && (
-          <span className="text-[9px] text-red-400 animate-pulse-glow">
-            ⚠️ Chefão em {10 - (biomeKills % 10)} kills!
-          </span>
-        )}
-      </div>
+      {/* Zone and Wave indicators moved to top container */}
 
       {/* Boss Wave Banner */}
       {isBossWave && isMoving && (
