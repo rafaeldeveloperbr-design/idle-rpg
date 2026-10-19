@@ -193,7 +193,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
         {/* Line 2: Enemy Name/HP Bar */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-[11px] text-red-300 tracking-wider">
-            {isBossWave ? '💀' : '👹'} {isBossWave ? 'CHEFÃO' : 'Goblin Selvagem'} <span className="text-purple-300">[Wave {wave}]</span>
+            {isBossWave ? '💀' : '👹'} {currentEnemy?.name || 'Inimigo'} <span className="text-purple-300">[Wave {wave}]</span>
           </span>
           <div className={`relative ${isBossWave ? 'w-48 sm:w-64' : 'w-40 sm:w-48'} h-3 sm:h-4 bg-[#0f0f1a]/80 border ${isBossWave ? 'border-red-500' : 'border-red-900/50'} rounded-sm overflow-hidden`}>
             <div
