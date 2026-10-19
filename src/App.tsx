@@ -5,10 +5,13 @@ import BottomPanel from './components/BottomPanel';
 import CharacterCreationModal from './components/modals/CharacterCreationModal';
 import SettingsModal from './components/modals/SettingsModal';
 import MerchantShop from './components/modals/MerchantShop';
+import PathChoiceModal from './components/modals/PathChoiceModal';
+import NPCDialogueModal from './components/modals/NPCDialogueModal';
 import ToastContainer from './components/ToastContainer';
+import { questsData, type Quest } from './data/questsData';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
-type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
+type GamePhase = 'approaching' | 'fighting' | 'respawning';
 
 export interface HeroAttributes {
   attack: number;
@@ -165,7 +168,12 @@ export default function App() {
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMerchantShop, setShowMerchantShop] = useState(false);
+  const [showPathChoice, setShowPathChoice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
+  const [isGameStarted, setIsGameStarted] = useState(false);
+
+  // === Reset Control Flag ===
+  const isResetting = useRef(false);
 
   // === Toast Notifications ===
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -381,6 +389,30 @@ export default function App() {
   ]);
 
   const [activeConsumables, setActiveConsumables] = useState<ActiveConsumable[]>([]);
+
+  // === Quest System ===
+  const [quests, setQuests] = useState<Quest[]>(
+    questsData.map(q => ({ ...q, completed: false, active: false, progress: 0 }))
+  );
+  const [currentNPCQuest, setCurrentNPCQuest] = useState<Quest | null>(null);
+  const lastNPCSpawnWave = useRef(0);
+  const [wavesSinceLastEvent, setWavesSinceLastEvent] = useState(0);
+  const MIN_WAVES_BETWEEN_EVENTS = 15; // Minimum waves between events
+
+  // === Path Difficulty System ===
+  const [pathDifficultyMultiplier, setPathDifficultyMultiplier] = useState<{
+    hpMultiplier: number;
+    attackMultiplier: number;
+    rewardMultiplier: number;
+    dropChanceBonus: number;
+    remainingEnemies: number;
+  }>({
+    hpMultiplier: 1.0,
+    attackMultiplier: 1.0,
+    rewardMultiplier: 1.0,
+    dropChanceBonus: 0,
+    remainingEnemies: 0,
+  });
 
   // === Shop Items (Equipment Catalog) ===
   const shopItems: Item[] = [
@@ -708,22 +740,64 @@ export default function App() {
     { name: 'Coroa do Dragão', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 15, defense: 12, maxHp: 40, speed: 6, critChance: 5 }, sellValue: 250 },
   ];
 
-  // === Wave System === - Balanced for Level 1 hero
+  // === Wave System === - Balanced progression
   const [wave, setWave] = useState(1);
   const baseEnemyHp = 30;
   const baseEnemyGold = 10;
   const baseEnemyXp = 15;
   const baseEnemyAttack = 3;
   
-  // Scaled enemy stats per wave + biome multiplier
+  // Scaled enemy stats per wave + biome multiplier + hero level scaling
   const biomeMultiplier = currentBiome.enemyMultiplier;
   const isBoss = isBossWave;
   const bossMultiplier = isBoss ? 5 : 1; // Boss has 5x HP
   
-  const enemyMaxHp = Math.floor((baseEnemyHp + (wave - 1) * 15) * biomeMultiplier.hp * bossMultiplier);
-  const enemyGoldReward = Math.floor((baseEnemyGold + (wave - 1) * 5) * biomeMultiplier.gold * (isBoss ? 3 : 1));
-  const enemyXpReward = Math.floor((baseEnemyXp + (wave - 1) * 8) * biomeMultiplier.xp * (isBoss ? 3 : 1));
-  const enemyAttackPower = Math.floor((baseEnemyAttack + Math.floor((wave - 1) * 2)) * biomeMultiplier.attack);
+  // Hero level scaling factor (enemies scale with player level)
+  const heroLevelScale = 1 + (heroLevel - 1) * 0.15; // +15% per hero level
+  
+  // Enemy HP: scales with wave, biome, boss, hero level, AND path difficulty
+  const enemyMaxHp = Math.floor(
+    (baseEnemyHp + (wave - 1) * 15) * 
+    biomeMultiplier.hp * 
+    bossMultiplier * 
+    heroLevelScale *
+    pathDifficultyMultiplier.hpMultiplier
+  );
+  
+  // Enemy Attack: smooth logarithmic scaling + path difficulty
+  // Formula: base * (1 + log(wave) * 0.5) * biome * level * path difficulty
+  // This ensures damage stays between 5-15% of hero max HP per hit
+  const waveAttackScale = 1 + Math.log(wave) * 0.5; // Logarithmic growth (much smoother)
+  const enemyAttackPower = Math.floor(
+    baseEnemyAttack * 
+    waveAttackScale * 
+    biomeMultiplier.attack * 
+    heroLevelScale *
+    pathDifficultyMultiplier.attackMultiplier
+  );
+  
+  // Rewards: logarithmic scaling to prevent exponential growth
+  // Using sqrt for smoother progression
+  const waveRewardMultiplier = 1 + Math.sqrt(wave - 1) * 0.3; // Smoother growth
+  const levelRewardMultiplier = 1 + (heroLevel - 1) * 0.1; // Small bonus per level
+  
+  const enemyGoldReward = Math.floor(
+    baseEnemyGold * 
+    waveRewardMultiplier * 
+    biomeMultiplier.gold * 
+    (isBoss ? 3 : 1) * 
+    levelRewardMultiplier *
+    pathDifficultyMultiplier.rewardMultiplier
+  );
+  
+  const enemyXpReward = Math.floor(
+    baseEnemyXp * 
+    waveRewardMultiplier * 
+    biomeMultiplier.xp * 
+    (isBoss ? 3 : 1) * 
+    levelRewardMultiplier *
+    pathDifficultyMultiplier.rewardMultiplier
+  );
 
   // === Enemy State (moves toward hero) ===
   const [enemyX, setEnemyX] = useState(700);
@@ -751,8 +825,7 @@ export default function App() {
   // Constants
   const attackRange = 80;
   const enemySpeed = 2;
-  const enemySpawnX = 750;
-  const waitDuration = 2000;
+  const enemySpawnX = 900; // Spawn off-screen to the right
 
   // XP formula: level * 100
   const xpToNextLevel = heroLevel * 100;
@@ -793,12 +866,16 @@ export default function App() {
       setTotalKills(savedData.totalKills);
       setWave(savedData.wave);
       
+      // Restore event management
+      setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
+      
       // Restore current enemy (spawn random enemy for the biome)
       const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
       const randomEnemy = restoredBiome.enemies.normal[Math.floor(Math.random() * restoredBiome.enemies.normal.length)];
       setCurrentEnemy(randomEnemy);
       
       setIsFirstTime(false);
+      setIsGameStarted(true); // Start the game loop when loading save
       console.log('[Load] Game restored successfully!');
     } else {
       console.log('[New Game] Starting fresh game...');
@@ -816,6 +893,9 @@ export default function App() {
   // === Auto-Save System ===
   useEffect(() => {
     const saveInterval = setInterval(() => {
+      // Prevent save during reset
+      if (isResetting.current) return;
+      
       saveGameData({
         heroName,
         heroHp,
@@ -831,11 +911,15 @@ export default function App() {
         biomeKills,
         totalKills,
         wave,
+        wavesSinceLastEvent,
       });
     }, 5000); // Save every 5 seconds
 
     // Save on page close/refresh
     const handleBeforeUnload = () => {
+      // Prevent save during reset
+      if (isResetting.current) return;
+      
       saveGameData({
         heroName,
         heroHp,
@@ -851,6 +935,7 @@ export default function App() {
         biomeKills,
         totalKills,
         wave,
+        wavesSinceLastEvent,
       });
     };
 
@@ -864,7 +949,13 @@ export default function App() {
 
   // === Reset Game ===
   const resetGame = useCallback(() => {
-    clearSaveData();
+    // Set reset flag to prevent auto-save during reset
+    isResetting.current = true;
+    
+    // Clear localStorage immediately
+    localStorage.removeItem('idle_rpg_save_v1');
+    
+    // Force reload to reset all state
     window.location.reload();
   }, []);
 
@@ -873,6 +964,7 @@ export default function App() {
     setHeroName(name);
     setShowCharacterCreation(false);
     setIsFirstTime(false);
+    setIsGameStarted(true); // Start the game loop
     console.log('[Character Creation] Adventure started with hero:', name);
   }, []);
 
@@ -962,7 +1054,7 @@ export default function App() {
       // Show level up toast
       addToast(`🌟 LEVEL UP! Você alcançou o Nível ${currentLevel}!`, 'levelup');
     }
-  }, [heroXp, heroAttributes.maxHp, addToast]);
+  }, [heroXp, heroLevel, heroAttributes.maxHp, addToast]);
 
   // === Spawn new enemy after delay ===
   // === Spawn Random Enemy ===
@@ -980,9 +1072,168 @@ export default function App() {
     }
   }, [currentBiomeId, biomes]);
 
+  // === Handle Path Choice ===
+  const handlePathChoice = useCallback((choice: 'safe' | 'challenging' | 'deadly') => {
+    setShowPathChoice(false);
+    setWavesSinceLastEvent(0); // Reset event counter after path choice
+    
+    // Apply difficulty multiplier based on choice
+    switch (choice) {
+      case 'safe':
+        setPathDifficultyMultiplier({
+          hpMultiplier: 1.0,
+          attackMultiplier: 1.0,
+          rewardMultiplier: 1.0,
+          dropChanceBonus: 0,
+          remainingEnemies: 5,
+        });
+        addToast('🟢 Caminho Seguro escolhido! Dificuldade normal.', 'info');
+        break;
+        
+      case 'challenging':
+        setPathDifficultyMultiplier({
+          hpMultiplier: 1.3,
+          attackMultiplier: 1.3,
+          rewardMultiplier: 1.5,
+          dropChanceBonus: 0.2, // +20% rare drop chance
+          remainingEnemies: 5,
+        });
+        addToast('🟡 Caminho Desafiador escolhido! +30% dificuldade, +50% recompensas!', 'info');
+        break;
+        
+      case 'deadly':
+        setPathDifficultyMultiplier({
+          hpMultiplier: 1.8,
+          attackMultiplier: 1.8,
+          rewardMultiplier: 2.0,
+          dropChanceBonus: 0.5, // +50% epic/legendary drop chance
+          remainingEnemies: 5,
+        });
+        addToast('🔴 Caminho Mortal escolhido! +80% dificuldade, x2 recompensas, drops épicos!', 'info');
+        break;
+    }
+    
+    // Continue with next enemy
+    const nextIsBoss = biomeKills > 0 && biomeKills % 10 === 0;
+    spawnRandomEnemy(nextIsBoss);
+    setEnemyX(enemySpawnX);
+    setGamePhase('approaching');
+    lastHeroAttackRef.current = Date.now();
+    lastEnemyAttackRef.current = Date.now();
+  }, [biomeKills, enemySpawnX, spawnRandomEnemy, addToast]);
+
+  // === Open Shop from Path Choice ===
+  const handleOpenShopFromPath = useCallback(() => {
+    setShowMerchantShop(true);
+  }, []);
+
+  // === Quest System Functions ===
+  const checkAndSpawnNPC = useCallback(() => {
+    // EXCLUSIVITY CHECK: Don't spawn NPC if path choice is active
+    if (showPathChoice) return;
+    
+    // EXCLUSIVITY CHECK: Don't spawn NPC if another NPC dialogue is already open
+    if (currentNPCQuest !== null) return;
+    
+    // EXCLUSIVITY CHECK: Don't spawn NPC if there's an active quest being processed
+    // (allow active quests to exist, but don't spawn new NPCs while one is being shown)
+    
+    // SPACING CHECK: Ensure minimum waves between events
+    if (wavesSinceLastEvent < MIN_WAVES_BETWEEN_EVENTS) return;
+    
+    // 20% chance to encounter NPC (reduced from 30% for better pacing)
+    if (Math.random() > 0.2) return;
+    
+    // Find available quests (not completed, not active, level requirement met)
+    const availableQuests = quests.filter(q => 
+      !q.completed && 
+      !q.active && 
+      heroLevel >= q.unlockedAtLevel
+    );
+    
+    if (availableQuests.length === 0) return;
+    
+    // Pick random quest
+    const randomQuest = availableQuests[Math.floor(Math.random() * availableQuests.length)];
+    
+    // Show NPC dialogue
+    setCurrentNPCQuest(randomQuest);
+    setWavesSinceLastEvent(0); // Reset event counter
+  }, [wave, quests, heroLevel, showPathChoice, currentNPCQuest, wavesSinceLastEvent]);
+
+  const acceptQuest = useCallback((quest: Quest) => {
+    setQuests(prev => prev.map(q => 
+      q.id === quest.id ? { ...q, active: true } : q
+    ));
+    setCurrentNPCQuest(null);
+    setWavesSinceLastEvent(0); // Reset event counter after quest event
+    addToast(`📜 Quest aceita: ${quest.title}`, 'info');
+  }, [addToast]);
+
+  const declineQuest = useCallback(() => {
+    setCurrentNPCQuest(null);
+    setWavesSinceLastEvent(0); // Reset event counter after quest event
+  }, []);
+
+  const completeQuest = useCallback((questId: string) => {
+    const quest = quests.find(q => q.id === questId);
+    if (!quest || !quest.active || quest.progress < quest.objectiveTarget) return;
+    
+    // Mark as completed
+    setQuests(prev => prev.map(q => 
+      q.id === questId ? { ...q, completed: true, active: false } : q
+    ));
+    
+    // Give rewards
+    setHeroGold(prev => prev + quest.reward.gold);
+    setHeroXp(prev => prev + quest.reward.xp);
+    
+    // Add item reward if exists
+    if (quest.reward.item) {
+      const newItem: Item = {
+        ...quest.reward.item,
+        id: `quest_item_${Date.now()}_${Math.random()}`,
+      };
+      setInventory(prev => [...prev, newItem]);
+    }
+    
+    addToast(`✅ Quest concluída: ${quest.title}!`, 'info');
+    addToast(`💰 +${quest.reward.gold} ouro, +${quest.reward.xp} XP`, 'info');
+  }, [quests, addToast]);
+
+  // Update quest progress based on game events
+  const updateQuestProgress = useCallback(() => {
+    setQuests(prev => prev.map(quest => {
+      if (!quest.active || quest.completed) return quest;
+      
+      let newProgress = quest.progress;
+      
+      switch (quest.objectiveType) {
+        case 'kill_monsters':
+          newProgress = totalKills;
+          break;
+        case 'reach_wave':
+          newProgress = wave;
+          break;
+        case 'collect_gold':
+          newProgress = heroGold;
+          break;
+        case 'defeat_boss':
+          // Track boss kills (every 10 kills is a boss)
+          newProgress = Math.floor(totalKills / 10);
+          break;
+      }
+      
+      return { ...quest, progress: newProgress };
+    }));
+  }, [totalKills, wave, heroGold]);
+
   const spawnNewEnemy = useCallback(() => {
     const newWave = wave + 1;
     setWave(newWave);
+    
+    // Increment waves since last event
+    setWavesSinceLastEvent(prev => prev + 1);
     
     // Track kills for biome progression
     const newBiomeKills = biomeKills + 1;
@@ -993,6 +1244,33 @@ export default function App() {
     // Check if next enemy should be a boss (every 10 kills in biome)
     const nextIsBoss = newBiomeKills > 0 && newBiomeKills % 10 === 0;
     setIsBossWave(nextIsBoss);
+    
+    // EXCLUSIVITY CHECK: Don't show path choice if NPC dialogue is active
+    if (currentNPCQuest !== null) {
+      // Skip path choice, just spawn enemy
+      spawnRandomEnemy(nextIsBoss);
+      setEnemyX(enemySpawnX);
+      setGamePhase('approaching');
+      lastHeroAttackRef.current = Date.now();
+      lastEnemyAttackRef.current = Date.now();
+      return;
+    }
+    
+    // EXCLUSIVITY CHECK: Don't show path choice if another path choice is already active
+    if (showPathChoice) {
+      return; // Already showing path choice, don't spawn enemy yet
+    }
+    
+    // SPACING CHECK: Ensure minimum waves between events for path choice
+    const shouldShowPathChoice = (newWave % 10 === 0 && newWave > 0) || (nextIsBoss && newBiomeKills % 10 === 9);
+    
+    if (shouldShowPathChoice && wavesSinceLastEvent >= MIN_WAVES_BETWEEN_EVENTS) {
+      // Heal hero to 100% when showing path choice
+      setHeroHp(heroAttributes.maxHp);
+      setShowPathChoice(true);
+      setWavesSinceLastEvent(0); // Reset event counter
+      return; // Don't spawn enemy yet, wait for choice
+    }
     
     // Spawn random enemy based on boss status
     spawnRandomEnemy(nextIsBoss);
@@ -1028,7 +1306,7 @@ export default function App() {
 
     setAttributeCosts((prev) => ({
       ...prev,
-      [attribute]: Math.floor(prev[attribute] * 1.5),
+      [attribute]: Math.floor(prev[attribute] * 1.3), // Smoother cost growth
     }));
   }, [heroGold, attributeCosts]);
 
@@ -1063,7 +1341,6 @@ export default function App() {
             const xpReward = baseEnemyXp + (currentWave - 1) * 8;
             setHeroGold((g) => g + goldReward);
             setHeroXp((x) => x + xpReward);
-            setGamePhase('waiting');
             
             // Generate item drop
             const droppedItem = generateItemDrop();
@@ -1077,7 +1354,25 @@ export default function App() {
               }
             }
             
-            setTimeout(() => spawnNewEnemy(), waitDuration);
+            // Decrement path difficulty remaining enemies
+            if (pathDifficultyMultiplier.remainingEnemies > 0) {
+              setPathDifficultyMultiplier(prev => {
+                const newRemaining = prev.remainingEnemies - 1;
+                if (newRemaining <= 0) {
+                  return {
+                    hpMultiplier: 1.0,
+                    attackMultiplier: 1.0,
+                    rewardMultiplier: 1.0,
+                    dropChanceBonus: 0,
+                    remainingEnemies: 0,
+                  };
+                }
+                return { ...prev, remainingEnemies: newRemaining };
+              });
+            }
+
+            // Spawn next enemy immediately
+            spawnNewEnemy();
             return 0;
           }
           return newHp;
@@ -1121,7 +1416,7 @@ export default function App() {
         ? { 
             ...s, 
             level: s.level + 1,
-            cost: Math.floor(s.cost * 1.5),
+            cost: Math.floor(s.cost * 1.3), // Smoother cost growth
             effectValue: s.effect === 'damage' 
               ? s.effectValue + 0.25 
               : s.effect === 'heal'
@@ -1230,14 +1525,20 @@ export default function App() {
 
   // === Generate Random Item Drop ===
   const generateItemDrop = useCallback((): Item | null => {
-    // 30% chance to drop an item
-    if (Math.random() > 0.3) return null;
+    // 30% base chance to drop an item + path difficulty bonus
+    const dropChance = 0.3 + pathDifficultyMultiplier.dropChanceBonus;
+    if (Math.random() > dropChance) return null;
 
-    // Rarity weights: common 60%, rare 30%, epic 10%
+    // Rarity weights adjusted by path difficulty bonus
+    // Base: common 60%, rare 30%, epic 10%
+    // With bonus: shift towards higher rarities
     const rarityRoll = Math.random();
     let targetRarity: ItemRarity;
-    if (rarityRoll < 0.6) targetRarity = 'common';
-    else if (rarityRoll < 0.9) targetRarity = 'rare';
+    const epicBonus = pathDifficultyMultiplier.dropChanceBonus * 0.5; // Half of bonus goes to epic
+    const rareBonus = pathDifficultyMultiplier.dropChanceBonus * 0.3; // 30% goes to rare
+    
+    if (rarityRoll < 0.6 - rareBonus - epicBonus) targetRarity = 'common';
+    else if (rarityRoll < 0.9 - epicBonus + rareBonus) targetRarity = 'rare';
     else targetRarity = 'epic';
 
     // Filter items by rarity
@@ -1416,6 +1717,9 @@ export default function App() {
 
   // === Main Game Loop ===
   useEffect(() => {
+    // Don't run game loop if game hasn't started yet
+    if (!isGameStarted) return;
+    
     const interval = setInterval(() => {
       const currentPhase = gamePhaseRef.current;
       const currentEnemyX = enemyXRef.current;
@@ -1477,7 +1781,6 @@ export default function App() {
               
               setHeroGold((g) => g + goldReward);
               setHeroXp((x) => x + xpReward);
-              setGamePhase('waiting');
               
               // Show boss defeated toast
               if (isBossWave) {
@@ -1496,9 +1799,26 @@ export default function App() {
                 }
               }
 
-              setTimeout(() => {
-                spawnNewEnemy();
-              }, waitDuration);
+              // Decrement path difficulty remaining enemies
+              if (pathDifficultyMultiplier.remainingEnemies > 0) {
+                setPathDifficultyMultiplier(prev => {
+                  const newRemaining = prev.remainingEnemies - 1;
+                  if (newRemaining <= 0) {
+                    // Reset to default when path ends
+                    return {
+                      hpMultiplier: 1.0,
+                      attackMultiplier: 1.0,
+                      rewardMultiplier: 1.0,
+                      dropChanceBonus: 0,
+                      remainingEnemies: 0,
+                    };
+                  }
+                  return { ...prev, remainingEnemies: newRemaining };
+                });
+              }
+
+              // Spawn next enemy immediately
+              spawnNewEnemy();
 
               return 0;
             }
@@ -1510,8 +1830,24 @@ export default function App() {
         if (enemyHpRef.current > 0 && now - lastEnemyAttackRef.current >= enemyAttackSpeed) {
           lastEnemyAttackRef.current = now;
           const currentWave = waveRef.current;
-          const currentEnemyAttack = baseEnemyAttack + Math.floor((currentWave - 1) * 2);
-          const damage = Math.max(1, Math.round(currentEnemyAttack - combatAttrs.defense));
+          
+          // Recalculate enemy attack with same formula as enemyAttackPower
+          const currentBiomeData = biomes.find(b => b.id === currentBiomeId) || biomes[0];
+          const currentBiomeMultiplier = currentBiomeData.enemyMultiplier;
+          const currentHeroLevelScale = 1 + (heroLevel - 1) * 0.15;
+          const currentWaveAttackScale = 1 + Math.log(currentWave) * 0.5; // Logarithmic growth
+          const currentEnemyAttack = Math.floor(
+            baseEnemyAttack * 
+            currentWaveAttackScale * 
+            currentBiomeMultiplier.attack * 
+            currentHeroLevelScale
+          );
+          
+          // Defense reduces damage by percentage, not flat subtraction
+          // Formula: damage = attack * (1 - defense/(defense + 100))
+          // This ensures damage is always at least 10% of attack
+          const defenseReduction = combatAttrs.defense / (combatAttrs.defense + 100);
+          const damage = Math.max(1, Math.round(currentEnemyAttack * (1 - defenseReduction)));
           
           // Spawn damage popup on hero
           spawnDamagePopup(damage, heroX, false);
@@ -1545,10 +1881,18 @@ export default function App() {
         // Do nothing during respawn - hero is recovering
         // The setTimeout in handleHeroDeath will handle the respawn logic
       }
+      
+      // Update quest progress
+      updateQuestProgress();
+      
+      // EXCLUSIVITY CHECK: Only check for NPC encounters if no modals are active
+      if (!showPathChoice && currentNPCQuest === null) {
+        checkAndSpawnNPC();
+      }
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted]);
 
   // === Consistency Check ===
   useEffect(() => {
@@ -1570,6 +1914,17 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
+      {/* Game Paused Overlay */}
+      {!isGameStarted && !showCharacterCreation && (
+        <div className="fixed inset-0 bg-black/80 z-[90] flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4 animate-pulse">⚔️</div>
+            <h2 className="text-2xl font-bold text-purple-300 mb-2">Jogo Pausado</h2>
+            <p className="text-sm text-gray-400">Aguardando início da aventura...</p>
+          </div>
+        </div>
+      )}
+
       <PlayerStatus
         hp={heroHp}
         maxHp={heroAttributes.maxHp}
@@ -1627,6 +1982,8 @@ export default function App() {
         onUnequipItem={unequipItem}
         onSellItem={sellItem}
         onResetGame={resetGame}
+        quests={quests}
+        onCompleteQuest={completeQuest}
       />
 
       {/* Character Creation Modal (First Time) */}
@@ -1659,6 +2016,20 @@ export default function App() {
           onBuyItem={buyShopItem}
           onEquipSkill={equipSkill}
           onClose={() => setShowMerchantShop(false)}
+        />
+      )}
+
+      {/* Path Choice Modal */}
+      {showPathChoice && (
+        <PathChoiceModal onChoose={handlePathChoice} onOpenShop={handleOpenShopFromPath} />
+      )}
+
+      {/* NPC Dialogue Modal */}
+      {currentNPCQuest && (
+        <NPCDialogueModal
+          quest={currentNPCQuest}
+          onAccept={() => acceptQuest(currentNPCQuest)}
+          onDecline={declineQuest}
         />
       )}
     </div>
