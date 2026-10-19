@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Biome } from '../App';
+import { GoldIcon } from '../App';
 
 interface PlayerStatusProps {
   hp: number;
@@ -80,7 +81,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
           {/* Gold Counter */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-3 sm:px-4 py-1.5 sm:py-2 border border-[#2d2d5e] rounded-sm">
-              <span className="text-sm sm:text-base">🪙</span>
+              <GoldIcon size="md" />
               <span className="text-[10px] sm:text-[11px] text-yellow-400 font-bold">{Math.floor(gold).toLocaleString()}</span>
             </div>
           </div>

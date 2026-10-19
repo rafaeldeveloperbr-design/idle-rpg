@@ -1,5 +1,6 @@
 import React from 'react';
 import type { HeroAttributes, AttributeCosts } from '../../App';
+import { GoldIcon } from '../../App';
 
 interface AttributesTabProps {
   heroAttributes: HeroAttributes;
@@ -87,8 +88,8 @@ const AttributesTab: React.FC<AttributesTabProps> = ({
               <span className="text-sm text-gray-200">{attr.name}</span>
               <span className="text-xs text-gray-500">{attr.description}</span>
               <div className="flex items-center justify-between mt-2">
-                <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                  🪙 {Math.round(cost)}
+                <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'} flex items-center gap-1`}>
+                  <GoldIcon size="sm" /> {Math.round(cost)}
                 </span>
                 <button
                   onClick={() => onUpgradeAttribute(attr.key)}

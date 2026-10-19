@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Skill, Consumable, Item, HeroAttributes } from '../../App';
+import { GoldIcon } from '../../App';
 
 interface MerchantShopProps {
   skills: Skill[];
@@ -48,7 +49,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
           </h2>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 bg-[#1a1a2e] px-3 py-1.5 border border-yellow-500/50 rounded-sm">
-              <span className="text-sm">🪙</span>
+              <GoldIcon size="md" />
               <span className="text-xs text-yellow-400 font-bold">{heroGold.toLocaleString()}</span>
             </div>
             <button
@@ -205,8 +206,8 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                               </p>
                             )}
                             <div className="flex items-center justify-between">
-                              <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                                🪙 {Math.round(skill.cost)}
+                              <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'} flex items-center gap-1`}>
+                                <GoldIcon size="sm" /> {Math.round(skill.cost)}
                               </span>
                               <button
                                 onClick={() => onBuySkill(skill.id)}
@@ -256,8 +257,8 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                         </p>
                       )}
                       <div className="flex items-center justify-between">
-                        <span className={`text-xs ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
-                          🪙 {Math.round(consumable.cost)}
+                        <span className={`text-xs ${canAfford ? 'text-green-400' : 'text-red-400'} flex items-center gap-1`}>
+                          <GoldIcon size="sm" /> {Math.round(consumable.cost)}
                         </span>
                         <button
                           onClick={() => onBuyConsumable(consumable.id)}
@@ -369,8 +370,8 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                         )}
                         
                         <div className="flex items-center justify-between">
-                          <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                            🪙 {Math.round(item.sellValue)}
+                          <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'} flex items-center gap-1`}>
+                            <GoldIcon size="sm" /> {Math.round(item.sellValue)}
                           </span>
                           <button
                             onClick={() => onBuyItem(item.id)}

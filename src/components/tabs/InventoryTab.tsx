@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Item, Equipment, HeroAttributes } from '../../App';
+import { GoldIcon } from '../../App';
 
 interface InventoryTabProps {
   inventory: Item[];
@@ -195,7 +196,9 @@ const ItemModal: React.FC<ItemModalProps> = ({
           {/* Sell Value */}
           <div className="flex items-center justify-between text-sm mb-4 p-3 bg-[#1a1a2e] rounded-md border border-[#2d2d5e]">
             <span className="text-gray-400">Valor de venda:</span>
-            <span className="text-yellow-300 font-bold">🪙 {Math.round(item.sellValue)}</span>
+            <span className="text-yellow-300 font-bold flex items-center gap-1">
+              <GoldIcon size="sm" /> {Math.round(item.sellValue)}
+            </span>
           </div>
 
           {/* Action Buttons */}
@@ -210,9 +213,9 @@ const ItemModal: React.FC<ItemModalProps> = ({
                 </button>
                 <button
                   onClick={onSell}
-                  className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm"
+                  className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm flex items-center justify-center gap-1"
                 >
-                  Vender (🪙 {Math.round(item.sellValue)})
+                  Vender (<GoldIcon size="sm" /> {Math.round(item.sellValue)})
                 </button>
               </>
             ) : (

@@ -11,6 +11,24 @@ import ToastContainer from './components/ToastContainer';
 import { questsData, type Quest } from './data/questsData';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
+// Universal Gold Icon Component (replaces emoji 🪙)
+export const GoldIcon = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg'; className?: string }) => {
+  const sizeClasses = {
+    sm: 'w-3 h-3 text-[8px]',
+    md: 'w-4 h-4 text-[10px]',
+    lg: 'w-5 h-5 text-xs'
+  };
+  
+  return (
+    <span 
+      className={`inline-flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900 font-bold border border-yellow-700 ${sizeClasses[size]} ${className}`}
+      style={{ lineHeight: 1 }}
+    >
+      G
+    </span>
+  );
+};
+
 type GamePhase = 'approaching' | 'fighting' | 'respawning';
 
 export interface HeroAttributes {
@@ -397,7 +415,7 @@ export default function App() {
   const [currentNPCQuest, setCurrentNPCQuest] = useState<Quest | null>(null);
   const lastNPCSpawnWave = useRef(0);
   const [wavesSinceLastEvent, setWavesSinceLastEvent] = useState(0);
-  const MIN_WAVES_BETWEEN_EVENTS = 15; // Minimum waves between events
+  const MIN_WAVES_BETWEEN_EVENTS = 10; // Minimum waves between events
 
   // === Path Difficulty System ===
   const [pathDifficultyMultiplier, setPathDifficultyMultiplier] = useState<{

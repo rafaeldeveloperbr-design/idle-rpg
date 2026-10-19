@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Quest } from '../../data/questsData';
+import { GoldIcon } from '../../App';
 
 interface NPCDialogueModalProps {
   quest: Quest;
@@ -45,7 +46,7 @@ const NPCDialogueModal: React.FC<NPCDialogueModalProps> = ({ quest, onAccept, on
             <h4 className="text-sm font-bold text-amber-300 mb-2">💎 Recompensas:</h4>
             <div className="flex flex-wrap gap-3">
               <div className="flex items-center gap-2 bg-yellow-900/50 px-3 py-1 rounded">
-                <span className="text-yellow-400">🪙</span>
+                <GoldIcon size="md" />
                 <span className="text-sm text-yellow-200">{quest.reward.gold} Ouro</span>
               </div>
               <div className="flex items-center gap-2 bg-blue-900/50 px-3 py-1 rounded">
