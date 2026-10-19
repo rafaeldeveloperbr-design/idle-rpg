@@ -35,42 +35,42 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   const [showBiomeSelector, setShowBiomeSelector] = useState(false);
 
   return (
-    <header className="w-full px-3 py-2 bg-[#1a1a2e] border-b-2 border-[#2d2d5e] flex items-center justify-between gap-3 flex-wrap md:flex-nowrap">
+    <header className="w-full px-4 py-3 bg-[#1a1a2e] border-b-2 border-[#2d2d5e] flex items-center justify-between gap-4 flex-wrap md:flex-nowrap">
       {/* HP Bar */}
-      <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-        <span className="text-[10px] text-red-400 whitespace-nowrap">❤️ HP</span>
-        <div className="relative flex-1 h-5 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+      <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+        <span className="text-[11px] text-red-400 whitespace-nowrap">❤️ HP</span>
+        <div className="relative flex-1 h-6 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
           <div
             className="hp-bar h-full transition-all duration-300 rounded-sm"
             style={{ width: `${hpPercent}%` }}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
             {hp}/{maxHp}
           </span>
         </div>
       </div>
 
       {/* Level & XP Bar */}
-      <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-        <span className="text-[10px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-2 py-1 border border-[#2d2d5e] rounded-sm">
+      <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+        <span className="text-[11px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-3 py-1.5 border border-[#2d2d5e] rounded-sm">
           LV.{level}
         </span>
-        <div className="relative flex-1 h-5 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+        <div className="relative flex-1 h-6 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
           <div
             className="xp-bar h-full transition-all duration-300 rounded-sm"
             style={{ width: `${xpPercent}%` }}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
             XP {xp}/{maxXp}
           </span>
         </div>
       </div>
 
       {/* Gold Counter */}
-      <div className="flex items-center gap-2 min-w-[100px]">
-        <div className="flex items-center gap-1 bg-[#0f0f1a] px-3 py-1.5 border border-[#2d2d5e] rounded-sm">
-          <span className="text-sm">🪙</span>
-          <span className="text-[10px] text-yellow-400 font-bold">{gold.toLocaleString()}</span>
+      <div className="flex items-center gap-3 min-w-[120px]">
+        <div className="flex items-center gap-2 bg-[#0f0f1a] px-4 py-2 border border-[#2d2d5e] rounded-sm">
+          <span className="text-base">🪙</span>
+          <span className="text-[11px] text-yellow-400 font-bold">{gold.toLocaleString()}</span>
         </div>
       </div>
 
@@ -78,20 +78,20 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
       <div className="relative">
         <button
           onClick={() => setShowBiomeSelector(!showBiomeSelector)}
-          className="flex items-center gap-1.5 bg-[#0f0f1a] px-3 py-1.5 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
+          className="flex items-center gap-2 bg-[#0f0f1a] px-4 py-2 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
         >
-          <span className="text-sm">{currentBiome.icon}</span>
-          <span className="text-[9px] text-purple-300">{currentBiome.name}</span>
-          <span className="text-[8px] text-gray-500">▼</span>
+          <span className="text-base">{currentBiome.icon}</span>
+          <span className="text-[11px] text-purple-300">{currentBiome.name}</span>
+          <span className="text-[10px] text-gray-500">▼</span>
         </button>
 
         {/* Biome Dropdown */}
         {showBiomeSelector && (
-          <div className="absolute top-full right-0 mt-1 w-64 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md shadow-[0_0_20px_rgba(139,92,246,0.3)] z-50">
-            <div className="p-2 border-b border-purple-500/30">
-              <span className="text-[9px] text-purple-300 font-bold">Selecionar Bioma</span>
+          <div className="absolute top-full right-0 mt-2 w-72 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md shadow-[0_0_20px_rgba(139,92,246,0.3)] z-50">
+            <div className="p-3 border-b border-purple-500/30">
+              <span className="text-[11px] text-purple-300 font-bold">Selecionar Bioma</span>
             </div>
-            <div className="max-h-64 overflow-y-auto">
+            <div className="max-h-72 overflow-y-auto">
               {biomes.map((biome) => {
                 const unlocked = isBiomeUnlocked(biome);
                 const isCurrent = biome.id === currentBiome.id;
@@ -106,7 +106,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
                       }
                     }}
                     disabled={!unlocked}
-                    className={`w-full p-2 flex items-start gap-2 transition-colors border-b border-[#2d2d5e] last:border-b-0 ${
+                    className={`w-full p-3 flex items-start gap-3 transition-colors border-b border-[#2d2d5e] last:border-b-0 ${
                       isCurrent
                         ? 'bg-purple-900/30 border-l-2 border-l-purple-500'
                         : unlocked
@@ -114,19 +114,19 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
                         : 'opacity-50 cursor-not-allowed'
                     }`}
                   >
-                    <span className="text-xl">{biome.icon}</span>
+                    <span className="text-2xl">{biome.icon}</span>
                     <div className="flex-1 text-left">
-                      <div className="flex items-center gap-1">
-                        <span className={`text-[9px] font-bold ${isCurrent ? 'text-purple-200' : 'text-gray-200'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[11px] font-bold ${isCurrent ? 'text-purple-200' : 'text-gray-200'}`}>
                           {biome.name}
                         </span>
                         {isCurrent && (
-                          <span className="text-[7px] bg-purple-600 text-white px-1 rounded">ATUAL</span>
+                          <span className="text-[8px] bg-purple-600 text-white px-1.5 py-0.5 rounded">ATUAL</span>
                         )}
                       </div>
-                      <span className="text-[7px] text-gray-400 block mt-0.5">{biome.description}</span>
+                      <span className="text-[9px] text-gray-400 block mt-1">{biome.description}</span>
                       {!unlocked && (
-                        <span className="text-[7px] text-red-400 block mt-0.5">
+                        <span className="text-[9px] text-red-400 block mt-1">
                           🔒 {biome.unlockRequirement.type === 'kills' 
                             ? `Derrote ${biome.unlockRequirement.value} inimigos (${totalKills}/${biome.unlockRequirement.value})`
                             : `Alcance o nível ${biome.unlockRequirement.value} (Nv. ${level}/${biome.unlockRequirement.value})`
@@ -134,11 +134,11 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
                         </span>
                       )}
                       {unlocked && (
-                        <div className="flex gap-2 mt-1">
-                          <span className="text-[6px] text-gray-500">
+                        <div className="flex gap-3 mt-2">
+                          <span className="text-[8px] text-gray-500">
                             HP: x{biome.enemyMultiplier.hp} | ATK: x{biome.enemyMultiplier.attack}
                           </span>
-                          <span className="text-[6px] text-yellow-500">
+                          <span className="text-[8px] text-yellow-500">
                             💰 x{biome.enemyMultiplier.gold} | XP x{biome.enemyMultiplier.xp}
                           </span>
                         </div>
@@ -148,12 +148,12 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
                 );
               })}
             </div>
-            <div className="p-2 border-t border-purple-500/30 bg-[#1a1a2e]">
-              <div className="flex justify-between text-[7px]">
+            <div className="p-3 border-t border-purple-500/30 bg-[#1a1a2e]">
+              <div className="flex justify-between text-[9px]">
                 <span className="text-gray-400">Kills no bioma:</span>
                 <span className="text-purple-300">{biomeKills}</span>
               </div>
-              <div className="flex justify-between text-[7px]">
+              <div className="flex justify-between text-[9px] mt-1">
                 <span className="text-gray-400">Total de kills:</span>
                 <span className="text-purple-300">{totalKills}</span>
               </div>

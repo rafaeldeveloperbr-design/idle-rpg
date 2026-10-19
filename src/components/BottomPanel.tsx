@@ -99,20 +99,20 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[9px] transition-all border-b-2 ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-[11px] transition-all border-b-2 ${
               activeTab === tab.id
                 ? 'tab-active text-purple-300 border-purple-500'
                 : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-[#16213e]/50'
             }`}
           >
-            <span>{tab.icon}</span>
+            <span className="text-base">{tab.icon}</span>
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="max-h-[220px] overflow-y-auto">
+      <div className="max-h-[240px] overflow-y-auto">
         {renderTabContent()}
       </div>
     </div>

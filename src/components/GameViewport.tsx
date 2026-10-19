@@ -49,24 +49,24 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
         const isHovered = hoveredSkill === skill.id;
 
         return (
-          <div key={skill.id} className="relative">
+          <div key={skill.id} className="relative group">
             {/* Tooltip - appears on hover */}
             {isHovered && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md p-2 shadow-[0_0_15px_rgba(139,92,246,0.3)] pointer-events-none z-30">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md p-3 shadow-[0_0_15px_rgba(139,92,246,0.3)] pointer-events-none z-30">
                 {/* Arrow */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px]">
                   <div className="w-2 h-2 bg-[#0f0f1a] border-r-2 border-b-2 border-purple-500/70 rotate-45 -translate-y-1" />
                 </div>
                 {/* Tooltip Content */}
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm">{skill.icon}</span>
-                    <span className="text-[9px] text-purple-200 font-bold">{skill.name}</span>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{skill.icon}</span>
+                    <span className="text-[11px] text-purple-200 font-bold">{skill.name}</span>
                   </div>
                   <div className="h-[1px] bg-purple-500/30 w-full" />
-                  <span className="text-[7px] text-gray-300 leading-relaxed">{skill.description}</span>
-                  <div className="flex flex-col gap-0.5 mt-0.5">
-                    <div className="flex justify-between text-[7px]">
+                  <span className="text-[9px] text-gray-300 leading-relaxed">{skill.description}</span>
+                  <div className="flex flex-col gap-1 mt-1">
+                    <div className="flex justify-between text-[9px]">
                       <span className="text-gray-400">Efeito:</span>
                       <span className="text-yellow-300">
                         {skill.effect === 'damage' && `${Math.round(skill.effectValue * 100)}% ATK`}
@@ -74,22 +74,22 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
                         {skill.effect === 'buff' && `${Math.round(skill.effectValue * 100)}% ATK por ${skill.buffDuration}s`}
                       </span>
                     </div>
-                    <div className="flex justify-between text-[7px]">
+                    <div className="flex justify-between text-[9px]">
                       <span className="text-gray-400">Cooldown:</span>
                       <span className={isOnCooldown ? 'text-red-400' : 'text-green-300'}>
                         {isOnCooldown ? `${cooldownRemaining}s` : `${skill.cooldown}s`}
                       </span>
                     </div>
                     {skill.autoCast && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <span className="text-[6px] bg-green-900/50 text-green-300 px-1 rounded-sm border border-green-700/50">
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-[8px] bg-green-900/50 text-green-300 px-1.5 py-0.5 rounded-sm border border-green-700/50">
                           ⚡ AUTO-CAST ATIVO
                         </span>
                       </div>
                     )}
                     {hasBuff && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <span className="text-[6px] bg-yellow-900/50 text-yellow-300 px-1 rounded-sm border border-yellow-700/50">
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-[8px] bg-yellow-900/50 text-yellow-300 px-1.5 py-0.5 rounded-sm border border-yellow-700/50">
                           🔥 BUFF ATIVO
                         </span>
                       </div>
@@ -105,13 +105,13 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
               disabled={isOnCooldown}
               onMouseEnter={() => setHoveredSkill(skill.id)}
               onMouseLeave={() => setHoveredSkill(null)}
-              className={`relative w-11 h-11 border-2 rounded-md flex items-center justify-center transition-all ${
+              className={`relative w-12 h-12 border-2 rounded-md flex items-center justify-center transition-all ${
                 isOnCooldown
                   ? 'border-gray-600 bg-[#0a0a12]/80 cursor-not-allowed'
                   : 'border-purple-500 bg-[#1a1a2e]/90 hover:border-purple-300 hover:shadow-[0_0_10px_rgba(139,92,246,0.5)] cursor-pointer'
               } ${hasBuff ? 'ring-2 ring-yellow-400 animate-pulse-glow' : ''}`}
             >
-              <span className="text-lg">{skill.icon}</span>
+              <span className="text-xl">{skill.icon}</span>
               {/* Cooldown overlay */}
               {isOnCooldown && (
                 <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
@@ -119,15 +119,15 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
                     className="absolute bottom-0 left-0 right-0 bg-purple-900/50"
                     style={{ height: `${cooldownPercent}%` }}
                   />
-                  <span className="text-[8px] text-white font-bold z-10">
+                  <span className="text-[10px] text-white font-bold z-10">
                     {cooldownRemaining}s
                   </span>
                 </div>
               )}
               {/* Auto-cast indicator */}
               {skill.autoCast && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border border-green-300 rounded-full flex items-center justify-center">
-                  <span className="text-[6px]">⚡</span>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border border-green-300 rounded-full flex items-center justify-center">
+                  <span className="text-[8px]">⚡</span>
                 </div>
               )}
             </button>
@@ -165,16 +165,16 @@ const GameViewport: React.FC<GameViewportProps> = ({
   return (
     <div className={`flex-1 w-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient} pixel-border rounded-md`}>
       {/* Enemy Name/HP Bar at top */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1">
-        <span className="text-[9px] text-red-300 tracking-wider">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5">
+        <span className="text-[11px] text-red-300 tracking-wider">
           {isBossWave ? '💀' : '👹'} {isBossWave ? 'CHEFÃO' : 'Goblin Selvagem'} <span className="text-purple-300">[Wave {wave}]</span>
         </span>
-        <div className={`relative ${isBossWave ? 'w-56' : 'w-40'} h-3 bg-[#0f0f1a]/80 border ${isBossWave ? 'border-red-500' : 'border-red-900/50'} rounded-sm overflow-hidden`}>
+        <div className={`relative ${isBossWave ? 'w-64' : 'w-48'} h-4 bg-[#0f0f1a]/80 border ${isBossWave ? 'border-red-500' : 'border-red-900/50'} rounded-sm overflow-hidden`}>
           <div
             className={`h-full rounded-sm transition-all duration-200 ${isBossWave ? 'bg-gradient-to-r from-red-600 via-orange-500 to-red-600' : 'hp-bar'}`}
             style={{ width: `${enemyHpPercent}%` }}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-[7px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+          <span className="absolute inset-0 flex items-center justify-center text-[9px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
             {Math.max(0, enemyHp)}/{enemyMaxHp}
           </span>
         </div>
@@ -383,16 +383,16 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
 
       {/* Zone indicator */}
-      <div className="absolute top-3 left-3 bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1">
-        <span className="text-[8px] text-purple-300">{currentBiome.icon} {currentBiome.name}</span>
+      <div className="absolute top-4 left-4 bg-black/60 border border-[#2d2d5e] rounded-sm px-3 py-1.5">
+        <span className="text-[10px] text-purple-300">{currentBiome.icon} {currentBiome.name}</span>
       </div>
 
       {/* Wave counter & Boss indicator */}
-      <div className="absolute top-3 right-3 bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1 flex flex-col gap-0.5">
-        <span className="text-[8px] text-gray-300">💀 Wave: {wave}</span>
-        <span className="text-[7px] text-purple-400">Kills no bioma: {biomeKills}</span>
+      <div className="absolute top-4 right-4 bg-black/60 border border-[#2d2d5e] rounded-sm px-3 py-1.5 flex flex-col gap-1">
+        <span className="text-[10px] text-gray-300">💀 Wave: {wave}</span>
+        <span className="text-[9px] text-purple-400">Kills no bioma: {biomeKills}</span>
         {biomeKills > 0 && biomeKills % 10 < 3 && (
-          <span className="text-[7px] text-red-400 animate-pulse-glow">
+          <span className="text-[9px] text-red-400 animate-pulse-glow">
             ⚠️ Chefão em {10 - (biomeKills % 10)} kills!
           </span>
         )}
@@ -408,8 +408,8 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
 
       {/* Phase indicator */}
-      <div className="absolute bottom-[72px] left-3 bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-0.5">
-        <span className={`text-[7px] ${
+      <div className="absolute bottom-[72px] left-4 bg-black/60 border border-[#2d2d5e] rounded-sm px-3 py-1">
+        <span className={`text-[9px] ${
           gamePhase === 'approaching' ? 'text-cyan-300' :
           gamePhase === 'fighting' ? (isBossWave ? 'text-red-400' : 'text-red-300') :
           'text-yellow-300'

@@ -15,11 +15,11 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
   onToggleAutoCast,
 }) => {
   return (
-    <div className="p-3">
-      <h3 className="text-[10px] text-purple-300 mb-3 flex items-center gap-2">
+    <div className="p-4">
+      <h3 className="text-[12px] text-purple-300 mb-4 flex items-center gap-2">
         <span>⚡</span> Habilidades
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {skills.map((skill) => {
           const now = Date.now();
           const cooldownMs = skill.cooldown * 1000;
@@ -34,7 +34,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
           return (
             <div
               key={skill.id}
-              className={`card-hover border rounded-md p-2.5 flex flex-col gap-1.5 ${
+              className={`card-hover border rounded-md p-3 flex flex-col gap-2 ${
                 skill.unlocked
                   ? 'bg-[#0f0f1a] border-[#2d2d5e]'
                   : 'bg-[#0a0a12] border-[#1a1a2e] opacity-60'
@@ -42,11 +42,11 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
             >
               {/* Header: Icon + Level */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg">{skill.icon}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{skill.icon}</span>
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-gray-200">{skill.name}</span>
-                    <span className="text-[7px] text-blue-300">
+                    <span className="text-[11px] text-gray-200">{skill.name}</span>
+                    <span className="text-[9px] text-blue-300">
                       Nv. {skill.level}/{skill.maxLevel}
                     </span>
                   </div>
@@ -54,10 +54,10 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
               </div>
 
               {/* Description */}
-              <span className="text-[7px] text-gray-500">{skill.description}</span>
+              <span className="text-[9px] text-gray-500">{skill.description}</span>
 
               {/* Stats */}
-              <div className="flex items-center gap-2 text-[7px]">
+              <div className="flex items-center gap-2 text-[9px]">
                 <span className="text-purple-300">CD: {skill.cooldown}s</span>
                 <span className="text-gray-400">|</span>
                 <span className="text-yellow-300">
@@ -69,7 +69,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 
               {/* Cooldown Bar */}
               {isOnCooldown && (
-                <div className="w-full h-1.5 bg-[#1a1a2e] rounded-sm overflow-hidden border border-[#2d2d5e]">
+                <div className="w-full h-2 bg-[#1a1a2e] rounded-sm overflow-hidden border border-[#2d2d5e]">
                   <div
                     className="h-full bg-purple-600 transition-all duration-300"
                     style={{
@@ -79,17 +79,17 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                 </div>
               )}
               {isOnCooldown && (
-                <span className="text-[7px] text-purple-300 text-center">
+                <span className="text-[9px] text-purple-300 text-center">
                   ⏳ {cooldownRemaining}s
                 </span>
               )}
 
               {/* Actions */}
-              <div className="flex items-center justify-between mt-1 gap-1">
+              <div className="flex items-center justify-between mt-2 gap-2">
                 {/* Auto-cast toggle */}
                 <button
                   onClick={() => onToggleAutoCast(skill.id)}
-                  className={`pixel-btn text-[7px] px-1.5 py-1 rounded-sm flex items-center gap-0.5 ${
+                  className={`pixel-btn text-[9px] px-2 py-1.5 rounded-sm flex items-center gap-1 ${
                     skill.autoCast
                       ? 'text-green-300 border-green-500/50 bg-green-900/20'
                       : 'text-gray-500'
@@ -105,7 +105,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                   <button
                     onClick={() => onUpgradeSkill(skill.id)}
                     disabled={!canAfford}
-                    className={`pixel-btn text-[7px] px-2 py-1 rounded-sm ${
+                    className={`pixel-btn text-[9px] px-3 py-1.5 rounded-sm ${
                       canAfford
                         ? 'text-yellow-300 hover:border-yellow-400'
                         : 'text-gray-600 cursor-not-allowed opacity-50'
@@ -114,7 +114,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                     🪙 {skill.cost}
                   </button>
                 ) : isMaxLevel ? (
-                  <span className="text-[7px] text-purple-400 px-2 py-1">MAX</span>
+                  <span className="text-[9px] text-purple-400 px-3 py-1.5">MAX</span>
                 ) : null}
               </div>
             </div>
