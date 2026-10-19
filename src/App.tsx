@@ -2210,9 +2210,10 @@ export default function App() {
       </div>
 
       {/* Center: Game Viewport + Skills + HP/XP Bars */}
-      <div className="flex-1 w-full overflow-hidden relative z-[10]">
-        <ToastContainer toasts={toasts} />
-        <GameViewport
+      <div className="flex-1 w-full overflow-hidden relative z-[10] bg-slate-950">
+        <div className="w-full h-full relative">
+          <ToastContainer toasts={toasts} />
+          <GameViewport
           heroX={heroX}
           heroName={heroName}
           heroHp={heroHp}
@@ -2237,6 +2238,7 @@ export default function App() {
           isBossWave={isBossWave}
           biomeKills={biomeKills}
         />
+        </div>
       </div>
 
       {/* Bottom: Bottom Bar Fixed */}

@@ -34,9 +34,9 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   const [showBiomeSelector, setShowBiomeSelector] = useState(false);
 
   return (
-    <header className="w-full px-2 sm:px-4 py-2 sm:py-3 bg-[#1a1a2e] border-b-2 border-[#2d2d5e]">
+    <header className="w-full h-full px-2 sm:px-4 bg-[#1a1a2e] border-b-2 border-[#2d2d5e] flex items-center">
       {/* Single Row Layout */}
-      <div className="flex items-center gap-2 sm:gap-3 justify-between">
+      <div className="flex items-center gap-2 sm:gap-3 justify-between w-full">
         {/* Left: Level */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] sm:text-[11px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm font-bold">

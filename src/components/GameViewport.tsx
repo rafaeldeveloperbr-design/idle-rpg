@@ -176,7 +176,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const isEnemyDead = enemyHp <= 0;
 
   return (
-    <div className={`flex-1 w-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient} pixel-border rounded-md`}>
+    <div className={`w-full h-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient}`}>
       {/* Top Info Container - Reorganized for mobile */}
       <div className="absolute top-2 left-2 right-2 z-10 flex flex-col gap-2">
         {/* Line 1: Biome & Wave Info */}
