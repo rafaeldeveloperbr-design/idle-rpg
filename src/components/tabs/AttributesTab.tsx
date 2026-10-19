@@ -82,13 +82,13 @@ const AttributesTab: React.FC<AttributesTabProps> = ({
             >
               <div className="flex items-center justify-between">
                 <span className="text-base">{attr.icon}</span>
-                <span className="text-xs text-gray-400">{attr.value}</span>
+                <span className="text-xs text-gray-400">{Math.round(attr.value)}</span>
               </div>
               <span className="text-sm text-gray-200">{attr.name}</span>
               <span className="text-xs text-gray-500">{attr.description}</span>
               <div className="flex items-center justify-between mt-2">
                 <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                  🪙 {cost}
+                  🪙 {Math.round(cost)}
                 </span>
                 <button
                   onClick={() => onUpgradeAttribute(attr.key)}

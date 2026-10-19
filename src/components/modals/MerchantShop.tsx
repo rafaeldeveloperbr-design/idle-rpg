@@ -206,7 +206,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                             )}
                             <div className="flex items-center justify-between">
                               <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                                🪙 {skill.cost}
+                                🪙 {Math.round(skill.cost)}
                               </span>
                               <button
                                 onClick={() => onBuySkill(skill.id)}
@@ -257,7 +257,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                       )}
                       <div className="flex items-center justify-between">
                         <span className={`text-xs ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
-                          🪙 {consumable.cost}
+                          🪙 {Math.round(consumable.cost)}
                         </span>
                         <button
                           onClick={() => onBuyConsumable(consumable.id)}
@@ -350,7 +350,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                             };
                             return (
                               <span key={key} className="text-[9px] text-green-300 bg-green-900/30 px-1.5 py-0.5 rounded">
-                                +{value} {attrLabels[key]}
+                                +{Math.round(value as number)} {attrLabels[key]}
                               </span>
                             );
                           })}
@@ -370,7 +370,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                         
                         <div className="flex items-center justify-between">
                           <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                            🪙 {item.sellValue}
+                            🪙 {Math.round(item.sellValue)}
                           </span>
                           <button
                             onClick={() => onBuyItem(item.id)}

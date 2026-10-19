@@ -1038,7 +1038,7 @@ export default function App() {
         // Power Strike - deal extra damage to enemy
         const baseDamage = heroAttributes.attack * skill.effectValue;
         const isCrit = Math.random() * 100 < heroAttributes.critChance;
-        const damage = isCrit ? baseDamage * 2 : baseDamage;
+        const damage = Math.round(isCrit ? baseDamage * 2 : baseDamage);
         
         spawnDamagePopup(damage, enemyXRef.current, isCrit, false, true);
         setEnemyHitFlash(true);
@@ -1398,7 +1398,7 @@ export default function App() {
 
           const isCrit = Math.random() * 100 < combatAttrs.critChance;
           const baseDamage = combatAttrs.attack * attackMultiplier;
-          const damage = isCrit ? baseDamage * 2 : baseDamage;
+          const damage = Math.round(isCrit ? baseDamage * 2 : baseDamage);
 
           // Spawn damage popup on enemy
           spawnDamagePopup(damage, currentEnemyX, isCrit);
@@ -1451,7 +1451,7 @@ export default function App() {
           lastEnemyAttackRef.current = now;
           const currentWave = waveRef.current;
           const currentEnemyAttack = baseEnemyAttack + Math.floor((currentWave - 1) * 2);
-          const damage = Math.max(1, currentEnemyAttack - combatAttrs.defense);
+          const damage = Math.max(1, Math.round(currentEnemyAttack - combatAttrs.defense));
           
           // Spawn damage popup on hero
           spawnDamagePopup(damage, heroX, false);

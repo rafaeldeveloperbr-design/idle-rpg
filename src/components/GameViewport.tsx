@@ -202,7 +202,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
               style={{ width: `${enemyHpPercent}%` }}
             />
             <span className="absolute inset-0 flex items-center justify-center text-[8px] sm:text-[9px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-              {Math.max(0, enemyHp)}/{enemyMaxHp}
+              {Math.max(0, Math.floor(enemyHp))}/{Math.floor(enemyMaxHp)}
             </span>
           </div>
         </div>

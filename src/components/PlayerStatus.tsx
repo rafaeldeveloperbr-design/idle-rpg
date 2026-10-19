@@ -53,7 +53,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
                 style={{ width: `${hpPercent}%` }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-[9px] sm:text-[10px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                {hp}/{maxHp}
+                {Math.floor(hp)}/{Math.floor(maxHp)}
               </span>
             </div>
           </div>
@@ -69,7 +69,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
                 style={{ width: `${xpPercent}%` }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-[9px] sm:text-[10px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                XP {xp}/{maxXp}
+                XP {Math.floor(xp)}/{Math.floor(maxXp)}
               </span>
             </div>
           </div>
@@ -81,7 +81,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-3 sm:px-4 py-1.5 sm:py-2 border border-[#2d2d5e] rounded-sm">
               <span className="text-sm sm:text-base">🪙</span>
-              <span className="text-[10px] sm:text-[11px] text-yellow-400 font-bold">{gold.toLocaleString()}</span>
+              <span className="text-[10px] sm:text-[11px] text-yellow-400 font-bold">{Math.floor(gold).toLocaleString()}</span>
             </div>
           </div>
 
