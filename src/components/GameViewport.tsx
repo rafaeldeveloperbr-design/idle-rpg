@@ -263,9 +263,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
         } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
         style={{ left: `max(60px, min(${heroX}px, 20%))` }}
       >
-        <div className="flex flex-col items-center">
-          {/* Hero Name */}
-          <div className="mb-1 px-2 py-0.5 bg-black/60 border border-green-500/50 rounded-sm">
+        <div className="relative">
+          {/* Hero Name - Above head */}
+          <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 bg-black/70 border border-green-500/50 rounded-sm z-10">
             <span className="text-[9px] sm:text-[10px] text-green-300 font-bold">{heroName}</span>
           </div>
           <div className="relative">
@@ -301,7 +301,6 @@ const GameViewport: React.FC<GameViewportProps> = ({
               <div className={`w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
             </div>
           </div>
-          <span className="text-[8px] text-green-300 mt-1 bg-black/50 px-1 rounded">Herói</span>
         </div>
       </div>
 
@@ -317,7 +316,13 @@ const GameViewport: React.FC<GameViewportProps> = ({
           filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
         }}
       >
-        <div className="flex flex-col items-center">
+        <div className="relative">
+          {/* Enemy Name - Above head */}
+          <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 bg-black/70 border border-red-500/50 rounded-sm z-10">
+            <span className="text-[9px] sm:text-[10px] text-red-300 font-bold">
+              {isBossWave ? '💀 CHEFÃO' : 'Goblin'}
+            </span>
+          </div>
           <div className="relative">
             {/* Hit flash overlay */}
             {enemyHitFlash && (
@@ -343,7 +348,6 @@ const GameViewport: React.FC<GameViewportProps> = ({
               <div className={`w-3 h-2.5 bg-green-900 border border-green-950 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
             </div>
           </div>
-          <span className="text-[8px] text-red-300 mt-1 bg-black/50 px-1 rounded">Inimigo</span>
         </div>
       </div>
 
