@@ -439,27 +439,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Zone and Wave indicators moved to top container */}
 
-      {/* Boss Wave Banner */}
-      {isBossWave && isMoving && (
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 pointer-events-none animate-pulse-glow">
-          <div className="bg-red-900/80 border-2 border-red-500 rounded-md px-4 py-2 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
-            <span className="text-[12px] text-red-200 font-bold">💀 CHEFÃO SE APROXIMA! 💀</span>
-          </div>
-        </div>
-      )}
 
-      {/* Phase indicator */}
-      <div className="absolute bottom-[72px] left-4 bg-black/60 border border-[#2d2d5e] rounded-sm px-3 py-1">
-        <span className={`text-[9px] ${
-          gamePhase === 'approaching' ? 'text-cyan-300' :
-          gamePhase === 'fighting' ? (isBossWave ? 'text-red-400' : 'text-red-300') :
-          'text-red-500'
-        }`}>
-          {gamePhase === 'approaching' ? (isBossWave ? '💀 Chefão se aproximando' : '🚶 Aproximando') :
-           gamePhase === 'fighting' ? (isBossWave ? '💀 COMBATE DE CHEFÃO' : '⚔️ Combate') :
-           '💀 DERROTADO - Recuperação'}
-        </span>
-      </div>
+
+
     </div>
   );
 };

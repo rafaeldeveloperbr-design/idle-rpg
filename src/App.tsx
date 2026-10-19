@@ -708,22 +708,56 @@ export default function App() {
     { name: 'Coroa do Dragão', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 15, defense: 12, maxHp: 40, speed: 6, critChance: 5 }, sellValue: 250 },
   ];
 
-  // === Wave System === - Balanced for Level 1 hero
+  // === Wave System === - Balanced progression
   const [wave, setWave] = useState(1);
   const baseEnemyHp = 30;
   const baseEnemyGold = 10;
   const baseEnemyXp = 15;
   const baseEnemyAttack = 3;
   
-  // Scaled enemy stats per wave + biome multiplier
+  // Scaled enemy stats per wave + biome multiplier + hero level scaling
   const biomeMultiplier = currentBiome.enemyMultiplier;
   const isBoss = isBossWave;
   const bossMultiplier = isBoss ? 5 : 1; // Boss has 5x HP
   
-  const enemyMaxHp = Math.floor((baseEnemyHp + (wave - 1) * 15) * biomeMultiplier.hp * bossMultiplier);
-  const enemyGoldReward = Math.floor((baseEnemyGold + (wave - 1) * 5) * biomeMultiplier.gold * (isBoss ? 3 : 1));
-  const enemyXpReward = Math.floor((baseEnemyXp + (wave - 1) * 8) * biomeMultiplier.xp * (isBoss ? 3 : 1));
-  const enemyAttackPower = Math.floor((baseEnemyAttack + Math.floor((wave - 1) * 2)) * biomeMultiplier.attack);
+  // Hero level scaling factor (enemies scale with player level)
+  const heroLevelScale = 1 + (heroLevel - 1) * 0.15; // +15% per hero level
+  
+  // Enemy HP: scales with wave, biome, boss, AND hero level
+  const enemyMaxHp = Math.floor(
+    (baseEnemyHp + (wave - 1) * 15) * 
+    biomeMultiplier.hp * 
+    bossMultiplier * 
+    heroLevelScale
+  );
+  
+  // Enemy Attack: scales with wave, biome, AND hero level
+  const enemyAttackPower = Math.floor(
+    (baseEnemyAttack + Math.floor((wave - 1) * 2)) * 
+    biomeMultiplier.attack * 
+    heroLevelScale
+  );
+  
+  // Rewards: logarithmic scaling to prevent exponential growth
+  // Using sqrt for smoother progression
+  const waveRewardMultiplier = 1 + Math.sqrt(wave - 1) * 0.3; // Smoother growth
+  const levelRewardMultiplier = 1 + (heroLevel - 1) * 0.1; // Small bonus per level
+  
+  const enemyGoldReward = Math.floor(
+    baseEnemyGold * 
+    waveRewardMultiplier * 
+    biomeMultiplier.gold * 
+    (isBoss ? 3 : 1) * 
+    levelRewardMultiplier
+  );
+  
+  const enemyXpReward = Math.floor(
+    baseEnemyXp * 
+    waveRewardMultiplier * 
+    biomeMultiplier.xp * 
+    (isBoss ? 3 : 1) * 
+    levelRewardMultiplier
+  );
 
   // === Enemy State (moves toward hero) ===
   const [enemyX, setEnemyX] = useState(700);
@@ -1027,7 +1061,7 @@ export default function App() {
 
     setAttributeCosts((prev) => ({
       ...prev,
-      [attribute]: Math.floor(prev[attribute] * 1.5),
+      [attribute]: Math.floor(prev[attribute] * 1.3), // Smoother cost growth
     }));
   }, [heroGold, attributeCosts]);
 
@@ -1120,7 +1154,7 @@ export default function App() {
         ? { 
             ...s, 
             level: s.level + 1,
-            cost: Math.floor(s.cost * 1.5),
+            cost: Math.floor(s.cost * 1.3), // Smoother cost growth
             effectValue: s.effect === 'damage' 
               ? s.effectValue + 0.25 
               : s.effect === 'heal'
