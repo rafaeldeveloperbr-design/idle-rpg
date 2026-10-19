@@ -9,6 +9,7 @@ interface PlayerStatusProps {
   xp: number;
   maxXp: number;
   gold: number;
+  diamonds: number;
   currentBiome: Biome;
   biomes: Biome[];
   biomeKills: number;
@@ -17,6 +18,7 @@ interface PlayerStatusProps {
   onChangeBiome: (biomeId: string) => void;
   onOpenSettings: () => void;
   onOpenMerchant: () => void;
+  onOpenDiamondShop: () => void;
 }
 
 const PlayerStatus: React.FC<PlayerStatusProps> = ({
@@ -26,6 +28,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   xp,
   maxXp,
   gold,
+  diamonds,
   currentBiome,
   biomes,
   biomeKills,
@@ -33,6 +36,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   isBiomeUnlocked,
   onOpenSettings,
   onOpenMerchant,
+  onOpenDiamondShop,
   onChangeBiome,
 }) => {
   const hpPercent = Math.round((hp / maxHp) * 100);
@@ -85,6 +89,23 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
               <span className="text-[10px] sm:text-[11px] text-yellow-400 font-bold">{Math.floor(gold).toLocaleString()}</span>
             </div>
           </div>
+
+          {/* Diamond Counter */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-3 sm:px-4 py-1.5 sm:py-2 border border-[#2d2d5e] rounded-sm">
+              <span className="text-sm sm:text-base">💎</span>
+              <span className="text-[10px] sm:text-[11px] text-cyan-300 font-bold">{Math.floor(diamonds).toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* Diamond Shop Button */}
+          <button
+            onClick={onOpenDiamondShop}
+            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-cyan-600 to-blue-700 border border-cyan-400 rounded-sm hover:from-cyan-500 hover:to-blue-600 transition-colors shadow-[0_0_10px_rgba(34,211,238,0.3)]"
+            title="Loja de Diamantes"
+          >
+            <span className="text-sm sm:text-base">💎</span>
+          </button>
 
           {/* Biome Selector */}
           <div className="relative">

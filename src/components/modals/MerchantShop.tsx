@@ -10,6 +10,7 @@ interface MerchantShopProps {
   heroLevel: number;
   equippedSkillIds: string[];
   inventoryCount: number;
+  inventoryCapacity: number;
   onBuySkill: (skillId: string) => void;
   onBuyConsumable: (consumableId: string) => void;
   onBuyItem: (itemId: string) => void;
@@ -25,6 +26,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
   heroLevel,
   equippedSkillIds,
   inventoryCount,
+  inventoryCapacity,
   onBuySkill,
   onBuyConsumable,
   onBuyItem,
@@ -363,7 +365,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                           </p>
                         )}
                         
-                        {inventoryCount >= 20 && (
+                        {inventoryCount >= inventoryCapacity && (
                           <p className="text-[10px] text-orange-400 mb-2">
                             ⚠️ Inventário cheio!
                           </p>

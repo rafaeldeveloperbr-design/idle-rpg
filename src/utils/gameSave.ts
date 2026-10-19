@@ -1,4 +1,4 @@
-import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../App';
+import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment, ActivePremiumEffect } from '../App';
 
 const SAVE_KEY = 'idle_rpg_save_v1';
 
@@ -9,6 +9,7 @@ export interface GameSaveData {
   heroLevel: number;
   heroXp: number;
   heroGold: number;
+  heroDiamonds: number;
   
   // Hero Attributes
   heroAttributes: HeroAttributes;
@@ -20,6 +21,7 @@ export interface GameSaveData {
   // Inventory & Equipment
   inventory: Item[];
   equipment: Equipment;
+  inventoryCapacity: number;
   
   // Biome & Progress
   currentBiomeId: string;
@@ -30,6 +32,11 @@ export interface GameSaveData {
   // Event Management
   wavesSinceLastEvent: number;
   completedQuestsSinceLastPath: number;
+  
+  // Premium Effects
+  isSpeedBoosted: boolean;
+  hasNoAds: boolean;
+  activePremiumEffects: ActivePremiumEffect[];
   
   // Metadata
   savedAt: number;

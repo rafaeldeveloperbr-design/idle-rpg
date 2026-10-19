@@ -5,6 +5,7 @@ import BottomPanel from './components/BottomPanel';
 import CharacterCreationModal from './components/modals/CharacterCreationModal';
 import SettingsModal from './components/modals/SettingsModal';
 import MerchantShop from './components/modals/MerchantShop';
+import DiamondShopModal from './components/modals/DiamondShopModal';
 import PathChoiceModal from './components/modals/PathChoiceModal';
 import NPCDialogueModal from './components/modals/NPCDialogueModal';
 import ToastContainer from './components/ToastContainer';
@@ -104,6 +105,25 @@ export interface ActiveBuff {
   multiplier: number;
 }
 
+export interface PremiumItem {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  price: number; // diamonds
+  type: 'speed_boost' | 'no_ads' | 'revive' | 'xp_boost' | 'inventory_expansion' | 'diamond_pack';
+  duration?: number; // seconds (for temporary effects)
+  value?: number; // for inventory expansion or diamond packs
+  realPrice?: string; // for diamond packs (e.g., "R$ 4,90")
+}
+
+export interface ActivePremiumEffect {
+  id: string;
+  itemId: string;
+  expiresAt?: number; // undefined for permanent effects
+  value: number;
+}
+
 export type ItemRarity = 'common' | 'rare' | 'epic';
 export type EquipmentSlot = 'weapon' | 'armor' | 'accessory';
 
@@ -181,11 +201,19 @@ export default function App() {
   const [heroLevel, setHeroLevel] = useState(1);
   const [heroXp, setHeroXp] = useState(0);
   const [heroGold, setHeroGold] = useState(10);
+  const [heroDiamonds, setHeroDiamonds] = useState(0); // Premium currency
+
+  // === Premium Effects ===
+  const [isSpeedBoosted, setIsSpeedBoosted] = useState(false);
+  const [hasNoAds, setHasNoAds] = useState(false);
+  const [activePremiumEffects, setActivePremiumEffects] = useState<ActivePremiumEffect[]>([]);
+  const [inventoryCapacity, setInventoryCapacity] = useState(20); // Can be expanded with premium items
 
   // === Modal States ===
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMerchantShop, setShowMerchantShop] = useState(false);
+  const [showDiamondShop, setShowDiamondShop] = useState(false);
   const [showPathChoice, setShowPathChoice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -531,6 +559,84 @@ export default function App() {
     },
   ];
 
+  // === Premium Items Catalog ===
+  const premiumItems: PremiumItem[] = [
+    {
+      id: 'speed_boost',
+      name: 'Acelerador de Velocidade',
+      icon: '⚡',
+      description: 'Ativa modo 2x velocidade no jogo por 1 hora',
+      price: 50,
+      type: 'speed_boost',
+      duration: 3600, // 1 hour
+    },
+    {
+      id: 'no_ads',
+      name: 'Pacote Sem Anúncios',
+      icon: '🚫',
+      description: 'Remove todos os anúncios permanentemente',
+      price: 200,
+      type: 'no_ads',
+    },
+    {
+      id: 'revive',
+      name: 'Ressuscitar / Vida Extra',
+      icon: '❤️',
+      description: 'Item consumível para reviver ao morrer (1 uso)',
+      price: 30,
+      type: 'revive',
+    },
+    {
+      id: 'xp_boost',
+      name: 'Bônus 2x XP/Ouro',
+      icon: '🍀',
+      description: 'Dobra ganhos de XP e Ouro por 1 hora',
+      price: 75,
+      type: 'xp_boost',
+      duration: 3600, // 1 hour
+    },
+    {
+      id: 'inventory_expansion',
+      name: 'Expansão de Inventário',
+      icon: '🎒',
+      description: 'Aumenta capacidade do inventário em +10 slots',
+      price: 100,
+      type: 'inventory_expansion',
+      value: 10,
+    },
+    // Diamond Packs
+    {
+      id: 'diamond_pack_100',
+      name: 'Pacote de 100 Diamantes',
+      icon: '💎',
+      description: 'Pacote inicial de diamantes',
+      price: 0,
+      type: 'diamond_pack',
+      value: 100,
+      realPrice: 'R$ 4,90',
+    },
+    {
+      id: 'diamond_pack_500',
+      name: 'Pacote de 500 Diamantes',
+      icon: '💎',
+      description: 'Pacote médio com bônus',
+      price: 0,
+      type: 'diamond_pack',
+      value: 500,
+      realPrice: 'R$ 19,90',
+    },
+    {
+      id: 'diamond_pack_1200',
+      name: 'Pacote de 1200 Diamantes',
+      icon: '💎',
+      description: 'Pacote grande - Melhor valor!',
+      price: 0,
+      type: 'diamond_pack',
+      value: 1200,
+      realPrice: 'R$ 39,90',
+    },
+  ];
+
   // === Inventory System ===
   const [inventory, setInventory] = useState<Item[]>([]);
   const [equipment, setEquipment] = useState<Equipment>({
@@ -868,6 +974,7 @@ export default function App() {
       setHeroLevel(savedData.heroLevel);
       setHeroXp(savedData.heroXp);
       setHeroGold(savedData.heroGold);
+      setHeroDiamonds(savedData.heroDiamonds || 0);
       
       // Restore attributes
       setHeroAttributes(savedData.heroAttributes);
@@ -889,6 +996,12 @@ export default function App() {
       // Restore event management
       setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
       setCompletedQuestsSinceLastPath(savedData.completedQuestsSinceLastPath || 0);
+      
+      // Restore premium effects
+      setInventoryCapacity(savedData.inventoryCapacity || 20);
+      setIsSpeedBoosted(savedData.isSpeedBoosted || false);
+      setHasNoAds(savedData.hasNoAds || false);
+      setActivePremiumEffects(savedData.activePremiumEffects || []);
       
       // Restore current enemy (spawn random enemy for the biome)
       const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
@@ -923,17 +1036,22 @@ export default function App() {
         heroLevel,
         heroXp,
         heroGold,
+        heroDiamonds,
         heroAttributes,
         attributeCosts,
         skills,
         inventory,
         equipment,
+        inventoryCapacity,
         currentBiomeId,
         biomeKills,
         totalKills,
         wave,
         wavesSinceLastEvent,
         completedQuestsSinceLastPath,
+        isSpeedBoosted,
+        hasNoAds,
+        activePremiumEffects,
       });
     }, 5000); // Save every 5 seconds
 
@@ -948,17 +1066,22 @@ export default function App() {
         heroLevel,
         heroXp,
         heroGold,
+        heroDiamonds,
         heroAttributes,
         attributeCosts,
         skills,
         inventory,
         equipment,
+        inventoryCapacity,
         currentBiomeId,
         biomeKills,
         totalKills,
         wave,
         wavesSinceLastEvent,
         completedQuestsSinceLastPath,
+        isSpeedBoosted,
+        hasNoAds,
+        activePremiumEffects,
       });
     };
 
@@ -968,7 +1091,7 @@ export default function App() {
       clearInterval(saveInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroAttributes, attributeCosts, skills, inventory, equipment, currentBiomeId, biomeKills, totalKills, wave]);
+  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroDiamonds, heroAttributes, attributeCosts, skills, inventory, equipment, inventoryCapacity, currentBiomeId, biomeKills, totalKills, wave, wavesSinceLastEvent, completedQuestsSinceLastPath, isSpeedBoosted, hasNoAds, activePremiumEffects]);
 
   // === Reset Game ===
   const resetGame = useCallback(() => {
@@ -1550,7 +1673,7 @@ export default function App() {
     if (!item) return;
     if (heroGold < item.sellValue) return;
     if (heroLevel < (item.requiredLevel || 1)) return;
-    if (inventory.length >= 20) {
+    if (inventory.length >= inventoryCapacity) {
       addToast('⚠️ Inventário cheio!', 'info');
       return;
     }
@@ -1566,6 +1689,85 @@ export default function App() {
     setInventory(prev => [...prev, newItem]);
     addToast(`🛡️ ${item.name} comprado!`, 'info');
   }, [shopItems, heroGold, heroLevel, inventory.length, addToast]);
+
+  // === Buy Premium Item ===
+  const buyPremiumItem = useCallback((itemId: string) => {
+    const item = premiumItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Diamond packs are free (simulated purchase)
+    if (item.type === 'diamond_pack') {
+      setHeroDiamonds(prev => prev + (item.value || 0));
+      addToast(`💎 +${item.value} diamantes adquiridos!`, 'info');
+      return;
+    }
+    
+    // Check if player has enough diamonds
+    if (heroDiamonds < item.price) {
+      addToast('❌ Diamantes insuficientes!', 'info');
+      return;
+    }
+    
+    // Deduct diamonds
+    setHeroDiamonds(prev => prev - item.price);
+    
+    // Apply effect based on type
+    switch (item.type) {
+      case 'speed_boost':
+        setIsSpeedBoosted(true);
+        setActivePremiumEffects(prev => [...prev, {
+          id: `speed_${Date.now()}`,
+          itemId: item.id,
+          expiresAt: Date.now() + (item.duration || 0) * 1000,
+          value: 2,
+        }]);
+        addToast(`⚡ Velocidade 2x ativada por 1 hora!`, 'info');
+        break;
+        
+      case 'no_ads':
+        setHasNoAds(true);
+        addToast(`🚫 Anúncios removidos permanentemente!`, 'info');
+        break;
+        
+      case 'revive':
+        // Revive is stored as consumable, not immediately applied
+        addToast(`❤️ Vida Extra adquirida! Use ao morrer.`, 'info');
+        break;
+        
+      case 'xp_boost':
+        setActivePremiumEffects(prev => [...prev, {
+          id: `xp_${Date.now()}`,
+          itemId: item.id,
+          expiresAt: Date.now() + (item.duration || 0) * 1000,
+          value: 2,
+        }]);
+        addToast(`🍀 Bônus 2x XP/Ouro ativado por 1 hora!`, 'info');
+        break;
+        
+      case 'inventory_expansion':
+        setInventoryCapacity(prev => prev + (item.value || 10));
+        addToast(`🎒 Inventário expandido em +${item.value} slots!`, 'info');
+        break;
+    }
+  }, [premiumItems, heroDiamonds, addToast]);
+
+  // === Use Revive (Premium Item) ===
+  const useRevive = useCallback(() => {
+    // Check if player has revive item
+    const hasRevive = activePremiumEffects.some(e => e.itemId === 'revive');
+    if (!hasRevive) {
+      addToast('❌ Você não tem Vida Extra!', 'info');
+      return false;
+    }
+    
+    // Remove revive effect
+    setActivePremiumEffects(prev => prev.filter(e => e.itemId !== 'revive'));
+    
+    // Restore HP
+    setHeroHp(heroAttributes.maxHp);
+    addToast(`❤️ Ressuscitado com vida cheia!`, 'info');
+    return true;
+  }, [activePremiumEffects, heroAttributes.maxHp, addToast]);
 
   // === Generate Random Item Drop ===
   const generateItemDrop = useCallback((): Item | null => {
@@ -1976,6 +2178,7 @@ export default function App() {
         xp={heroXp}
         maxXp={xpToNextLevel}
         gold={heroGold}
+        diamonds={heroDiamonds}
         currentBiome={currentBiome}
         biomes={biomes}
         biomeKills={biomeKills}
@@ -1984,6 +2187,7 @@ export default function App() {
         onChangeBiome={changeBiome}
         onOpenSettings={() => setShowSettings(true)}
         onOpenMerchant={() => setShowMerchantShop(true)}
+        onOpenDiamondShop={() => setShowDiamondShop(true)}
       />
 
       <ToastContainer toasts={toasts} />
@@ -2055,11 +2259,22 @@ export default function App() {
           heroLevel={heroLevel}
           equippedSkillIds={equippedSkillIds}
           inventoryCount={inventory.length}
+          inventoryCapacity={inventoryCapacity}
           onBuySkill={buySkill}
           onBuyConsumable={buyConsumable}
           onBuyItem={buyShopItem}
           onEquipSkill={equipSkill}
           onClose={() => setShowMerchantShop(false)}
+        />
+      )}
+
+      {/* Diamond Shop Modal */}
+      {showDiamondShop && (
+        <DiamondShopModal
+          premiumItems={premiumItems}
+          heroDiamonds={heroDiamonds}
+          onBuyItem={buyPremiumItem}
+          onClose={() => setShowDiamondShop(false)}
         />
       )}
 

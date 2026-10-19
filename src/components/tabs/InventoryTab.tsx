@@ -5,6 +5,7 @@ import { GoldIcon } from '../../App';
 interface InventoryTabProps {
   inventory: Item[];
   equipment: Equipment;
+  inventoryCapacity: number;
   onEquipItem: (itemId: string) => void;
   onUnequipItem: (slot: keyof Equipment) => void;
   onSellItem: (itemId: string) => void;
@@ -242,6 +243,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
 const InventoryTab: React.FC<InventoryTabProps> = ({
   inventory,
   equipment,
+  inventoryCapacity,
   onEquipItem,
   onUnequipItem,
   onSellItem,

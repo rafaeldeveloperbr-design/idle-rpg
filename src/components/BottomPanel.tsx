@@ -26,6 +26,7 @@ interface BottomPanelProps {
   onEquipSkill: (skillId: string) => void;
   inventory: Item[];
   equipment: Equipment;
+  inventoryCapacity: number;
   onEquipItem: (itemId: string) => void;
   onUnequipItem: (slot: keyof Equipment) => void;
   onSellItem: (itemId: string) => void;
@@ -53,6 +54,7 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   onEquipSkill,
   inventory,
   equipment,
+  inventoryCapacity,
   onEquipItem,
   onUnequipItem,
   onSellItem,
