@@ -41,9 +41,9 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
       {/* Mobile Layout: 2 rows */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         {/* Row 1: HP and Level/XP */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           {/* HP Bar */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-1 min-w-[120px] sm:min-w-[150px]">
             <span className="text-[10px] sm:text-[11px] text-red-400 whitespace-nowrap">❤️ HP</span>
             <div className="relative flex-1 h-5 sm:h-6 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
               <div
@@ -57,7 +57,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
           </div>
 
           {/* Level & XP Bar */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-1 min-w-[120px] sm:min-w-[150px]">
             <span className="text-[10px] sm:text-[11px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm">
               LV.{level}
             </span>
@@ -74,7 +74,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
         </div>
 
         {/* Row 2: Gold and Biome (on mobile) / Right side (on desktop) */}
-        <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end">
+        <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end flex-shrink-0">
           {/* Gold Counter */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-3 sm:px-4 py-1.5 sm:py-2 border border-[#2d2d5e] rounded-sm">
