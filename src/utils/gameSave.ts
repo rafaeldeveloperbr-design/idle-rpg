@@ -27,6 +27,9 @@ export interface GameSaveData {
   totalKills: number;
   wave: number;
   
+  // Event Management
+  wavesSinceLastEvent: number;
+  
   // Metadata
   savedAt: number;
   version: string;

@@ -395,6 +395,8 @@ export default function App() {
   );
   const [currentNPCQuest, setCurrentNPCQuest] = useState<Quest | null>(null);
   const lastNPCSpawnWave = useRef(0);
+  const [wavesSinceLastEvent, setWavesSinceLastEvent] = useState(0);
+  const MIN_WAVES_BETWEEN_EVENTS = 15; // Minimum waves between events
 
   // === Path Difficulty System ===
   const [pathDifficultyMultiplier, setPathDifficultyMultiplier] = useState<{
@@ -863,6 +865,9 @@ export default function App() {
       setTotalKills(savedData.totalKills);
       setWave(savedData.wave);
       
+      // Restore event management
+      setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
+      
       // Restore current enemy (spawn random enemy for the biome)
       const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
       const randomEnemy = restoredBiome.enemies.normal[Math.floor(Math.random() * restoredBiome.enemies.normal.length)];
@@ -904,6 +909,7 @@ export default function App() {
         biomeKills,
         totalKills,
         wave,
+        wavesSinceLastEvent,
       });
     }, 5000); // Save every 5 seconds
 
@@ -927,6 +933,7 @@ export default function App() {
         biomeKills,
         totalKills,
         wave,
+        wavesSinceLastEvent,
       });
     };
 
@@ -1065,6 +1072,7 @@ export default function App() {
   // === Handle Path Choice ===
   const handlePathChoice = useCallback((choice: 'safe' | 'challenging' | 'deadly') => {
     setShowPathChoice(false);
+    setWavesSinceLastEvent(0); // Reset event counter after path choice
     
     // Apply difficulty multiplier based on choice
     switch (choice) {
@@ -1118,11 +1126,20 @@ export default function App() {
 
   // === Quest System Functions ===
   const checkAndSpawnNPC = useCallback(() => {
-    // Check if we should spawn an NPC (every 5 waves)
-    if (wave - lastNPCSpawnWave.current < 5) return;
+    // EXCLUSIVITY CHECK: Don't spawn NPC if path choice is active
+    if (showPathChoice) return;
     
-    // 30% chance to encounter NPC
-    if (Math.random() > 0.3) return;
+    // EXCLUSIVITY CHECK: Don't spawn NPC if another NPC dialogue is already open
+    if (currentNPCQuest !== null) return;
+    
+    // EXCLUSIVITY CHECK: Don't spawn NPC if there's an active quest being processed
+    // (allow active quests to exist, but don't spawn new NPCs while one is being shown)
+    
+    // SPACING CHECK: Ensure minimum waves between events
+    if (wavesSinceLastEvent < MIN_WAVES_BETWEEN_EVENTS) return;
+    
+    // 20% chance to encounter NPC (reduced from 30% for better pacing)
+    if (Math.random() > 0.2) return;
     
     // Find available quests (not completed, not active, level requirement met)
     const availableQuests = quests.filter(q => 
@@ -1138,19 +1155,21 @@ export default function App() {
     
     // Show NPC dialogue
     setCurrentNPCQuest(randomQuest);
-    lastNPCSpawnWave.current = wave;
-  }, [wave, quests, heroLevel]);
+    setWavesSinceLastEvent(0); // Reset event counter
+  }, [wave, quests, heroLevel, showPathChoice, currentNPCQuest, wavesSinceLastEvent]);
 
   const acceptQuest = useCallback((quest: Quest) => {
     setQuests(prev => prev.map(q => 
       q.id === quest.id ? { ...q, active: true } : q
     ));
     setCurrentNPCQuest(null);
+    setWavesSinceLastEvent(0); // Reset event counter after quest event
     addToast(`📜 Quest aceita: ${quest.title}`, 'info');
   }, [addToast]);
 
   const declineQuest = useCallback(() => {
     setCurrentNPCQuest(null);
+    setWavesSinceLastEvent(0); // Reset event counter after quest event
   }, []);
 
   const completeQuest = useCallback((questId: string) => {
@@ -1210,6 +1229,9 @@ export default function App() {
     const newWave = wave + 1;
     setWave(newWave);
     
+    // Increment waves since last event
+    setWavesSinceLastEvent(prev => prev + 1);
+    
     // Track kills for biome progression
     const newBiomeKills = biomeKills + 1;
     const newTotalKills = totalKills + 1;
@@ -1220,13 +1242,30 @@ export default function App() {
     const nextIsBoss = newBiomeKills > 0 && newBiomeKills % 10 === 0;
     setIsBossWave(nextIsBoss);
     
-    // Check if should show path choice (every 10 waves or before boss)
+    // EXCLUSIVITY CHECK: Don't show path choice if NPC dialogue is active
+    if (currentNPCQuest !== null) {
+      // Skip path choice, just spawn enemy
+      spawnRandomEnemy(nextIsBoss);
+      setEnemyX(enemySpawnX);
+      setGamePhase('approaching');
+      lastHeroAttackRef.current = Date.now();
+      lastEnemyAttackRef.current = Date.now();
+      return;
+    }
+    
+    // EXCLUSIVITY CHECK: Don't show path choice if another path choice is already active
+    if (showPathChoice) {
+      return; // Already showing path choice, don't spawn enemy yet
+    }
+    
+    // SPACING CHECK: Ensure minimum waves between events for path choice
     const shouldShowPathChoice = (newWave % 10 === 0 && newWave > 0) || (nextIsBoss && newBiomeKills % 10 === 9);
     
-    if (shouldShowPathChoice) {
+    if (shouldShowPathChoice && wavesSinceLastEvent >= MIN_WAVES_BETWEEN_EVENTS) {
       // Heal hero to 100% when showing path choice
       setHeroHp(heroAttributes.maxHp);
       setShowPathChoice(true);
+      setWavesSinceLastEvent(0); // Reset event counter
       return; // Don't spawn enemy yet, wait for choice
     }
     
@@ -1840,12 +1879,14 @@ export default function App() {
       // Update quest progress
       updateQuestProgress();
       
-      // Check for NPC encounters
-      checkAndSpawnNPC();
+      // EXCLUSIVITY CHECK: Only check for NPC encounters if no modals are active
+      if (!showPathChoice && currentNPCQuest === null) {
+        checkAndSpawnNPC();
+      }
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest]);
 
   // === Consistency Check ===
   useEffect(() => {
