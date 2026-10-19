@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AttributesTab from './tabs/AttributesTab';
 import SkillsTab from './tabs/SkillsTab';
 import InventoryTab from './tabs/InventoryTab';
+import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../App';
 
 type TabId = 'attributes' | 'skills' | 'inventory';
 
@@ -11,25 +12,82 @@ interface Tab {
   icon: string;
 }
 
+interface BottomPanelProps {
+  heroAttributes: HeroAttributes;
+  attributeCosts: AttributeCosts;
+  heroGold: number;
+  onUpgradeAttribute: (attribute: keyof HeroAttributes) => void;
+  skills: Skill[];
+  onUpgradeSkill: (skillId: string) => void;
+  onToggleAutoCast: (skillId: string) => void;
+  inventory: Item[];
+  equipment: Equipment;
+  onEquipItem: (itemId: string) => void;
+  onUnequipItem: (slot: keyof Equipment) => void;
+  onSellItem: (itemId: string) => void;
+}
+
 const tabs: Tab[] = [
   { id: 'attributes', label: 'Atributos', icon: '📊' },
   { id: 'skills', label: 'Habilidades', icon: '⚡' },
   { id: 'inventory', label: 'Inventário', icon: '🎒' },
 ];
 
-const BottomPanel: React.FC = () => {
+const BottomPanel: React.FC<BottomPanelProps> = ({
+  heroAttributes,
+  attributeCosts,
+  heroGold,
+  onUpgradeAttribute,
+  skills,
+  onUpgradeSkill,
+  onToggleAutoCast,
+  inventory,
+  equipment,
+  onEquipItem,
+  onUnequipItem,
+  onSellItem,
+}) => {
   const [activeTab, setActiveTab] = useState<TabId>('attributes');
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'attributes':
-        return <AttributesTab />;
+        return (
+          <AttributesTab
+            heroAttributes={heroAttributes}
+            attributeCosts={attributeCosts}
+            heroGold={heroGold}
+            onUpgradeAttribute={onUpgradeAttribute}
+          />
+        );
       case 'skills':
-        return <SkillsTab />;
+        return (
+          <SkillsTab
+            skills={skills}
+            heroGold={heroGold}
+            onUpgradeSkill={onUpgradeSkill}
+            onToggleAutoCast={onToggleAutoCast}
+          />
+        );
       case 'inventory':
-        return <InventoryTab />;
+        return (
+          <InventoryTab
+            inventory={inventory}
+            equipment={equipment}
+            onEquipItem={onEquipItem}
+            onUnequipItem={onUnequipItem}
+            onSellItem={onSellItem}
+          />
+        );
       default:
-        return <AttributesTab />;
+        return (
+          <AttributesTab
+            heroAttributes={heroAttributes}
+            attributeCosts={attributeCosts}
+            heroGold={heroGold}
+            onUpgradeAttribute={onUpgradeAttribute}
+          />
+        );
     }
   };
 
@@ -41,20 +99,20 @@ const BottomPanel: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[9px] transition-all border-b-2 ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-[11px] transition-all border-b-2 ${
               activeTab === tab.id
                 ? 'tab-active text-purple-300 border-purple-500'
                 : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-[#16213e]/50'
             }`}
           >
-            <span>{tab.icon}</span>
+            <span className="text-base">{tab.icon}</span>
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="max-h-[220px] overflow-y-auto">
+      <div className="max-h-[240px] overflow-y-auto">
         {renderTabContent()}
       </div>
     </div>
