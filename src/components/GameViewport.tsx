@@ -265,7 +265,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       >
         <div className="relative">
           {/* Hero Name - Above head */}
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 bg-black/70 border border-green-500/50 rounded-sm z-10">
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-green-500/60 rounded-sm z-20 pointer-events-none">
             <span className="text-[9px] sm:text-[10px] text-green-300 font-bold">{heroName}</span>
           </div>
           <div className="relative">
@@ -308,22 +308,31 @@ const GameViewport: React.FC<GameViewportProps> = ({
       <div
         className={`absolute bottom-16 transition-opacity duration-500 ${
           isEnemyDead ? 'opacity-0' : ''
-        } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''} ${
-          isBossWave ? 'scale-125' : ''
-        }`}
+        } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
         style={{ 
           left: `${enemyX}px`,
-          filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
         }}
       >
         <div className="relative">
-          {/* Enemy Name - Above head */}
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 bg-black/70 border border-red-500/50 rounded-sm z-10">
+          {/* Enemy Name - Above head (inside scaled container) */}
+          <div 
+            className={`absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-red-500/60 rounded-sm z-20 pointer-events-none ${
+              isBossWave ? 'scale-125' : ''
+            }`}
+            style={{
+              filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
+            }}
+          >
             <span className="text-[9px] sm:text-[10px] text-red-300 font-bold">
               {isBossWave ? '💀 CHEFÃO' : 'Goblin'}
             </span>
           </div>
-          <div className="relative">
+          <div 
+            className={`relative ${isBossWave ? 'scale-125' : ''}`}
+            style={{
+              filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
+            }}
+          >
             {/* Hit flash overlay */}
             {enemyHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
