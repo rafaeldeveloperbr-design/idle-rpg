@@ -8,7 +8,7 @@ import MerchantShop from './components/modals/MerchantShop';
 import ToastContainer from './components/ToastContainer';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
-type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
+type GamePhase = 'approaching' | 'fighting' | 'respawning';
 
 export interface HeroAttributes {
   attack: number;
@@ -751,8 +751,7 @@ export default function App() {
   // Constants
   const attackRange = 80;
   const enemySpeed = 2;
-  const enemySpawnX = 750;
-  const waitDuration = 2000;
+  const enemySpawnX = 900; // Spawn off-screen to the right
 
   // XP formula: level * 100
   const xpToNextLevel = heroLevel * 100;
@@ -1063,7 +1062,6 @@ export default function App() {
             const xpReward = baseEnemyXp + (currentWave - 1) * 8;
             setHeroGold((g) => g + goldReward);
             setHeroXp((x) => x + xpReward);
-            setGamePhase('waiting');
             
             // Generate item drop
             const droppedItem = generateItemDrop();
@@ -1077,7 +1075,8 @@ export default function App() {
               }
             }
             
-            setTimeout(() => spawnNewEnemy(), waitDuration);
+            // Spawn next enemy immediately
+            spawnNewEnemy();
             return 0;
           }
           return newHp;
@@ -1477,7 +1476,6 @@ export default function App() {
               
               setHeroGold((g) => g + goldReward);
               setHeroXp((x) => x + xpReward);
-              setGamePhase('waiting');
               
               // Show boss defeated toast
               if (isBossWave) {
@@ -1496,9 +1494,8 @@ export default function App() {
                 }
               }
 
-              setTimeout(() => {
-                spawnNewEnemy();
-              }, waitDuration);
+              // Spawn next enemy immediately
+              spawnNewEnemy();
 
               return 0;
             }
@@ -1548,7 +1545,7 @@ export default function App() {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath]);
 
   // === Consistency Check ===
   useEffect(() => {

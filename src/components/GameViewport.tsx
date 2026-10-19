@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../App';
 
-type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
+type GamePhase = 'approaching' | 'fighting' | 'respawning';
 
 interface GameViewportProps {
   heroX: number;
@@ -165,7 +165,6 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const enemyHpPercent = Math.max(0, Math.round((enemyHp / enemyMaxHp) * 100));
   const isMoving = gamePhase === 'approaching';
   const isAttacking = gamePhase === 'fighting' && enemyHp > 0;
-  const isWaiting = gamePhase === 'waiting';
   const isEnemyDead = enemyHp <= 0;
 
   return (
@@ -424,19 +423,6 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       ))}
 
-      {/* Waiting phase indicator */}
-      {isWaiting && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-waiting-pulse">
-          <div className="bg-black/70 border-2 border-yellow-500/50 rounded-md px-4 py-2 flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(234,179,8,0.3)]">
-            <span className="text-[10px] text-yellow-400">⚔️ Vitória!</span>
-            <span className="text-[8px] text-gray-300">Próximo inimigo em breve...</span>
-            <div className="w-24 h-1 bg-[#0f0f1a] border border-yellow-900/50 rounded-sm overflow-hidden mt-1">
-              <div className="h-full bg-yellow-500 animate-waiting-bar" />
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Respawning phase indicator */}
       {gamePhase === 'respawning' && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse-glow">
@@ -467,13 +453,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
         <span className={`text-[9px] ${
           gamePhase === 'approaching' ? 'text-cyan-300' :
           gamePhase === 'fighting' ? (isBossWave ? 'text-red-400' : 'text-red-300') :
-          gamePhase === 'respawning' ? 'text-red-500' :
-          'text-yellow-300'
+          'text-red-500'
         }`}>
           {gamePhase === 'approaching' ? (isBossWave ? '💀 Chefão se aproximando' : '🚶 Aproximando') :
            gamePhase === 'fighting' ? (isBossWave ? '💀 COMBATE DE CHEFÃO' : '⚔️ Combate') :
-           gamePhase === 'respawning' ? '💀 DERROTADO - Recuperação' :
-           '💤 Aguardando'}
+           '💀 DERROTADO - Recuperação'}
         </span>
       </div>
     </div>
