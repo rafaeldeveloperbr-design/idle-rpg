@@ -25,6 +25,7 @@ interface BottomPanelProps {
   onEquipItem: (itemId: string) => void;
   onUnequipItem: (slot: keyof Equipment) => void;
   onSellItem: (itemId: string) => void;
+  onResetGame: () => void;
 }
 
 const tabs: Tab[] = [
@@ -46,6 +47,7 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   onEquipItem,
   onUnequipItem,
   onSellItem,
+  onResetGame,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('attributes');
 
@@ -114,6 +116,17 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
       {/* Tab Content */}
       <div className="max-h-[240px] overflow-y-auto">
         {renderTabContent()}
+      </div>
+
+      {/* Reset Button */}
+      <div className="border-t border-[#2d2d5e] p-2">
+        <button
+          onClick={onResetGame}
+          className="w-full py-2 px-3 bg-red-900/30 hover:bg-red-900/50 border border-red-700/50 text-red-300 text-xs rounded transition-colors flex items-center justify-center gap-2"
+        >
+          <span>🔄</span>
+          <span>Resetar Progresso</span>
+        </button>
       </div>
     </div>
   );

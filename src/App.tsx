@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import PlayerStatus from './components/PlayerStatus';
 import GameViewport from './components/GameViewport';
 import BottomPanel from './components/BottomPanel';
+import { saveGameData, loadGameData, clearSaveData } from './utils/gameSave';
 
 type GamePhase = 'approaching' | 'fighting' | 'waiting';
 
@@ -325,6 +326,93 @@ export default function App() {
 
   // XP formula: level * 100
   const xpToNextLevel = heroLevel * 100;
+
+  // === Load Game on Mount ===
+  useEffect(() => {
+    const savedData = loadGameData();
+    
+    if (savedData) {
+      console.log('[Load] Restoring saved game...');
+      
+      // Restore hero state
+      setHeroHp(savedData.heroHp);
+      setHeroLevel(savedData.heroLevel);
+      setHeroXp(savedData.heroXp);
+      setHeroGold(savedData.heroGold);
+      
+      // Restore attributes
+      setHeroAttributes(savedData.heroAttributes);
+      setAttributeCosts(savedData.attributeCosts);
+      
+      // Restore skills
+      setSkills(savedData.skills);
+      
+      // Restore inventory & equipment
+      setInventory(savedData.inventory);
+      setEquipment(savedData.equipment);
+      
+      // Restore biome & progress
+      setCurrentBiomeId(savedData.currentBiomeId);
+      setBiomeKills(savedData.biomeKills);
+      setTotalKills(savedData.totalKills);
+      setWave(savedData.wave);
+    }
+  }, []);
+
+  // === Auto-Save System ===
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
+      saveGameData({
+        heroHp,
+        heroLevel,
+        heroXp,
+        heroGold,
+        heroAttributes,
+        attributeCosts,
+        skills,
+        inventory,
+        equipment,
+        currentBiomeId,
+        biomeKills,
+        totalKills,
+        wave,
+      });
+    }, 5000); // Save every 5 seconds
+
+    // Save on page close/refresh
+    const handleBeforeUnload = () => {
+      saveGameData({
+        heroHp,
+        heroLevel,
+        heroXp,
+        heroGold,
+        heroAttributes,
+        attributeCosts,
+        skills,
+        inventory,
+        equipment,
+        currentBiomeId,
+        biomeKills,
+        totalKills,
+        wave,
+      });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(saveInterval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [heroHp, heroLevel, heroXp, heroGold, heroAttributes, attributeCosts, skills, inventory, equipment, currentBiomeId, biomeKills, totalKills, wave]);
+
+  // === Reset Game ===
+  const resetGame = useCallback(() => {
+    if (window.confirm('Tem certeza que deseja resetar todo o progresso? Esta ação não pode ser desfeita!')) {
+      clearSaveData();
+      window.location.reload();
+    }
+  }, []);
 
   // === Refs for game loop ===
   const enemyXRef = useRef(enemyX);
@@ -803,6 +891,7 @@ export default function App() {
         onEquipItem={equipItem}
         onUnequipItem={unequipItem}
         onSellItem={sellItem}
+        onResetGame={resetGame}
       />
     </div>
   );
