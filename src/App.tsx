@@ -5,6 +5,7 @@ import BottomPanel from './components/BottomPanel';
 import CharacterCreationModal from './components/modals/CharacterCreationModal';
 import SettingsModal from './components/modals/SettingsModal';
 import MerchantShop from './components/modals/MerchantShop';
+import PathChoiceModal from './components/modals/PathChoiceModal';
 import ToastContainer from './components/ToastContainer';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
@@ -165,6 +166,7 @@ export default function App() {
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMerchantShop, setShowMerchantShop] = useState(false);
+  const [showPathChoice, setShowPathChoice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
 
   // === Toast Notifications ===
@@ -731,9 +733,11 @@ export default function App() {
     heroLevelScale
   );
   
-  // Enemy Attack: scales with wave, biome, AND hero level
+  // Enemy Attack: aggressive scaling with exponential curve
+  // Formula: base + (wave^1.3) + biome + level scaling
+  const waveAttackScale = Math.pow(wave, 1.3); // Exponential growth
   const enemyAttackPower = Math.floor(
-    (baseEnemyAttack + Math.floor((wave - 1) * 2)) * 
+    (baseEnemyAttack + waveAttackScale) * 
     biomeMultiplier.attack * 
     heroLevelScale
   );
@@ -1013,6 +1017,53 @@ export default function App() {
     }
   }, [currentBiomeId, biomes]);
 
+  // === Handle Path Choice ===
+  const handlePathChoice = useCallback((choice: 'risk' | 'rest' | 'mine') => {
+    setShowPathChoice(false);
+    
+    switch (choice) {
+      case 'risk':
+        // Spawn mini-boss with guaranteed rare/epic drop
+        addToast('⚔️ Você escolheu o Caminho do Risco!', 'info');
+        setIsBossWave(true);
+        spawnRandomEnemy(true);
+        setEnemyX(enemySpawnX);
+        setGamePhase('approaching');
+        lastHeroAttackRef.current = Date.now();
+        lastEnemyAttackRef.current = Date.now();
+        break;
+        
+      case 'rest':
+        // Full heal + temporary buff
+        addToast('🔥 Você escolheu o Caminho do Descanso!', 'info');
+        setHeroHp(heroAttributes.maxHp);
+        // TODO: Implement temporary buff system
+        // For now, just continue with next enemy
+        const nextIsBoss = biomeKills > 0 && biomeKills % 10 === 0;
+        spawnRandomEnemy(nextIsBoss);
+        setEnemyX(enemySpawnX);
+        setGamePhase('approaching');
+        lastHeroAttackRef.current = Date.now();
+        lastEnemyAttackRef.current = Date.now();
+        break;
+        
+      case 'mine':
+        // Extra gold and materials
+        addToast('⛏️ Você escolheu o Caminho da Mineração!', 'info');
+        const miningGold = 50 + wave * 10;
+        setHeroGold(prev => prev + miningGold);
+        addToast(`💰 +${miningGold} ouro coletado!`, 'info');
+        // Continue with next enemy
+        const nextIsBossMine = biomeKills > 0 && biomeKills % 10 === 0;
+        spawnRandomEnemy(nextIsBossMine);
+        setEnemyX(enemySpawnX);
+        setGamePhase('approaching');
+        lastHeroAttackRef.current = Date.now();
+        lastEnemyAttackRef.current = Date.now();
+        break;
+    }
+  }, [heroAttributes.maxHp, wave, biomeKills, enemySpawnX, spawnRandomEnemy, addToast]);
+
   const spawnNewEnemy = useCallback(() => {
     const newWave = wave + 1;
     setWave(newWave);
@@ -1026,6 +1077,14 @@ export default function App() {
     // Check if next enemy should be a boss (every 10 kills in biome)
     const nextIsBoss = newBiomeKills > 0 && newBiomeKills % 10 === 0;
     setIsBossWave(nextIsBoss);
+    
+    // Check if should show path choice (every 10 waves or before boss)
+    const shouldShowPathChoice = (newWave % 10 === 0 && newWave > 0) || (nextIsBoss && newBiomeKills % 10 === 9);
+    
+    if (shouldShowPathChoice) {
+      setShowPathChoice(true);
+      return; // Don't spawn enemy yet, wait for choice
+    }
     
     // Spawn random enemy based on boss status
     spawnRandomEnemy(nextIsBoss);
@@ -1541,8 +1600,23 @@ export default function App() {
         if (enemyHpRef.current > 0 && now - lastEnemyAttackRef.current >= enemyAttackSpeed) {
           lastEnemyAttackRef.current = now;
           const currentWave = waveRef.current;
-          const currentEnemyAttack = baseEnemyAttack + Math.floor((currentWave - 1) * 2);
-          const damage = Math.max(1, Math.round(currentEnemyAttack - combatAttrs.defense));
+          
+          // Recalculate enemy attack with same formula as enemyAttackPower
+          const currentBiomeData = biomes.find(b => b.id === currentBiomeId) || biomes[0];
+          const currentBiomeMultiplier = currentBiomeData.enemyMultiplier;
+          const currentHeroLevelScale = 1 + (heroLevel - 1) * 0.15;
+          const currentWaveAttackScale = Math.pow(currentWave, 1.3);
+          const currentEnemyAttack = Math.floor(
+            (baseEnemyAttack + currentWaveAttackScale) * 
+            currentBiomeMultiplier.attack * 
+            currentHeroLevelScale
+          );
+          
+          // Defense reduces damage by percentage, not flat subtraction
+          // Formula: damage = attack * (1 - defense/(defense + 100))
+          // This ensures damage is always at least 10% of attack
+          const defenseReduction = combatAttrs.defense / (combatAttrs.defense + 100);
+          const damage = Math.max(1, Math.round(currentEnemyAttack * (1 - defenseReduction)));
           
           // Spawn damage popup on hero
           spawnDamagePopup(damage, heroX, false);
@@ -1691,6 +1765,11 @@ export default function App() {
           onEquipSkill={equipSkill}
           onClose={() => setShowMerchantShop(false)}
         />
+      )}
+
+      {/* Path Choice Modal */}
+      {showPathChoice && (
+        <PathChoiceModal onChoose={handlePathChoice} />
       )}
     </div>
   );
