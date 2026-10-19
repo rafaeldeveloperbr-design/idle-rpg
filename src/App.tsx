@@ -170,6 +170,7 @@ export default function App() {
   const [showMerchantShop, setShowMerchantShop] = useState(false);
   const [showPathChoice, setShowPathChoice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
+  const [isGameStarted, setIsGameStarted] = useState(false);
 
   // === Reset Control Flag ===
   const isResetting = useRef(false);
@@ -874,6 +875,7 @@ export default function App() {
       setCurrentEnemy(randomEnemy);
       
       setIsFirstTime(false);
+      setIsGameStarted(true); // Start the game loop when loading save
       console.log('[Load] Game restored successfully!');
     } else {
       console.log('[New Game] Starting fresh game...');
@@ -962,6 +964,7 @@ export default function App() {
     setHeroName(name);
     setShowCharacterCreation(false);
     setIsFirstTime(false);
+    setIsGameStarted(true); // Start the game loop
     console.log('[Character Creation] Adventure started with hero:', name);
   }, []);
 
@@ -1714,6 +1717,9 @@ export default function App() {
 
   // === Main Game Loop ===
   useEffect(() => {
+    // Don't run game loop if game hasn't started yet
+    if (!isGameStarted) return;
+    
     const interval = setInterval(() => {
       const currentPhase = gamePhaseRef.current;
       const currentEnemyX = enemyXRef.current;
@@ -1886,7 +1892,7 @@ export default function App() {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted]);
 
   // === Consistency Check ===
   useEffect(() => {
@@ -1908,6 +1914,17 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
+      {/* Game Paused Overlay */}
+      {!isGameStarted && !showCharacterCreation && (
+        <div className="fixed inset-0 bg-black/80 z-[90] flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4 animate-pulse">⚔️</div>
+            <h2 className="text-2xl font-bold text-purple-300 mb-2">Jogo Pausado</h2>
+            <p className="text-sm text-gray-400">Aguardando início da aventura...</p>
+          </div>
+        </div>
+      )}
+
       <PlayerStatus
         hp={heroHp}
         maxHp={heroAttributes.maxHp}
