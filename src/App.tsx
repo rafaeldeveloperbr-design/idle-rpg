@@ -95,6 +95,7 @@ export interface Item {
   bonuses: Partial<HeroAttributes>;
   sellValue: number;
   requiredLevel?: number;
+  upgradeLevel?: number; // 0-5, onde 5 é Lendário
 }
 
 export interface Equipment {
@@ -684,17 +685,27 @@ export default function App() {
   // === Item Database ===
   const itemDatabase: Omit<Item, 'id'>[] = [
     // Weapons
+    { name: 'Adaga Enferrujada', icon: '🔪', slot: 'weapon', rarity: 'common', bonuses: { attack: 3 }, sellValue: 10 },
     { name: 'Espada de Ferro', icon: '🗡️', slot: 'weapon', rarity: 'common', bonuses: { attack: 5 }, sellValue: 20 },
+    { name: 'Machado de Batalha', icon: '🪓', slot: 'weapon', rarity: 'common', bonuses: { attack: 6, critChance: 1 }, sellValue: 25 },
     { name: 'Machado de Guerra', icon: '🪓', slot: 'weapon', rarity: 'rare', bonuses: { attack: 12, critChance: 2 }, sellValue: 50 },
+    { name: 'Espada Longa', icon: '⚔️', slot: 'weapon', rarity: 'rare', bonuses: { attack: 14, speed: 2 }, sellValue: 65 },
     { name: 'Lâmina Élfica', icon: '⚔️', slot: 'weapon', rarity: 'epic', bonuses: { attack: 25, critChance: 5, speed: 3 }, sellValue: 150 },
+    { name: 'Espada do Caos', icon: '🗡️', slot: 'weapon', rarity: 'epic', bonuses: { attack: 28, critChance: 8 }, sellValue: 180 },
     // Armor
     { name: 'Escudo de Madeira', icon: '🛡️', slot: 'armor', rarity: 'common', bonuses: { defense: 4, maxHp: 10 }, sellValue: 15 },
-    { name: 'Armadura de Couro', icon: '🦺', slot: 'armor', rarity: 'rare', bonuses: { defense: 10, maxHp: 25 }, sellValue: 60 },
+    { name: 'Armadura de Couro', icon: '🦺', slot: 'armor', rarity: 'common', bonuses: { defense: 5, maxHp: 15 }, sellValue: 20 },
+    { name: 'Cota de Malha', icon: '⛓️', slot: 'armor', rarity: 'rare', bonuses: { defense: 10, maxHp: 25 }, sellValue: 60 },
+    { name: 'Armadura de Placas', icon: '🛡️', slot: 'armor', rarity: 'rare', bonuses: { defense: 12, maxHp: 30, regen: 1 }, sellValue: 75 },
     { name: 'Peitoral de Aço', icon: '⛓️', slot: 'armor', rarity: 'epic', bonuses: { defense: 20, maxHp: 50, regen: 2 }, sellValue: 180 },
+    { name: 'Armadura Dracônica', icon: '🛡️', slot: 'armor', rarity: 'epic', bonuses: { defense: 25, maxHp: 60, regen: 3 }, sellValue: 220 },
     // Accessories
     { name: 'Anel de Vida', icon: '💍', slot: 'accessory', rarity: 'common', bonuses: { maxHp: 15, regen: 1 }, sellValue: 25 },
+    { name: 'Anel de Rubi', icon: '💍', slot: 'accessory', rarity: 'common', bonuses: { attack: 3, critChance: 2 }, sellValue: 30 },
     { name: 'Amuleto de Velocidade', icon: '📿', slot: 'accessory', rarity: 'rare', bonuses: { speed: 5, critChance: 3 }, sellValue: 70 },
+    { name: 'Colar de Esmeralda', icon: '📿', slot: 'accessory', rarity: 'rare', bonuses: { maxHp: 25, regen: 2, defense: 3 }, sellValue: 85 },
     { name: 'Coroa do Rei', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 10, defense: 10, maxHp: 30, speed: 5 }, sellValue: 200 },
+    { name: 'Coroa do Dragão', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 15, defense: 12, maxHp: 40, speed: 6, critChance: 5 }, sellValue: 250 },
   ];
 
   // === Wave System === - Balanced for Level 1 hero
@@ -1236,22 +1247,71 @@ export default function App() {
     // Pick random item from filtered list
     const template = availableItems[Math.floor(Math.random() * availableItems.length)];
     
+    // === Upgrade Level System ===
+    // Base probabilities for upgrade levels
+    let upgradeLevel = 0;
+    const upgradeRoll = Math.random();
+    
+    // Boss drops have better upgrade chances
+    const bossBonus = isBossWave ? 0.15 : 0;
+    
+    // Biome bonus: higher biomes have better upgrade chances
+    const biomeIndex = biomes.findIndex(b => b.id === currentBiomeId);
+    const biomeBonus = biomeIndex * 0.05; // +5% per biome tier
+    
+    // Progressive upgrade chances
+    const upgradeChances = [
+      0.65 - bossBonus - biomeBonus, // +0: ~65% (reduced by bonuses)
+      0.20, // +1: 20%
+      0.09, // +2: 9%
+      0.04, // +3: 4%
+      0.018, // +4: 1.8%
+      0.002, // +5: 0.2% (Legendary)
+    ];
+    
+    let cumulative = 0;
+    for (let i = 0; i < upgradeChances.length; i++) {
+      cumulative += upgradeChances[i];
+      if (upgradeRoll < cumulative) {
+        upgradeLevel = i;
+        break;
+      }
+    }
+    
     // Scale bonuses based on wave
     const waveBonus = Math.floor((wave - 1) * 0.1); // +10% per wave
+    
+    // Apply upgrade level multiplier (each +1 adds 25% to base stats)
+    const upgradeMultiplier = 1 + (upgradeLevel * 0.25);
+    
     const scaledBonuses: Partial<HeroAttributes> = {};
     Object.entries(template.bonuses).forEach(([key, value]) => {
       if (value !== undefined) {
-        scaledBonuses[key as keyof HeroAttributes] = value + Math.floor(value * waveBonus);
+        const waveScaled = value + Math.floor(value * waveBonus);
+        scaledBonuses[key as keyof HeroAttributes] = Math.round(waveScaled * upgradeMultiplier);
       }
     });
+
+    // Calculate final name with upgrade suffix
+    let finalName = template.name;
+    if (upgradeLevel > 0) {
+      finalName = `${template.name} +${upgradeLevel}`;
+    }
+
+    // Calculate sell value with upgrade bonus
+    const baseSellValue = template.sellValue * (1 + waveBonus);
+    const upgradeSellBonus = 1 + (upgradeLevel * 0.5); // +50% per upgrade level
+    const finalSellValue = Math.round(baseSellValue * upgradeSellBonus);
 
     return {
       ...template,
       id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: finalName,
       bonuses: scaledBonuses,
-      sellValue: Math.floor(template.sellValue * (1 + waveBonus)),
+      sellValue: finalSellValue,
+      upgradeLevel: upgradeLevel,
     };
-  }, [wave]);
+  }, [wave, isBossWave, currentBiomeId, biomes]);
 
   // === Equip Item ===
   const equipItem = useCallback((itemId: string) => {
