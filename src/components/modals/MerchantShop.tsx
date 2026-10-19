@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import type { Skill, Consumable } from '../../App';
+import type { Skill, Consumable, Item, HeroAttributes } from '../../App';
 
 interface MerchantShopProps {
   skills: Skill[];
   consumables: Consumable[];
+  shopItems: Item[];
   heroGold: number;
   heroLevel: number;
   equippedSkillIds: string[];
+  inventoryCount: number;
   onBuySkill: (skillId: string) => void;
   onBuyConsumable: (consumableId: string) => void;
+  onBuyItem: (itemId: string) => void;
   onEquipSkill: (skillId: string) => void;
   onClose: () => void;
 }
@@ -16,15 +19,18 @@ interface MerchantShopProps {
 const MerchantShop: React.FC<MerchantShopProps> = ({
   skills,
   consumables,
+  shopItems,
   heroGold,
   heroLevel,
   equippedSkillIds,
+  inventoryCount,
   onBuySkill,
   onBuyConsumable,
+  onBuyItem,
   onEquipSkill,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'skills' | 'consumables'>('skills');
+  const [activeTab, setActiveTab] = useState<'skills' | 'consumables' | 'equipment'>('skills');
 
   const unlockedSkills = skills.filter(s => s.unlocked);
   const lockedSkills = skills.filter(s => !s.unlocked);
@@ -75,6 +81,16 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
             }`}
           >
             🧪 Consumíveis
+          </button>
+          <button
+            onClick={() => setActiveTab('equipment')}
+            className={`flex-1 py-3 text-sm transition-all border-b-2 ${
+              activeTab === 'equipment'
+                ? 'text-yellow-300 border-yellow-500 bg-yellow-900/20'
+                : 'text-gray-500 border-transparent hover:text-gray-300'
+            }`}
+          >
+            🛡️ Equipamentos
           </button>
         </div>
 
@@ -259,6 +275,120 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {activeTab === 'equipment' && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm text-gray-300">Catálogo de Equipamentos</h3>
+                <span className="text-xs text-gray-400">
+                  Inventário: {inventoryCount}/20
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {shopItems.map((item) => {
+                  const canAfford = heroGold >= item.sellValue;
+                  const levelMet = heroLevel >= (item.requiredLevel || 1);
+                  const canBuy = canAfford && levelMet && inventoryCount < 20;
+                  
+                  const rarityColors = {
+                    common: 'border-gray-500/50 bg-gray-900/10',
+                    rare: 'border-blue-500/50 bg-blue-900/10',
+                    epic: 'border-purple-500/50 bg-purple-900/10',
+                  };
+                  
+                  const rarityTextColors = {
+                    common: 'text-gray-300',
+                    rare: 'text-blue-300',
+                    epic: 'text-purple-300',
+                  };
+                  
+                  const rarityLabels = {
+                    common: 'Comum',
+                    rare: 'Raro',
+                    epic: 'Épico',
+                  };
+                  
+                  const slotLabels = {
+                    weapon: '⚔️ Arma',
+                    armor: '🛡️ Armadura',
+                    accessory: '💍 Acessório',
+                  };
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={`border rounded-md p-3 flex items-start gap-3 transition-colors ${
+                        canBuy
+                          ? rarityColors[item.rarity]
+                          : 'border-[#2d2d5e] bg-[#0a0a12] opacity-60'
+                      }`}
+                    >
+                      <span className="text-3xl">{item.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-sm font-bold ${rarityTextColors[item.rarity]}`}>
+                            {item.name}
+                          </span>
+                          <span className={`text-[9px] ${rarityTextColors[item.rarity]}`}>
+                            {rarityLabels[item.rarity]}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 mb-1">{slotLabels[item.slot]}</p>
+                        
+                        {/* Atributos */}
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {Object.entries(item.bonuses).map(([key, value]) => {
+                            const attrLabels: Record<string, string> = {
+                              attack: 'ATK',
+                              defense: 'DEF',
+                              maxHp: 'HP',
+                              speed: 'SPD',
+                              critChance: 'CRIT',
+                              regen: 'REG',
+                            };
+                            return (
+                              <span key={key} className="text-[9px] text-green-300 bg-green-900/30 px-1.5 py-0.5 rounded">
+                                +{value} {attrLabels[key]}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        
+                        {!levelMet && (
+                          <p className="text-[10px] text-red-400 mb-2">
+                            🔒 Desbloqueia no Nv. {item.requiredLevel}
+                          </p>
+                        )}
+                        
+                        {inventoryCount >= 20 && (
+                          <p className="text-[10px] text-orange-400 mb-2">
+                            ⚠️ Inventário cheio!
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
+                            🪙 {item.sellValue}
+                          </span>
+                          <button
+                            onClick={() => onBuyItem(item.id)}
+                            disabled={!canBuy}
+                            className={`text-xs px-3 py-1 rounded-sm transition-colors ${
+                              canBuy
+                                ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
+                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            }`}
+                          >
+                            Comprar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

@@ -94,6 +94,7 @@ export interface Item {
   rarity: ItemRarity;
   bonuses: Partial<HeroAttributes>;
   sellValue: number;
+  requiredLevel?: number;
 }
 
 export interface Equipment {
@@ -379,6 +380,103 @@ export default function App() {
   ]);
 
   const [activeConsumables, setActiveConsumables] = useState<ActiveConsumable[]>([]);
+
+  // === Shop Items (Equipment Catalog) ===
+  const shopItems: Item[] = [
+    // Armas
+    {
+      id: 'shop_iron_sword',
+      name: 'Espada de Ferro',
+      icon: '🗡️',
+      slot: 'weapon',
+      rarity: 'common',
+      bonuses: { attack: 8 },
+      sellValue: 50,
+      requiredLevel: 1,
+    },
+    {
+      id: 'shop_steel_sword',
+      name: 'Espada de Aço',
+      icon: '⚔️',
+      slot: 'weapon',
+      rarity: 'rare',
+      bonuses: { attack: 15, critChance: 3 },
+      sellValue: 150,
+      requiredLevel: 5,
+    },
+    {
+      id: 'shop_dragon_blade',
+      name: 'Lâmina do Dragão',
+      icon: '🔥',
+      slot: 'weapon',
+      rarity: 'epic',
+      bonuses: { attack: 30, critChance: 8, speed: 5 },
+      sellValue: 500,
+      requiredLevel: 12,
+    },
+    // Armaduras
+    {
+      id: 'shop_leather_armor',
+      name: 'Armadura de Couro',
+      icon: '🦺',
+      slot: 'armor',
+      rarity: 'common',
+      bonuses: { defense: 5, maxHp: 20 },
+      sellValue: 60,
+      requiredLevel: 2,
+    },
+    {
+      id: 'shop_chain_mail',
+      name: 'Cota de Malha',
+      icon: '⛓️',
+      slot: 'armor',
+      rarity: 'rare',
+      bonuses: { defense: 12, maxHp: 40 },
+      sellValue: 180,
+      requiredLevel: 7,
+    },
+    {
+      id: 'shop_dragon_armor',
+      name: 'Armadura Dracônica',
+      icon: '🛡️',
+      slot: 'armor',
+      rarity: 'epic',
+      bonuses: { defense: 25, maxHp: 80, regen: 3 },
+      sellValue: 600,
+      requiredLevel: 15,
+    },
+    // Acessórios
+    {
+      id: 'shop_speed_ring',
+      name: 'Anel de Velocidade',
+      icon: '💍',
+      slot: 'accessory',
+      rarity: 'common',
+      bonuses: { speed: 5, critChance: 2 },
+      sellValue: 70,
+      requiredLevel: 3,
+    },
+    {
+      id: 'shop_life_amulet',
+      name: 'Amuleto da Vida',
+      icon: '📿',
+      slot: 'accessory',
+      rarity: 'rare',
+      bonuses: { maxHp: 50, regen: 2, defense: 5 },
+      sellValue: 200,
+      requiredLevel: 8,
+    },
+    {
+      id: 'shop_dragon_crown',
+      name: 'Coroa do Dragão',
+      icon: '👑',
+      slot: 'accessory',
+      rarity: 'epic',
+      bonuses: { attack: 15, defense: 15, maxHp: 60, speed: 8, critChance: 10 },
+      sellValue: 800,
+      requiredLevel: 18,
+    },
+  ];
 
   // === Inventory System ===
   const [inventory, setInventory] = useState<Item[]>([]);
@@ -1096,6 +1194,29 @@ export default function App() {
     }
   }, [consumables, heroGold, heroLevel, heroAttributes.maxHp, addToast]);
 
+  // === Buy Item from Shop ===
+  const buyShopItem = useCallback((itemId: string) => {
+    const item = shopItems.find(i => i.id === itemId);
+    if (!item) return;
+    if (heroGold < item.sellValue) return;
+    if (heroLevel < (item.requiredLevel || 1)) return;
+    if (inventory.length >= 20) {
+      addToast('⚠️ Inventário cheio!', 'info');
+      return;
+    }
+
+    setHeroGold(prev => prev - item.sellValue);
+    
+    // Create new item instance with unique ID
+    const newItem: Item = {
+      ...item,
+      id: `${item.id}_${Date.now()}_${Math.random()}`,
+    };
+    
+    setInventory(prev => [...prev, newItem]);
+    addToast(`🛡️ ${item.name} comprado!`, 'info');
+  }, [shopItems, heroGold, heroLevel, inventory.length, addToast]);
+
   // === Generate Random Item Drop ===
   const generateItemDrop = useCallback((): Item | null => {
     // 30% chance to drop an item
@@ -1468,11 +1589,14 @@ export default function App() {
         <MerchantShop
           skills={skills}
           consumables={consumables}
+          shopItems={shopItems}
           heroGold={heroGold}
           heroLevel={heroLevel}
           equippedSkillIds={equippedSkillIds}
+          inventoryCount={inventory.length}
           onBuySkill={buySkill}
           onBuyConsumable={buyConsumable}
+          onBuyItem={buyShopItem}
           onEquipSkill={equipSkill}
           onClose={() => setShowMerchantShop(false)}
         />
