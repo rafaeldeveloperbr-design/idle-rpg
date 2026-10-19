@@ -336,10 +336,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
 
       {/* === GROUND WITH TEXTURES === */}
-      <div
-        className="absolute bottom-0 left-0 w-[200%] h-20"
-        style={{ transform: `translateX(${-(scrollOffset * 0.8) % 800}px)` }}
-      >
+      <div className="absolute bottom-0 left-0 right-0 h-20 overflow-hidden">
+        <div
+          className="absolute bottom-0 left-0 w-[300%] h-full"
+          style={{ transform: `translateX(${-(scrollOffset * 0.8) % 1200}px)` }}
+        >
         {/* Forest Ground */}
         {currentBiome.id === 'forest' && (
           <>
@@ -445,6 +446,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
               <circle key={i} cx={(i * 37) % 800} cy={(i * 23) % 80} r={1 + (i % 2)} fill="#000" />
             ))}
           </svg>
+        </div>
         </div>
       </div>
 
@@ -574,11 +576,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
       </div>
 
       {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+      <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-2 gap-2 z-20">
         {/* HP Bar - Left of Skills */}
-        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5">
+        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5 flex-1 max-w-[200px]">
           <span className="text-[9px] text-red-400 whitespace-nowrap">❤️</span>
-          <div className="relative w-20 sm:w-24 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+          <div className="relative flex-1 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
             <div
               className="hp-bar h-full transition-all duration-300 rounded-sm"
               style={{ width: `${Math.max(0, Math.round((heroHp / heroMaxHp) * 100))}%` }}
@@ -597,9 +599,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
         />
 
         {/* XP Bar - Right of Skills */}
-        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5">
+        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5 flex-1 max-w-[200px]">
           <span className="text-[9px] text-blue-400 whitespace-nowrap">⭐</span>
-          <div className="relative w-20 sm:w-24 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+          <div className="relative flex-1 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
             <div
               className="xp-bar h-full transition-all duration-300 rounded-sm"
               style={{ width: `${Math.max(0, Math.round((heroXp / heroMaxXp) * 100))}%` }}
