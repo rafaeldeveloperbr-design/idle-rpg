@@ -4,6 +4,7 @@ import GameViewport from './components/GameViewport';
 import BottomPanel from './components/BottomPanel';
 import CharacterCreationModal from './components/modals/CharacterCreationModal';
 import SettingsModal from './components/modals/SettingsModal';
+import MerchantShop from './components/modals/MerchantShop';
 import ToastContainer from './components/ToastContainer';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
@@ -53,6 +54,26 @@ export interface Skill {
   effect: 'damage' | 'heal' | 'buff';
   effectValue: number;
   buffDuration?: number; // seconds (for buffs)
+  requiredLevel?: number; // minimum level to unlock
+}
+
+export interface Consumable {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  cost: number;
+  requiredLevel: number;
+  effect: 'heal' | 'buff_attack' | 'buff_defense' | 'buff_speed';
+  value: number;
+  duration: number; // seconds
+}
+
+export interface ActiveConsumable {
+  id: string;
+  consumableId: string;
+  expiresAt: number;
+  value: number;
 }
 
 export interface ActiveBuff {
@@ -141,6 +162,7 @@ export default function App() {
   // === Modal States ===
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showMerchantShop, setShowMerchantShop] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
 
   // === Toast Notifications ===
@@ -169,7 +191,7 @@ export default function App() {
   // Combat timing (based on speed attribute)
   const heroAttackSpeed = Math.max(300, 1500 - heroAttributes.speed * 50);
 
-  // === Skills System === - New Game defaults
+  // === Skills System === - New Game defaults (3 initial skills)
   const [skills, setSkills] = useState<Skill[]>([
     {
       id: 'power_strike',
@@ -185,6 +207,7 @@ export default function App() {
       lastUsed: 0,
       effect: 'damage',
       effectValue: 2.5,
+      requiredLevel: 1,
     },
     {
       id: 'quick_heal',
@@ -200,6 +223,7 @@ export default function App() {
       lastUsed: 0,
       effect: 'heal',
       effectValue: 0.3,
+      requiredLevel: 1,
     },
     {
       id: 'fury',
@@ -216,10 +240,145 @@ export default function App() {
       effect: 'buff',
       effectValue: 2.0,
       buffDuration: 5,
+      requiredLevel: 1,
+    },
+    {
+      id: 'shield_bash',
+      name: 'Golpe de Escudo',
+      icon: '🛡️',
+      description: 'Causa 200% de dano e atordoa',
+      level: 1,
+      maxLevel: 8,
+      cooldown: 8,
+      cost: 150,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'damage',
+      effectValue: 2.0,
+      requiredLevel: 5,
+    },
+    {
+      id: 'life_drain',
+      name: 'Drenar Vida',
+      icon: '🩸',
+      description: 'Causa 180% de dano e cura 50%',
+      level: 1,
+      maxLevel: 8,
+      cooldown: 15,
+      cost: 200,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'damage',
+      effectValue: 1.8,
+      requiredLevel: 8,
+    },
+    {
+      id: 'berserker',
+      name: 'Berserker',
+      icon: '😡',
+      description: 'Aumenta Ataque em 150% por 8s',
+      level: 1,
+      maxLevel: 6,
+      cooldown: 20,
+      cost: 300,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'buff',
+      effectValue: 2.5,
+      buffDuration: 8,
+      requiredLevel: 10,
+    },
+    {
+      id: 'healing_aura',
+      name: 'Aura de Cura',
+      icon: '💚',
+      description: 'Restaura 50% da Vida Máxima',
+      level: 1,
+      maxLevel: 8,
+      cooldown: 20,
+      cost: 250,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'heal',
+      effectValue: 0.5,
+      requiredLevel: 12,
+    },
+    {
+      id: 'thunder_strike',
+      name: 'Golpe Trovejante',
+      icon: '⚡',
+      description: 'Causa 350% de dano em um único golpe',
+      level: 1,
+      maxLevel: 6,
+      cooldown: 12,
+      cost: 500,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'damage',
+      effectValue: 3.5,
+      requiredLevel: 15,
     },
   ]);
 
   const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>([]);
+
+  // === Skill Deck System ===
+  const [equippedSkillIds, setEquippedSkillIds] = useState<string[]>(['power_strike', 'quick_heal', 'fury']);
+
+  // === Consumables System ===
+  const [consumables, setConsumables] = useState<Consumable[]>([
+    {
+      id: 'potion_strength',
+      name: 'Poção de Força',
+      icon: '💪',
+      description: '+50% Ataque por 10s',
+      cost: 25,
+      requiredLevel: 3,
+      effect: 'buff_attack',
+      value: 1.5,
+      duration: 10,
+    },
+    {
+      id: 'potion_defense',
+      name: 'Poção de Proteção',
+      icon: '🛡️',
+      description: '+50% Defesa por 10s',
+      cost: 25,
+      requiredLevel: 5,
+      effect: 'buff_defense',
+      value: 1.5,
+      duration: 10,
+    },
+    {
+      id: 'potion_speed',
+      name: 'Poção de Velocidade',
+      icon: '⚡',
+      description: '+50% Velocidade por 10s',
+      cost: 30,
+      requiredLevel: 7,
+      effect: 'buff_speed',
+      value: 1.5,
+      duration: 10,
+    },
+    {
+      id: 'potion_heal',
+      name: 'Poção de Cura',
+      icon: '❤️',
+      description: 'Restaura 50% HP',
+      cost: 20,
+      requiredLevel: 2,
+      effect: 'heal',
+      value: 0.5,
+      duration: 0,
+    },
+  ]);
+
+  const [activeConsumables, setActiveConsumables] = useState<ActiveConsumable[]>([]);
 
   // === Inventory System ===
   const [inventory, setInventory] = useState<Item[]>([]);
@@ -871,6 +1030,72 @@ export default function App() {
     ));
   }, []);
 
+  // === Skill Deck Management ===
+  const equipSkill = useCallback((skillId: string) => {
+    const skill = skills.find(s => s.id === skillId);
+    if (!skill || !skill.unlocked) return;
+
+    // If already equipped, unequip it
+    if (equippedSkillIds.includes(skillId)) {
+      setEquippedSkillIds(prev => prev.filter(id => id !== skillId));
+      return;
+    }
+
+    // If 3 skills already equipped, replace the first one
+    if (equippedSkillIds.length >= 3) {
+      setEquippedSkillIds(prev => [...prev.slice(1), skillId]);
+    } else {
+      setEquippedSkillIds(prev => [...prev, skillId]);
+    }
+  }, [skills, equippedSkillIds]);
+
+  // === Buy Skill from Market ===
+  const buySkill = useCallback((skillId: string) => {
+    const skill = skills.find(s => s.id === skillId);
+    if (!skill || skill.unlocked) return;
+    if (heroGold < skill.cost) return;
+    if (skill.requiredLevel && heroLevel < skill.requiredLevel) return;
+
+    setHeroGold(prev => prev - skill.cost);
+    setSkills(prev => prev.map(s => 
+      s.id === skillId ? { ...s, unlocked: true } : s
+    ));
+
+    // Auto-equip if less than 3 equipped
+    if (equippedSkillIds.length < 3) {
+      setEquippedSkillIds(prev => [...prev, skillId]);
+    }
+
+    addToast(`🎉 Habilidade desbloqueada: ${skill.name}!`, 'info');
+  }, [skills, heroGold, heroLevel, equippedSkillIds, addToast]);
+
+  // === Buy Consumable ===
+  const buyConsumable = useCallback((consumableId: string) => {
+    const consumable = consumables.find(c => c.id === consumableId);
+    if (!consumable) return;
+    if (heroGold < consumable.cost) return;
+    if (heroLevel < consumable.requiredLevel) return;
+
+    setHeroGold(prev => prev - consumable.cost);
+
+    // Apply consumable effect immediately
+    if (consumable.effect === 'heal') {
+      const healAmount = Math.floor(heroAttributes.maxHp * consumable.value);
+      setHeroHp(prev => Math.min(heroAttributes.maxHp, prev + healAmount));
+      addToast(`❤️ +${healAmount} HP restaurado!`, 'info');
+    } else {
+      // Buff effect
+      const activeConsumable: ActiveConsumable = {
+        id: `${consumableId}_${Date.now()}`,
+        consumableId,
+        expiresAt: Date.now() + consumable.duration * 1000,
+        value: consumable.value,
+      };
+      setActiveConsumables(prev => [...prev, activeConsumable]);
+      addToast(`${consumable.icon} ${consumable.name} ativada!`, 'info');
+    }
+  }, [consumables, heroGold, heroLevel, heroAttributes.maxHp, addToast]);
+
   // === Generate Random Item Drop ===
   const generateItemDrop = useCallback((): Item | null => {
     // 30% chance to drop an item
@@ -1178,6 +1403,7 @@ export default function App() {
         isBiomeUnlocked={isBiomeUnlocked}
         onChangeBiome={changeBiome}
         onOpenSettings={() => setShowSettings(true)}
+        onOpenMerchant={() => setShowMerchantShop(true)}
       />
 
       <ToastContainer toasts={toasts} />
@@ -1195,6 +1421,7 @@ export default function App() {
         heroHitFlash={heroHitFlash}
         enemyHitFlash={enemyHitFlash}
         skills={skills}
+        equippedSkillIds={equippedSkillIds}
         activeBuffs={activeBuffs}
         onUseSkill={useSkill}
         currentBiome={currentBiome}
@@ -1209,8 +1436,10 @@ export default function App() {
         heroGold={heroGold}
         onUpgradeAttribute={upgradeAttribute}
         skills={skills}
+        equippedSkillIds={equippedSkillIds}
         onUpgradeSkill={upgradeSkill}
         onToggleAutoCast={toggleAutoCast}
+        onEquipSkill={equipSkill}
         inventory={inventory}
         equipment={equipment}
         onEquipItem={equipItem}
@@ -1231,6 +1460,21 @@ export default function App() {
           onChangeName={handleChangeName}
           onResetGame={resetGame}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {/* Merchant Shop Modal */}
+      {showMerchantShop && (
+        <MerchantShop
+          skills={skills}
+          consumables={consumables}
+          heroGold={heroGold}
+          heroLevel={heroLevel}
+          equippedSkillIds={equippedSkillIds}
+          onBuySkill={buySkill}
+          onBuyConsumable={buyConsumable}
+          onEquipSkill={equipSkill}
+          onClose={() => setShowMerchantShop(false)}
         />
       )}
     </div>

@@ -16,6 +16,7 @@ interface GameViewportProps {
   heroHitFlash: boolean;
   enemyHitFlash: boolean;
   skills: Skill[];
+  equippedSkillIds: string[];
   activeBuffs: ActiveBuff[];
   onUseSkill: (skillId: string) => void;
   currentBiome: Biome;
@@ -153,6 +154,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
   heroHitFlash,
   enemyHitFlash,
   skills,
+  equippedSkillIds,
   activeBuffs,
   onUseSkill,
   currentBiome,
@@ -374,7 +376,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Skill Bar - Quick Access (positioned near the ground) */}
       <SkillBar
-        skills={skills.filter(s => s.unlocked)}
+        skills={skills.filter(s => equippedSkillIds.includes(s.id))}
         activeBuffs={activeBuffs}
         onUseSkill={onUseSkill}
       />

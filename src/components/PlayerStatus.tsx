@@ -15,6 +15,7 @@ interface PlayerStatusProps {
   isBiomeUnlocked: (biome: Biome) => boolean;
   onChangeBiome: (biomeId: string) => void;
   onOpenSettings: () => void;
+  onOpenMerchant: () => void;
 }
 
 const PlayerStatus: React.FC<PlayerStatusProps> = ({
@@ -30,6 +31,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   totalKills,
   isBiomeUnlocked,
   onOpenSettings,
+  onOpenMerchant,
   onChangeBiome,
 }) => {
   const hpPercent = Math.round((hp / maxHp) * 100);
@@ -170,6 +172,15 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
               </div>
             )}
           </div>
+
+          {/* Merchant Shop Button */}
+          <button
+            onClick={onOpenMerchant}
+            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-yellow-500 transition-colors"
+            title="Mercado"
+          >
+            <span className="text-base sm:text-lg">🏪</span>
+          </button>
 
           {/* Settings Button */}
           <button
