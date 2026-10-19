@@ -51,46 +51,140 @@ const attributeIcons: Record<keyof HeroAttributes, string> = {
   regen: '💚',
 };
 
-// === Tooltip Component ===
-const ItemTooltip: React.FC<{ item: Item; action?: string }> = ({ item, action }) => (
-  <div className="absolute bottom-[115%] left-1/2 -translate-x-1/2 mb-1 w-52 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md p-3 shadow-[0_0_15px_rgba(139,92,246,0.3)] pointer-events-none z-50">
-    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px]">
-      <div className="w-2 h-2 bg-[#0f0f1a] border-r-2 border-b-2 border-purple-500/70 rotate-45 -translate-y-1" />
-    </div>
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
-        <span className="text-base">{item.icon}</span>
-        <span className={`text-sm font-bold ${rarityTextColors[item.rarity]}`}>
-          {item.name}
-        </span>
-      </div>
-      <div className="h-[1px] bg-purple-500/30 w-full" />
-      <span className={`text-xs ${rarityTextColors[item.rarity]}`}>
-        {rarityLabels[item.rarity]} • {slotLabels[item.slot]}
-      </span>
-      <div className="flex flex-col gap-1 mt-1">
-        {Object.entries(item.bonuses).map(([key, value]) => (
-          <div key={key} className="flex justify-between text-xs">
-            <span className="text-gray-400">
-              {attributeIcons[key as keyof HeroAttributes]} {attributeLabels[key as keyof HeroAttributes]}:
-            </span>
-            <span className="text-green-300">+{value}</span>
+// === Item Modal Component ===
+interface ItemModalProps {
+  item: Item;
+  equippedItem: Item | null;
+  isFromInventory: boolean;
+  onEquip: () => void;
+  onUnequip: () => void;
+  onSell: () => void;
+  onClose: () => void;
+}
+
+const ItemModal: React.FC<ItemModalProps> = ({
+  item,
+  equippedItem,
+  isFromInventory,
+  onEquip,
+  onUnequip,
+  onSell,
+  onClose,
+}) => {
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-[#0f0f1a] border-2 border-purple-500/70 rounded-lg max-w-sm w-full shadow-[0_0_30px_rgba(139,92,246,0.4)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-purple-500/30">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{item.icon}</span>
+            <div>
+              <h3 className={`text-base font-bold ${rarityTextColors[item.rarity]}`}>
+                {item.name}
+              </h3>
+              <span className={`text-xs ${rarityTextColors[item.rarity]}`}>
+                {rarityLabels[item.rarity]} • {slotLabels[item.slot]}
+              </span>
+            </div>
           </div>
-        ))}
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4">
+          {/* Item Attributes */}
+          <div className="mb-4">
+            <h4 className="text-sm text-gray-400 mb-2">Atributos:</h4>
+            <div className="flex flex-col gap-2">
+              {Object.entries(item.bonuses).map(([key, value]) => {
+                const attrKey = key as keyof HeroAttributes;
+                const equippedValue = equippedItem?.bonuses[attrKey] || 0;
+                const diff = (value as number) - equippedValue;
+                
+                return (
+                  <div key={key} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300 flex items-center gap-2">
+                      <span>{attributeIcons[attrKey]}</span>
+                      <span>{attributeLabels[attrKey]}</span>
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-300">+{value}</span>
+                      {equippedItem && diff !== 0 && (
+                        <span className={`text-xs ${diff > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          ({diff > 0 ? '+' : ''}{diff})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Comparison with equipped item */}
+          {equippedItem && (
+            <div className="mb-4 p-3 bg-[#1a1a2e] rounded-md border border-[#2d2d5e]">
+              <h4 className="text-xs text-gray-400 mb-2">Comparação com item equipado:</h4>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-gray-300">{equippedItem.icon}</span>
+                <span className={rarityTextColors[equippedItem.rarity]}>
+                  {equippedItem.name}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Sell Value */}
+          <div className="flex items-center justify-between text-sm mb-4 p-3 bg-[#1a1a2e] rounded-md border border-[#2d2d5e]">
+            <span className="text-gray-400">Valor de venda:</span>
+            <span className="text-yellow-300 font-bold">🪙 {item.sellValue}</span>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-2">
+            {isFromInventory ? (
+              <>
+                <button
+                  onClick={onEquip}
+                  className="w-full py-3 px-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-md transition-colors text-sm"
+                >
+                  Equipar
+                </button>
+                <button
+                  onClick={onSell}
+                  className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm"
+                >
+                  Vender (🪙 {item.sellValue})
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={onUnequip}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-md transition-colors text-sm"
+              >
+                Desequipar
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-full py-3 px-4 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-md transition-colors text-sm"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="h-[1px] bg-purple-500/30 w-full mt-1" />
-      <div className="flex justify-between text-xs">
-        <span className="text-gray-400">Valor de venda:</span>
-        <span className="text-yellow-300">🪙 {item.sellValue}</span>
-      </div>
-      {action && (
-        <span className="text-[10px] text-center text-purple-300 mt-1 italic">
-          {action}
-        </span>
-      )}
     </div>
-  </div>
-);
+  );
+};
 
 const InventoryTab: React.FC<InventoryTabProps> = ({
   inventory,
@@ -99,53 +193,74 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
   onUnequipItem,
   onSellItem,
 }) => {
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{ item: Item; fromSlot: keyof Equipment | null } | null>(null);
 
   const slots: (keyof Equipment)[] = ['weapon', 'armor', 'accessory'];
 
+  const handleItemClick = (item: Item, fromSlot: keyof Equipment | null) => {
+    setSelectedItem({ item, fromSlot });
+  };
+
+  const handleCloseModal = () => {
+    setSelectedItem(null);
+  };
+
+  const handleEquip = () => {
+    if (selectedItem) {
+      onEquipItem(selectedItem.item.id);
+      setSelectedItem(null);
+    }
+  };
+
+  const handleUnequip = () => {
+    if (selectedItem && selectedItem.fromSlot) {
+      onUnequipItem(selectedItem.fromSlot);
+      setSelectedItem(null);
+    }
+  };
+
+  const handleSell = () => {
+    if (selectedItem) {
+      onSellItem(selectedItem.item.id);
+      setSelectedItem(null);
+    }
+  };
+
   return (
-    <div className="p-4">
-      <h3 className="text-sm text-purple-300 mb-4 flex items-center gap-2">
+    <div className="p-3 sm:p-4">
+      <h3 className="text-sm text-purple-300 mb-3 sm:mb-4 flex items-center gap-2">
         <span>🎒</span> Inventário & Equipamentos
       </h3>
 
       {/* Equipment Slots (Paperdoll) */}
       <div className="mb-4">
         <span className="text-xs text-gray-400 mb-2 block">Equipamentos:</span>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {slots.map((slot) => {
             const item = equipment[slot];
-            const isHovered = hoveredSlot === slot;
 
             return (
-              <div key={slot} className="relative">
-                {isHovered && item && (
-                  <ItemTooltip item={item} action="Clique para desequipar" />
+              <button
+                key={slot}
+                onClick={() => item && handleItemClick(item, slot)}
+                className={`w-full border-2 rounded-md p-2 sm:p-3 flex flex-col items-center gap-1.5 transition-colors min-h-[80px] ${
+                  item
+                    ? `${rarityColors[item.rarity]} cursor-pointer hover:border-purple-500`
+                    : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
+                }`}
+              >
+                <span className="text-xs text-gray-500">{slotLabels[slot]}</span>
+                {item ? (
+                  <>
+                    <span className="text-xl">{item.icon}</span>
+                    <span className={`text-xs ${rarityTextColors[item.rarity]} text-center`}>
+                      {item.name}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs text-gray-700 mt-2">— Vazio —</span>
                 )}
-                <button
-                  onClick={() => item && onUnequipItem(slot)}
-                  onMouseEnter={() => setHoveredSlot(slot)}
-                  onMouseLeave={() => setHoveredSlot(null)}
-                  className={`w-full border-2 rounded-md p-3 flex flex-col items-center gap-1.5 transition-colors min-h-[80px] ${
-                    item
-                      ? `${rarityColors[item.rarity]} cursor-pointer hover:border-purple-500`
-                      : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
-                  }`}
-                >
-                  <span className="text-xs text-gray-500">{slotLabels[slot]}</span>
-                  {item ? (
-                    <>
-                      <span className="text-xl">{item.icon}</span>
-                      <span className={`text-xs ${rarityTextColors[item.rarity]} text-center`}>
-                        {item.name}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-xs text-gray-700 mt-2">— Vazio —</span>
-                  )}
-                </button>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -153,42 +268,22 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
 
       {/* Inventory Grid */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           <span className="text-xs text-gray-400">Itens ({inventory.length}/20):</span>
         </div>
-        <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {inventory.map((item) => {
-            const isHovered = hoveredItem === item.id;
             return (
-              <div key={item.id} className="relative">
-                {isHovered && (
-                  <ItemTooltip item={item} action="Clique para equipar" />
-                )}
-                <div className="relative group">
-                  <button
-                    onClick={() => onEquipItem(item.id)}
-                    onMouseEnter={() => setHoveredItem(item.id)}
-                    onMouseLeave={() => setHoveredItem(null)}
-                    className={`w-full aspect-square border-2 rounded-md flex flex-col items-center justify-center gap-1 transition-colors hover:border-purple-500 ${rarityColors[item.rarity]}`}
-                  >
-                    <span className="text-xl">{item.icon}</span>
-                    <span className={`text-xs ${rarityTextColors[item.rarity]} text-center leading-tight px-1`}>
-                      {item.name}
-                    </span>
-                  </button>
-                  {/* Sell button overlay */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSellItem(item.id);
-                    }}
-                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border border-red-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    title={`Vender por 🪙 ${item.sellValue}`}
-                  >
-                    <span className="text-[8px] text-white">💰</span>
-                  </button>
-                </div>
-              </div>
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item, null)}
+                className={`w-full aspect-square border-2 rounded-md flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors hover:border-purple-500 ${rarityColors[item.rarity]}`}
+              >
+                <span className="text-lg sm:text-xl">{item.icon}</span>
+                <span className={`text-[9px] sm:text-xs ${rarityTextColors[item.rarity]} text-center leading-tight px-0.5 sm:px-1`}>
+                  {item.name}
+                </span>
+              </button>
             );
           })}
           {/* Empty slots */}
@@ -202,6 +297,19 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Item Modal */}
+      {selectedItem && (
+        <ItemModal
+          item={selectedItem.item}
+          equippedItem={selectedItem.fromSlot ? equipment[selectedItem.fromSlot] : null}
+          isFromInventory={selectedItem.fromSlot === null}
+          onEquip={handleEquip}
+          onUnequip={handleUnequip}
+          onSell={handleSell}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 };
