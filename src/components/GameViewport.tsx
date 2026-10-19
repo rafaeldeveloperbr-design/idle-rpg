@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { DamagePopup, Skill, ActiveBuff, Biome } from '../App';
+import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../App';
 
 type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
 
@@ -19,6 +19,7 @@ interface GameViewportProps {
   activeBuffs: ActiveBuff[];
   onUseSkill: (skillId: string) => void;
   currentBiome: Biome;
+  currentEnemy: Enemy;
   isBossWave: boolean;
   biomeKills: number;
 }
@@ -155,6 +156,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
   activeBuffs,
   onUseSkill,
   currentBiome,
+  currentEnemy,
   isBossWave,
   biomeKills,
 }) => {
@@ -320,41 +322,51 @@ const GameViewport: React.FC<GameViewportProps> = ({
               isBossWave ? 'scale-125' : ''
             }`}
             style={{
-              filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
+              filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 8px ${currentEnemy.glowColor})` : undefined,
             }}
           >
             <span className="text-[9px] sm:text-[10px] text-red-300 font-bold">
-              {isBossWave ? '💀 CHEFÃO' : 'Goblin'}
+              {currentEnemy.name}
             </span>
           </div>
           <div 
-            className={`relative ${isBossWave ? 'scale-125' : ''}`}
+            className={`relative`}
             style={{
-              filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
+              transform: `scale(${currentEnemy.scale})`,
+              transformOrigin: 'bottom center',
+              filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 12px ${currentEnemy.glowColor})` : undefined,
             }}
           >
             {/* Hit flash overlay */}
             {enemyHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
             )}
-            <div className="w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b from-green-600 to-green-800 border-2 border-green-400 rounded-t-md relative">
+            {/* Enemy Body */}
+            <div className={`w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border-2 ${currentEnemy.sprite.accentColor} rounded-t-md relative`}>
               {/* Head */}
-              <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b from-green-400 to-green-600 border-2 border-green-800 rounded-sm">
-                <div className="absolute top-1.5 left-1 w-2 h-2 bg-red-500 rounded-full" />
-                <div className="absolute top-1.5 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                <div className="absolute -left-2 top-0 w-2 h-3 bg-green-500 border border-green-800 rounded-sm rotate-[-15deg]" />
-                <div className="absolute -right-2 top-0 w-2 h-3 bg-green-500 border border-green-800 rounded-sm rotate-[15deg]" />
+              <div className={`absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b ${currentEnemy.sprite.headColor} border-2 ${currentEnemy.sprite.accentColor} rounded-sm`}>
+                {/* Eyes */}
+                <div className={`absolute top-1.5 left-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                <div className={`absolute top-1.5 right-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                {/* Ears/Horns (only for some enemies) */}
+                {currentEnemy.id !== 'skeleton' && currentEnemy.id !== 'golem' && (
+                  <>
+                    <div className={`absolute -left-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[-15deg]`} />
+                    <div className={`absolute -right-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[15deg]`} />
+                  </>
+                )}
+                {/* Mouth */}
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-gray-900 rounded-sm" />
               </div>
-              {/* Club weapon */}
+              {/* Weapon */}
               <div className="absolute -left-4 top-4 w-3 h-8 bg-gradient-to-b from-amber-700 to-amber-900 border border-amber-950 rounded-sm">
                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-3 bg-amber-800 border border-amber-950 rounded-sm" />
               </div>
             </div>
             {/* Legs */}
             <div className="flex justify-center gap-0.5">
-              <div className={`w-3 h-2.5 bg-green-900 border border-green-950 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
-              <div className={`w-3 h-2.5 bg-green-900 border border-green-950 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
+              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
+              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
             </div>
           </div>
         </div>

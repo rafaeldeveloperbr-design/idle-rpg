@@ -100,6 +100,24 @@ export interface Biome {
     groundColor: string;
     mountainColor: string;
   };
+  enemies: {
+    normal: Enemy[];
+    boss: Enemy;
+  };
+}
+
+export interface Enemy {
+  id: string;
+  name: string;
+  type: 'normal' | 'boss';
+  sprite: {
+    bodyColor: string;
+    headColor: string;
+    eyeColor: string;
+    accentColor?: string;
+  };
+  scale: number; // 1.0 = normal, 1.3-1.5 = boss
+  glowColor?: string; // para bosses
 }
 
 export default function App() {
@@ -218,6 +236,47 @@ export default function App() {
         groundColor: 'from-green-700 to-green-900',
         mountainColor: '#2a1a4e',
       },
+      enemies: {
+        normal: [
+          {
+            id: 'goblin',
+            name: 'Goblin Selvagem',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-green-600 to-green-800',
+              headColor: 'from-green-400 to-green-600',
+              eyeColor: 'bg-red-500',
+              accentColor: 'border-green-400',
+            },
+            scale: 1.0,
+          },
+          {
+            id: 'wolf',
+            name: 'Lobo das Sombras',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-slate-600 to-slate-800',
+              headColor: 'from-slate-400 to-slate-600',
+              eyeColor: 'bg-blue-400',
+              accentColor: 'border-slate-400',
+            },
+            scale: 1.0,
+          },
+        ],
+        boss: {
+          id: 'ent',
+          name: 'Ent Ancestral',
+          type: 'boss',
+          sprite: {
+            bodyColor: 'from-amber-800 to-amber-950',
+            headColor: 'from-green-800 to-green-950',
+            eyeColor: 'bg-yellow-400',
+            accentColor: 'border-amber-700',
+          },
+          scale: 1.4,
+          glowColor: 'rgba(34, 197, 94, 0.6)',
+        },
+      },
     },
     {
       id: 'cave',
@@ -231,6 +290,47 @@ export default function App() {
         groundColor: 'from-stone-600 to-stone-800',
         mountainColor: '#3d3d3d',
       },
+      enemies: {
+        normal: [
+          {
+            id: 'skeleton',
+            name: 'Esqueleto Guerreiro',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-gray-300 to-gray-500',
+              headColor: 'from-gray-100 to-gray-300',
+              eyeColor: 'bg-red-600',
+              accentColor: 'border-gray-400',
+            },
+            scale: 1.0,
+          },
+          {
+            id: 'golem',
+            name: 'Golem de Pedra',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-stone-500 to-stone-700',
+              headColor: 'from-stone-400 to-stone-600',
+              eyeColor: 'bg-purple-500',
+              accentColor: 'border-stone-500',
+            },
+            scale: 1.0,
+          },
+        ],
+        boss: {
+          id: 'rock_dragon',
+          name: 'Dragão de Rocha',
+          type: 'boss',
+          sprite: {
+            bodyColor: 'from-orange-700 to-red-900',
+            headColor: 'from-red-600 to-orange-800',
+            eyeColor: 'bg-yellow-300',
+            accentColor: 'border-orange-600',
+          },
+          scale: 1.5,
+          glowColor: 'rgba(249, 115, 22, 0.6)',
+        },
+      },
     },
     {
       id: 'castle',
@@ -243,6 +343,47 @@ export default function App() {
         skyGradient: 'from-red-900 via-orange-900 to-amber-900',
         groundColor: 'from-red-800 to-red-950',
         mountainColor: '#4a1a1a',
+      },
+      enemies: {
+        normal: [
+          {
+            id: 'knight',
+            name: 'Cavaleiro Amaldiçoado',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-purple-900 to-gray-900',
+              headColor: 'from-purple-700 to-purple-900',
+              eyeColor: 'bg-red-500',
+              accentColor: 'border-purple-600',
+            },
+            scale: 1.0,
+          },
+          {
+            id: 'mage',
+            name: 'Mago Negro',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-fuchsia-800 to-purple-950',
+              headColor: 'from-fuchsia-600 to-fuchsia-800',
+              eyeColor: 'bg-cyan-400',
+              accentColor: 'border-fuchsia-500',
+            },
+            scale: 1.0,
+          },
+        ],
+        boss: {
+          id: 'demon_king',
+          name: 'Rei Demônio',
+          type: 'boss',
+          sprite: {
+            bodyColor: 'from-yellow-600 to-red-800',
+            headColor: 'from-yellow-500 to-red-700',
+            eyeColor: 'bg-red-600',
+            accentColor: 'border-yellow-500',
+          },
+          scale: 1.5,
+          glowColor: 'rgba(234, 179, 8, 0.7)',
+        },
       },
     },
   ];
@@ -307,6 +448,7 @@ export default function App() {
   // === Enemy State (moves toward hero) ===
   const [enemyX, setEnemyX] = useState(700);
   const [enemyHp, setEnemyHp] = useState(enemyMaxHp);
+  const [currentEnemy, setCurrentEnemy] = useState<Enemy>(biomes[0].enemies.normal[0]);
   const enemyAttackSpeed = 2000;
 
   // Reset enemy HP when wave changes or biome changes
@@ -370,6 +512,11 @@ export default function App() {
       setBiomeKills(savedData.biomeKills);
       setTotalKills(savedData.totalKills);
       setWave(savedData.wave);
+      
+      // Restore current enemy (spawn random enemy for the biome)
+      const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
+      const randomEnemy = restoredBiome.enemies.normal[Math.floor(Math.random() * restoredBiome.enemies.normal.length)];
+      setCurrentEnemy(randomEnemy);
       
       setIsFirstTime(false);
       console.log('[Load] Game restored successfully!');
@@ -516,6 +663,21 @@ export default function App() {
   }, [heroXp, heroAttributes.maxHp]);
 
   // === Spawn new enemy after delay ===
+  // === Spawn Random Enemy ===
+  const spawnRandomEnemy = useCallback((isBoss: boolean) => {
+    const currentBiomeData = biomes.find(b => b.id === currentBiomeId) || biomes[0];
+    
+    if (isBoss) {
+      // Spawn boss
+      setCurrentEnemy(currentBiomeData.enemies.boss);
+    } else {
+      // Spawn random normal enemy
+      const normalEnemies = currentBiomeData.enemies.normal;
+      const randomIndex = Math.floor(Math.random() * normalEnemies.length);
+      setCurrentEnemy(normalEnemies[randomIndex]);
+    }
+  }, [currentBiomeId, biomes]);
+
   const spawnNewEnemy = useCallback(() => {
     const newWave = wave + 1;
     setWave(newWave);
@@ -530,11 +692,14 @@ export default function App() {
     const nextIsBoss = newBiomeKills > 0 && newBiomeKills % 10 === 0;
     setIsBossWave(nextIsBoss);
     
+    // Spawn random enemy based on boss status
+    spawnRandomEnemy(nextIsBoss);
+    
     setEnemyX(enemySpawnX);
     setGamePhase('approaching');
     lastHeroAttackRef.current = Date.now();
     lastEnemyAttackRef.current = Date.now();
-  }, [wave, biomeKills, totalKills, enemySpawnX]);
+  }, [wave, biomeKills, totalKills, enemySpawnX, spawnRandomEnemy]);
 
   // === Attribute Upgrade Functions ===
   const upgradeAttribute = useCallback((attribute: keyof HeroAttributes) => {
@@ -980,6 +1145,7 @@ export default function App() {
         activeBuffs={activeBuffs}
         onUseSkill={useSkill}
         currentBiome={currentBiome}
+        currentEnemy={currentEnemy}
         isBossWave={isBossWave}
         biomeKills={biomeKills}
       />
