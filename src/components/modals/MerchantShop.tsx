@@ -39,7 +39,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
   const lockedSkills = skills.filter(s => !s.unlocked);
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-60 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div 
         className="bg-[#0f0f1a] border-2 border-yellow-500/70 rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(234,179,8,0.4)]"
         onClick={(e) => e.stopPropagation()}

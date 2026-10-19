@@ -9,6 +9,7 @@ import DiamondShopModal from './components/modals/DiamondShopModal';
 import PathChoiceModal from './components/modals/PathChoiceModal';
 import NPCDialogueModal from './components/modals/NPCDialogueModal';
 import ToastContainer from './components/ToastContainer';
+import Drawer from './components/Drawer';
 import { questsData, type Quest } from './data/questsData';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
@@ -218,6 +219,7 @@ export default function App() {
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // Pause state for modals
+  const [activeDrawer, setActiveDrawer] = useState<'attributes' | 'skills' | 'inventory' | 'quests' | null>(null);
 
   // === Reset Control Flag ===
   const isResetting = useRef(false);
@@ -2177,7 +2179,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950">
       {/* Game Paused Overlay */}
       {!isGameStarted && !showCharacterCreation && (
         <div className="fixed inset-0 bg-black/80 z-[90] flex items-center justify-center">
@@ -2189,50 +2191,106 @@ export default function App() {
         </div>
       )}
 
-      <PlayerStatus
-        level={heroLevel}
-        gold={heroGold}
-        diamonds={heroDiamonds}
-        currentBiome={currentBiome}
-        biomes={biomes}
-        biomeKills={biomeKills}
-        totalKills={totalKills}
-        isBiomeUnlocked={isBiomeUnlocked}
-        onChangeBiome={changeBiome}
-        onOpenSettings={() => setShowSettings(true)}
-        onOpenMerchant={() => setShowMerchantShop(true)}
-        onOpenDiamondShop={() => setShowDiamondShop(true)}
-      />
+      {/* Top: HUD/Header */}
+      <div className="h-12 w-full shrink-0 z-[20]">
+        <PlayerStatus
+          level={heroLevel}
+          gold={heroGold}
+          diamonds={heroDiamonds}
+          currentBiome={currentBiome}
+          biomes={biomes}
+          biomeKills={biomeKills}
+          totalKills={totalKills}
+          isBiomeUnlocked={isBiomeUnlocked}
+          onChangeBiome={changeBiome}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenMerchant={() => setShowMerchantShop(true)}
+          onOpenDiamondShop={() => setShowDiamondShop(true)}
+        />
+      </div>
 
-      <ToastContainer toasts={toasts} />
+      {/* Center: Game Viewport + Skills + HP/XP Bars */}
+      <div className="flex-1 w-full overflow-hidden relative z-[10]">
+        <ToastContainer toasts={toasts} />
+        <GameViewport
+          heroX={heroX}
+          heroName={heroName}
+          heroHp={heroHp}
+          heroMaxHp={heroAttributes.maxHp}
+          heroXp={heroXp}
+          heroMaxXp={xpToNextLevel}
+          enemyX={enemyX}
+          enemyHp={enemyHp}
+          enemyMaxHp={enemyMaxHp}
+          scrollOffset={scrollOffset}
+          gamePhase={gamePhase}
+          wave={wave}
+          damagePopups={damagePopups}
+          heroHitFlash={heroHitFlash}
+          enemyHitFlash={enemyHitFlash}
+          skills={skills}
+          equippedSkillIds={equippedSkillIds}
+          activeBuffs={activeBuffs}
+          onUseSkill={useSkill}
+          currentBiome={currentBiome}
+          currentEnemy={currentEnemy}
+          isBossWave={isBossWave}
+          biomeKills={biomeKills}
+        />
+      </div>
 
-      <GameViewport
-        heroX={heroX}
-        heroName={heroName}
-        heroHp={heroHp}
-        heroMaxHp={heroAttributes.maxHp}
-        heroXp={heroXp}
-        heroMaxXp={xpToNextLevel}
-        enemyX={enemyX}
-        enemyHp={enemyHp}
-        enemyMaxHp={enemyMaxHp}
-        scrollOffset={scrollOffset}
-        gamePhase={gamePhase}
-        wave={wave}
-        damagePopups={damagePopups}
-        heroHitFlash={heroHitFlash}
-        enemyHitFlash={enemyHitFlash}
-        skills={skills}
-        equippedSkillIds={equippedSkillIds}
-        activeBuffs={activeBuffs}
-        onUseSkill={useSkill}
-        currentBiome={currentBiome}
-        currentEnemy={currentEnemy}
-        isBossWave={isBossWave}
-        biomeKills={biomeKills}
-      />
+      {/* Bottom: Bottom Bar Fixed */}
+      <div className="h-16 w-full shrink-0 z-[30] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
+        <button
+          onClick={() => setActiveDrawer('attributes')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'attributes'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">⚔️</span>
+          <span className="text-[10px] font-medium">Atributos</span>
+        </button>
+        <button
+          onClick={() => setActiveDrawer('skills')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'skills'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">✨</span>
+          <span className="text-[10px] font-medium">Skills</span>
+        </button>
+        <button
+          onClick={() => setActiveDrawer('inventory')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'inventory'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">🎒</span>
+          <span className="text-[10px] font-medium">Bag</span>
+        </button>
+        <button
+          onClick={() => setActiveDrawer('quests')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'quests'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">📜</span>
+          <span className="text-[10px] font-medium">Quests</span>
+        </button>
+      </div>
 
-      <BottomPanel
+      {/* Drawer Portal */}
+      <Drawer
+        activeDrawer={activeDrawer}
+        onClose={() => setActiveDrawer(null)}
         heroAttributes={heroAttributes}
         attributeCosts={attributeCosts}
         heroGold={heroGold}
@@ -2248,7 +2306,6 @@ export default function App() {
         onEquipItem={equipItem}
         onUnequipItem={unequipItem}
         onSellItem={sellItem}
-        onResetGame={resetGame}
         quests={quests}
         onCompleteQuest={completeQuest}
       />

@@ -10,7 +10,7 @@ interface NPCDialogueModalProps {
 
 const NPCDialogueModal: React.FC<NPCDialogueModalProps> = ({ quest, onAccept, onDecline }) => {
   return (
-    <div className="fixed inset-0 bg-black/80 z-60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
       <div className="bg-gradient-to-b from-amber-900 to-amber-950 border-4 border-amber-600 rounded-lg max-w-2xl w-full shadow-[0_0_40px_rgba(251,191,36,0.5)]">
         {/* Header */}
         <div className="p-6 border-b-2 border-amber-700">

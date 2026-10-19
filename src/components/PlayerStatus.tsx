@@ -81,7 +81,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
 
             {/* Biome Dropdown */}
             {showBiomeSelector && (
-              <div className="absolute top-full right-0 mt-2 w-72 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md shadow-[0_0_20px_rgba(139,92,246,0.3)] z-60">
+              <div className="absolute top-full right-0 mt-2 w-72 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md shadow-[0_0_20px_rgba(139,92,246,0.3)] z-[100]">
                 <div className="p-3 border-b border-purple-500/30">
                   <span className="text-[11px] text-purple-300 font-bold">Selecionar Bioma</span>
                 </div>

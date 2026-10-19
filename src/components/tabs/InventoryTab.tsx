@@ -117,7 +117,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 bg-black/70 z-60 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div
         className="bg-[#0f0f1a] border-2 border-purple-500/70 rounded-lg max-w-sm w-full shadow-[0_0_30px_rgba(139,92,246,0.4)]"
         onClick={(e) => e.stopPropagation()}

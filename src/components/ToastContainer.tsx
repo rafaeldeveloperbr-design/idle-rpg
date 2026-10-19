@@ -47,7 +47,7 @@ const ToastContainer: React.FC<ToastContainerProps> = ({ toasts }) => {
   };
 
   return (
-    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-70 flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[110] flex flex-col gap-2 pointer-events-none">
       {toasts.map((toast) => {
         const styles = getToastStyles(toast.type);
         
