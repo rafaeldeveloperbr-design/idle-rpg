@@ -745,11 +745,13 @@ export default function App() {
     heroLevelScale
   );
   
-  // Enemy Attack: aggressive scaling with exponential curve
-  // Formula: base + (wave^1.3) + biome + level scaling
-  const waveAttackScale = Math.pow(wave, 1.3); // Exponential growth
+  // Enemy Attack: smooth logarithmic scaling
+  // Formula: base * (1 + log(wave) * 0.5) * biome * level scaling
+  // This ensures damage stays between 5-15% of hero max HP per hit
+  const waveAttackScale = 1 + Math.log(wave) * 0.5; // Logarithmic growth (much smoother)
   const enemyAttackPower = Math.floor(
-    (baseEnemyAttack + waveAttackScale) * 
+    baseEnemyAttack * 
+    waveAttackScale * 
     biomeMultiplier.attack * 
     heroLevelScale
   );
@@ -1023,7 +1025,7 @@ export default function App() {
       // Show level up toast
       addToast(`🌟 LEVEL UP! Você alcançou o Nível ${currentLevel}!`, 'levelup');
     }
-  }, [heroXp, heroAttributes.maxHp, addToast]);
+  }, [heroXp, heroLevel, heroAttributes.maxHp, addToast]);
 
   // === Spawn new enemy after delay ===
   // === Spawn Random Enemy ===
@@ -1719,9 +1721,10 @@ export default function App() {
           const currentBiomeData = biomes.find(b => b.id === currentBiomeId) || biomes[0];
           const currentBiomeMultiplier = currentBiomeData.enemyMultiplier;
           const currentHeroLevelScale = 1 + (heroLevel - 1) * 0.15;
-          const currentWaveAttackScale = Math.pow(currentWave, 1.3);
+          const currentWaveAttackScale = 1 + Math.log(currentWave) * 0.5; // Logarithmic growth
           const currentEnemyAttack = Math.floor(
-            (baseEnemyAttack + currentWaveAttackScale) * 
+            baseEnemyAttack * 
+            currentWaveAttackScale * 
             currentBiomeMultiplier.attack * 
             currentHeroLevelScale
           );
