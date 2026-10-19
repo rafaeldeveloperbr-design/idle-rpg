@@ -576,16 +576,16 @@ const GameViewport: React.FC<GameViewportProps> = ({
       </div>
 
       {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
-      <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-2 gap-2 z-20">
+      <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-1 gap-1 z-20">
         {/* HP Bar - Left of Skills */}
-        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5 flex-1 max-w-[200px]">
-          <span className="text-[9px] text-red-400 whitespace-nowrap">❤️</span>
-          <div className="relative flex-1 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-1 flex-1 max-w-[200px]">
+          <span className="text-sm text-red-400 whitespace-nowrap">❤️</span>
+          <div className="relative flex-1 h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
             <div
               className="hp-bar h-full transition-all duration-300 rounded-sm"
               style={{ width: `${Math.max(0, Math.round((heroHp / heroMaxHp) * 100))}%` }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
               {Math.floor(heroHp)}/{Math.floor(heroMaxHp)}
             </span>
           </div>
@@ -599,14 +599,14 @@ const GameViewport: React.FC<GameViewportProps> = ({
         />
 
         {/* XP Bar - Right of Skills */}
-        <div className="flex items-center gap-1.5 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-2 py-1.5 flex-1 max-w-[200px]">
-          <span className="text-[9px] text-blue-400 whitespace-nowrap">⭐</span>
-          <div className="relative flex-1 h-4 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-1 flex-1 max-w-[200px]">
+          <span className="text-sm text-blue-400 whitespace-nowrap">⭐</span>
+          <div className="relative flex-1 h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
             <div
               className="xp-bar h-full transition-all duration-300 rounded-sm"
               style={{ width: `${Math.max(0, Math.round((heroXp / heroMaxXp) * 100))}%` }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
               {Math.floor(heroXp)}/{Math.floor(heroMaxXp)}
             </span>
           </div>
