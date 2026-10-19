@@ -77,6 +77,28 @@ export interface Equipment {
   accessory: Item | null;
 }
 
+export interface Biome {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  unlockRequirement: {
+    type: 'kills' | 'level';
+    value: number;
+  };
+  enemyMultiplier: {
+    hp: number;
+    attack: number;
+    gold: number;
+    xp: number;
+  };
+  theme: {
+    skyGradient: string;
+    groundColor: string;
+    mountainColor: string;
+  };
+}
+
 export default function App() {
   // === Hero State (fixed position) ===
   const heroX = 150;
@@ -168,6 +190,78 @@ export default function App() {
     accessory: null,
   });
 
+  // === Biome System ===
+  const [currentBiomeId, setCurrentBiomeId] = useState<string>('forest');
+  const [biomeKills, setBiomeKills] = useState<number>(0);
+  const [totalKills, setTotalKills] = useState<number>(0);
+  const [isBossWave, setIsBossWave] = useState<boolean>(false);
+
+  const biomes: Biome[] = [
+    {
+      id: 'forest',
+      name: 'Floresta Sombria',
+      icon: '🌲',
+      description: 'Uma floresta misteriosa cheia de goblins',
+      unlockRequirement: { type: 'kills', value: 0 },
+      enemyMultiplier: { hp: 1.0, attack: 1.0, gold: 1.0, xp: 1.0 },
+      theme: {
+        skyGradient: 'from-indigo-900 via-purple-900 to-slate-900',
+        groundColor: 'from-green-700 to-green-900',
+        mountainColor: '#2a1a4e',
+      },
+    },
+    {
+      id: 'cave',
+      name: 'Caverna Subterrânea',
+      icon: '🕳️',
+      description: 'Cavernas escuras habitadas por criaturas perigosas',
+      unlockRequirement: { type: 'kills', value: 50 },
+      enemyMultiplier: { hp: 1.8, attack: 1.5, gold: 1.8, xp: 1.8 },
+      theme: {
+        skyGradient: 'from-stone-900 via-gray-900 to-zinc-900',
+        groundColor: 'from-stone-600 to-stone-800',
+        mountainColor: '#3d3d3d',
+      },
+    },
+    {
+      id: 'castle',
+      name: 'Castelo do Dragão',
+      icon: '🏰',
+      description: 'O covil do dragão ancestral',
+      unlockRequirement: { type: 'level', value: 10 },
+      enemyMultiplier: { hp: 3.0, attack: 2.5, gold: 3.0, xp: 3.0 },
+      theme: {
+        skyGradient: 'from-red-900 via-orange-900 to-amber-900',
+        groundColor: 'from-red-800 to-red-950',
+        mountainColor: '#4a1a1a',
+      },
+    },
+  ];
+
+  const currentBiome = biomes.find(b => b.id === currentBiomeId) || biomes[0];
+
+  const isBiomeUnlocked = (biome: Biome): boolean => {
+    if (biome.unlockRequirement.type === 'kills') {
+      return totalKills >= biome.unlockRequirement.value;
+    } else if (biome.unlockRequirement.type === 'level') {
+      return heroLevel >= biome.unlockRequirement.value;
+    }
+    return false;
+  };
+
+  const changeBiome = (biomeId: string) => {
+    const biome = biomes.find(b => b.id === biomeId);
+    if (biome && isBiomeUnlocked(biome)) {
+      setCurrentBiomeId(biomeId);
+      setBiomeKills(0);
+      setIsBossWave(false);
+      // Reset enemy to spawn in new biome
+      setEnemyHp(baseEnemyHp * biome.enemyMultiplier.hp);
+      setEnemyX(enemySpawnX);
+      setGamePhase('approaching');
+    }
+  };
+
   // === Item Database ===
   const itemDatabase: Omit<Item, 'id'>[] = [
     // Weapons
@@ -191,21 +285,25 @@ export default function App() {
   const baseEnemyXp = 20;
   const baseEnemyAttack = 5;
   
-  // Scaled enemy stats per wave
-  const enemyMaxHp = baseEnemyHp + (wave - 1) * 15;
-  const enemyGoldReward = baseEnemyGold + (wave - 1) * 5;
-  const enemyXpReward = baseEnemyXp + (wave - 1) * 8;
-  const enemyAttackPower = baseEnemyAttack + Math.floor((wave - 1) * 2);
+  // Scaled enemy stats per wave + biome multiplier
+  const biomeMultiplier = currentBiome.enemyMultiplier;
+  const isBoss = isBossWave;
+  const bossMultiplier = isBoss ? 5 : 1; // Boss has 5x HP
+  
+  const enemyMaxHp = Math.floor((baseEnemyHp + (wave - 1) * 15) * biomeMultiplier.hp * bossMultiplier);
+  const enemyGoldReward = Math.floor((baseEnemyGold + (wave - 1) * 5) * biomeMultiplier.gold * (isBoss ? 3 : 1));
+  const enemyXpReward = Math.floor((baseEnemyXp + (wave - 1) * 8) * biomeMultiplier.xp * (isBoss ? 3 : 1));
+  const enemyAttackPower = Math.floor((baseEnemyAttack + Math.floor((wave - 1) * 2)) * biomeMultiplier.attack);
 
   // === Enemy State (moves toward hero) ===
   const [enemyX, setEnemyX] = useState(700);
   const [enemyHp, setEnemyHp] = useState(enemyMaxHp);
   const enemyAttackSpeed = 2000;
 
-  // Reset enemy HP when wave changes
+  // Reset enemy HP when wave changes or biome changes
   useEffect(() => {
     setEnemyHp(enemyMaxHp);
-  }, [wave]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wave, currentBiomeId, isBossWave]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // === Game Phase ===
   const [gamePhase, setGamePhase] = useState<GamePhase>('approaching');
@@ -278,13 +376,24 @@ export default function App() {
 
   // === Spawn new enemy after delay ===
   const spawnNewEnemy = useCallback(() => {
-    setWave((prev) => prev + 1);
-    setEnemyHp(enemyMaxHp);
+    const newWave = wave + 1;
+    setWave(newWave);
+    
+    // Track kills for biome progression
+    const newBiomeKills = biomeKills + 1;
+    const newTotalKills = totalKills + 1;
+    setBiomeKills(newBiomeKills);
+    setTotalKills(newTotalKills);
+    
+    // Check if next enemy should be a boss (every 10 kills in biome)
+    const nextIsBoss = newBiomeKills > 0 && newBiomeKills % 10 === 0;
+    setIsBossWave(nextIsBoss);
+    
     setEnemyX(enemySpawnX);
     setGamePhase('approaching');
     lastHeroAttackRef.current = Date.now();
     lastEnemyAttackRef.current = Date.now();
-  }, [enemyMaxHp, enemySpawnX]);
+  }, [wave, biomeKills, totalKills, enemySpawnX]);
 
   // === Attribute Upgrade Functions ===
   const upgradeAttribute = useCallback((attribute: keyof HeroAttributes) => {
@@ -654,6 +763,12 @@ export default function App() {
         xp={heroXp}
         maxXp={xpToNextLevel}
         gold={heroGold}
+        currentBiome={currentBiome}
+        biomes={biomes}
+        biomeKills={biomeKills}
+        totalKills={totalKills}
+        isBiomeUnlocked={isBiomeUnlocked}
+        onChangeBiome={changeBiome}
       />
 
       <GameViewport
@@ -670,6 +785,9 @@ export default function App() {
         skills={skills}
         activeBuffs={activeBuffs}
         onUseSkill={useSkill}
+        currentBiome={currentBiome}
+        isBossWave={isBossWave}
+        biomeKills={biomeKills}
       />
 
       <BottomPanel

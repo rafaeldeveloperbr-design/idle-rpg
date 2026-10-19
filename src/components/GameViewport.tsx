@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { DamagePopup, Skill, ActiveBuff } from '../App';
+import type { DamagePopup, Skill, ActiveBuff, Biome } from '../App';
 
 type GamePhase = 'approaching' | 'fighting' | 'waiting';
 
@@ -17,6 +17,9 @@ interface GameViewportProps {
   skills: Skill[];
   activeBuffs: ActiveBuff[];
   onUseSkill: (skillId: string) => void;
+  currentBiome: Biome;
+  isBossWave: boolean;
+  biomeKills: number;
 }
 
 // === Skill Bar Sub-component with Tooltips ===
@@ -149,6 +152,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
   skills,
   activeBuffs,
   onUseSkill,
+  currentBiome,
+  isBossWave,
+  biomeKills,
 }) => {
   const enemyHpPercent = Math.max(0, Math.round((enemyHp / enemyMaxHp) * 100));
   const isMoving = gamePhase === 'approaching';
@@ -157,15 +163,15 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const isEnemyDead = enemyHp <= 0;
 
   return (
-    <div className="flex-1 w-full relative overflow-hidden sky-gradient pixel-border rounded-md">
+    <div className={`flex-1 w-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient} pixel-border rounded-md`}>
       {/* Enemy Name/HP Bar at top */}
       <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1">
         <span className="text-[9px] text-red-300 tracking-wider">
-          👹 Goblin Selvagem <span className="text-purple-300">[Wave {wave}]</span>
+          {isBossWave ? '💀' : '👹'} {isBossWave ? 'CHEFÃO' : 'Goblin Selvagem'} <span className="text-purple-300">[Wave {wave}]</span>
         </span>
-        <div className="relative w-40 h-3 bg-[#0f0f1a]/80 border border-red-900/50 rounded-sm overflow-hidden">
+        <div className={`relative ${isBossWave ? 'w-56' : 'w-40'} h-3 bg-[#0f0f1a]/80 border ${isBossWave ? 'border-red-500' : 'border-red-900/50'} rounded-sm overflow-hidden`}>
           <div
-            className="hp-bar h-full rounded-sm transition-all duration-200"
+            className={`h-full rounded-sm transition-all duration-200 ${isBossWave ? 'bg-gradient-to-r from-red-600 via-orange-500 to-red-600' : 'hp-bar'}`}
             style={{ width: `${enemyHpPercent}%` }}
           />
           <span className="absolute inset-0 flex items-center justify-center text-[7px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
@@ -212,9 +218,10 @@ const GameViewport: React.FC<GameViewportProps> = ({
         style={{
           width: '200%',
           transform: `translateX(${-(scrollOffset * 0.8) % 400}px)`,
+          background: `repeating-linear-gradient(90deg, ${currentBiome.theme.groundColor.includes('green') ? '#3d2b1f' : currentBiome.theme.groundColor.includes('stone') ? '#4a4a4a' : '#4a1a1a'} 0px, ${currentBiome.theme.groundColor.includes('green') ? '#4a3728' : currentBiome.theme.groundColor.includes('stone') ? '#5a5a5a' : '#5a2a2a'} 4px, ${currentBiome.theme.groundColor.includes('green') ? '#3d2b1f' : currentBiome.theme.groundColor.includes('stone') ? '#4a4a4a' : '#4a1a1a'} 8px)`,
         }}
       >
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-green-700 to-green-900 opacity-80" />
+        <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-b ${currentBiome.theme.groundColor} opacity-80`} />
         {[0, 400, 800, 1200].map((offset) => (
           <React.Fragment key={offset}>
             <div className="absolute top-3 w-3 h-1 bg-amber-900/40 rounded-full" style={{ left: `${offset + 40}px` }} />
@@ -274,8 +281,13 @@ const GameViewport: React.FC<GameViewportProps> = ({
       <div
         className={`absolute bottom-16 transition-opacity duration-500 ${
           isEnemyDead ? 'opacity-0' : ''
-        } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
-        style={{ left: `${enemyX}px` }}
+        } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''} ${
+          isBossWave ? 'scale-125' : ''
+        }`}
+        style={{ 
+          left: `${enemyX}px`,
+          filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
+        }}
       >
         <div className="flex flex-col items-center">
           <div className="relative">
@@ -372,24 +384,38 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Zone indicator */}
       <div className="absolute top-3 left-3 bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1">
-        <span className="text-[8px] text-purple-300">📍 Floresta Sombria</span>
+        <span className="text-[8px] text-purple-300">{currentBiome.icon} {currentBiome.name}</span>
       </div>
 
-      {/* Wave counter */}
+      {/* Wave counter & Boss indicator */}
       <div className="absolute top-3 right-3 bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1 flex flex-col gap-0.5">
         <span className="text-[8px] text-gray-300">💀 Wave: {wave}</span>
-        <span className="text-[7px] text-yellow-400">🪙 +{15 + (wave - 1) * 5}</span>
+        <span className="text-[7px] text-purple-400">Kills no bioma: {biomeKills}</span>
+        {biomeKills > 0 && biomeKills % 10 < 3 && (
+          <span className="text-[7px] text-red-400 animate-pulse-glow">
+            ⚠️ Chefão em {10 - (biomeKills % 10)} kills!
+          </span>
+        )}
       </div>
+
+      {/* Boss Wave Banner */}
+      {isBossWave && isMoving && (
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 pointer-events-none animate-pulse-glow">
+          <div className="bg-red-900/80 border-2 border-red-500 rounded-md px-4 py-2 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+            <span className="text-[12px] text-red-200 font-bold">💀 CHEFÃO SE APROXIMA! 💀</span>
+          </div>
+        </div>
+      )}
 
       {/* Phase indicator */}
       <div className="absolute bottom-[72px] left-3 bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-0.5">
         <span className={`text-[7px] ${
           gamePhase === 'approaching' ? 'text-cyan-300' :
-          gamePhase === 'fighting' ? 'text-red-300' :
+          gamePhase === 'fighting' ? (isBossWave ? 'text-red-400' : 'text-red-300') :
           'text-yellow-300'
         }`}>
-          {gamePhase === 'approaching' ? '🚶 Aproximando' :
-           gamePhase === 'fighting' ? '⚔️ Combate' :
+          {gamePhase === 'approaching' ? (isBossWave ? '💀 Chefão se aproximando' : '🚶 Aproximando') :
+           gamePhase === 'fighting' ? (isBossWave ? '💀 COMBATE DE CHEFÃO' : '⚔️ Combate') :
            '💤 Aguardando'}
         </span>
       </div>

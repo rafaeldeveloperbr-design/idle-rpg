@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import type { Biome } from '../App';
 
 interface PlayerStatusProps {
   hp: number;
@@ -7,6 +8,12 @@ interface PlayerStatusProps {
   xp: number;
   maxXp: number;
   gold: number;
+  currentBiome: Biome;
+  biomes: Biome[];
+  biomeKills: number;
+  totalKills: number;
+  isBiomeUnlocked: (biome: Biome) => boolean;
+  onChangeBiome: (biomeId: string) => void;
 }
 
 const PlayerStatus: React.FC<PlayerStatusProps> = ({
@@ -16,9 +23,16 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   xp,
   maxXp,
   gold,
+  currentBiome,
+  biomes,
+  biomeKills,
+  totalKills,
+  isBiomeUnlocked,
+  onChangeBiome,
 }) => {
   const hpPercent = Math.round((hp / maxHp) * 100);
   const xpPercent = Math.round((xp / maxXp) * 100);
+  const [showBiomeSelector, setShowBiomeSelector] = useState(false);
 
   return (
     <header className="w-full px-3 py-2 bg-[#1a1a2e] border-b-2 border-[#2d2d5e] flex items-center justify-between gap-3 flex-wrap md:flex-nowrap">
@@ -58,6 +72,94 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
           <span className="text-sm">🪙</span>
           <span className="text-[10px] text-yellow-400 font-bold">{gold.toLocaleString()}</span>
         </div>
+      </div>
+
+      {/* Biome Selector */}
+      <div className="relative">
+        <button
+          onClick={() => setShowBiomeSelector(!showBiomeSelector)}
+          className="flex items-center gap-1.5 bg-[#0f0f1a] px-3 py-1.5 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
+        >
+          <span className="text-sm">{currentBiome.icon}</span>
+          <span className="text-[9px] text-purple-300">{currentBiome.name}</span>
+          <span className="text-[8px] text-gray-500">▼</span>
+        </button>
+
+        {/* Biome Dropdown */}
+        {showBiomeSelector && (
+          <div className="absolute top-full right-0 mt-1 w-64 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md shadow-[0_0_20px_rgba(139,92,246,0.3)] z-50">
+            <div className="p-2 border-b border-purple-500/30">
+              <span className="text-[9px] text-purple-300 font-bold">Selecionar Bioma</span>
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {biomes.map((biome) => {
+                const unlocked = isBiomeUnlocked(biome);
+                const isCurrent = biome.id === currentBiome.id;
+                
+                return (
+                  <button
+                    key={biome.id}
+                    onClick={() => {
+                      if (unlocked && !isCurrent) {
+                        onChangeBiome(biome.id);
+                        setShowBiomeSelector(false);
+                      }
+                    }}
+                    disabled={!unlocked}
+                    className={`w-full p-2 flex items-start gap-2 transition-colors border-b border-[#2d2d5e] last:border-b-0 ${
+                      isCurrent
+                        ? 'bg-purple-900/30 border-l-2 border-l-purple-500'
+                        : unlocked
+                        ? 'hover:bg-purple-900/20 cursor-pointer'
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <span className="text-xl">{biome.icon}</span>
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-1">
+                        <span className={`text-[9px] font-bold ${isCurrent ? 'text-purple-200' : 'text-gray-200'}`}>
+                          {biome.name}
+                        </span>
+                        {isCurrent && (
+                          <span className="text-[7px] bg-purple-600 text-white px-1 rounded">ATUAL</span>
+                        )}
+                      </div>
+                      <span className="text-[7px] text-gray-400 block mt-0.5">{biome.description}</span>
+                      {!unlocked && (
+                        <span className="text-[7px] text-red-400 block mt-0.5">
+                          🔒 {biome.unlockRequirement.type === 'kills' 
+                            ? `Derrote ${biome.unlockRequirement.value} inimigos (${totalKills}/${biome.unlockRequirement.value})`
+                            : `Alcance o nível ${biome.unlockRequirement.value} (Nv. ${level}/${biome.unlockRequirement.value})`
+                          }
+                        </span>
+                      )}
+                      {unlocked && (
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-[6px] text-gray-500">
+                            HP: x{biome.enemyMultiplier.hp} | ATK: x{biome.enemyMultiplier.attack}
+                          </span>
+                          <span className="text-[6px] text-yellow-500">
+                            💰 x{biome.enemyMultiplier.gold} | XP x{biome.enemyMultiplier.xp}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="p-2 border-t border-purple-500/30 bg-[#1a1a2e]">
+              <div className="flex justify-between text-[7px]">
+                <span className="text-gray-400">Kills no bioma:</span>
+                <span className="text-purple-300">{biomeKills}</span>
+              </div>
+              <div className="flex justify-between text-[7px]">
+                <span className="text-gray-400">Total de kills:</span>
+                <span className="text-purple-300">{totalKills}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
