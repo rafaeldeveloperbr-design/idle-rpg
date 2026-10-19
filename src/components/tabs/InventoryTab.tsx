@@ -21,6 +21,24 @@ const rarityTextColors: Record<string, string> = {
   epic: 'text-purple-300',
 };
 
+const upgradeLevelColors: Record<number, string> = {
+  0: 'text-gray-400',
+  1: 'text-green-400',
+  2: 'text-blue-400',
+  3: 'text-purple-400',
+  4: 'text-orange-400',
+  5: 'text-red-400', // Legendary
+};
+
+const upgradeLevelGlow: Record<number, string> = {
+  0: '',
+  1: 'shadow-[0_0_5px_rgba(34,197,94,0.3)]',
+  2: 'shadow-[0_0_8px_rgba(59,130,246,0.4)]',
+  3: 'shadow-[0_0_10px_rgba(168,85,247,0.5)]',
+  4: 'shadow-[0_0_12px_rgba(251,146,60,0.6)]',
+  5: 'shadow-[0_0_15px_rgba(239,68,68,0.7)] animate-pulse', // Legendary glow
+};
+
 const rarityLabels: Record<string, string> = {
   common: 'Comum',
   rare: 'Raro',
@@ -49,6 +67,31 @@ const attributeIcons: Record<keyof HeroAttributes, string> = {
   speed: '💨',
   critChance: '🎯',
   regen: '💚',
+};
+
+const slotIcons: Record<string, string> = {
+  weapon: '⚔️',
+  armor: '🛡️',
+  accessory: '💍',
+};
+
+// === Utility Functions ===
+const calculateTotalBonus = (item: Item | null): number => {
+  if (!item) return 0;
+  return Object.values(item.bonuses).reduce((sum, value) => sum + (value as number), 0);
+};
+
+const isUpgrade = (item: Item, equipment: Equipment): boolean => {
+  const equippedItem = equipment[item.slot];
+  
+  // If slot is empty, any item is an upgrade
+  if (!equippedItem) return true;
+  
+  // Compare total bonuses
+  const itemTotal = calculateTotalBonus(item);
+  const equippedTotal = calculateTotalBonus(equippedItem);
+  
+  return itemTotal > equippedTotal;
 };
 
 // === Item Modal Component ===
@@ -82,12 +125,19 @@ const ItemModal: React.FC<ItemModalProps> = ({
           <div className="flex items-center gap-3">
             <span className="text-3xl">{item.icon}</span>
             <div>
-              <h3 className={`text-base font-bold ${rarityTextColors[item.rarity]}`}>
+              <h3 className={`text-base font-bold ${item.upgradeLevel && item.upgradeLevel > 0 ? upgradeLevelColors[item.upgradeLevel] : rarityTextColors[item.rarity]}`}>
                 {item.name}
               </h3>
-              <span className={`text-xs ${rarityTextColors[item.rarity]}`}>
-                {rarityLabels[item.rarity]} • {slotLabels[item.slot]}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs ${rarityTextColors[item.rarity]}`}>
+                  {rarityLabels[item.rarity]} • {slotLabels[item.slot]}
+                </span>
+                {item.upgradeLevel && item.upgradeLevel > 0 && (
+                  <span className={`text-xs font-bold ${upgradeLevelColors[item.upgradeLevel]}`}>
+                    {item.upgradeLevel === 5 ? '🌟 LENDÁRIO' : `+${item.upgradeLevel}`}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <button
@@ -116,10 +166,10 @@ const ItemModal: React.FC<ItemModalProps> = ({
                       <span>{attributeLabels[attrKey]}</span>
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-green-300">+{value}</span>
+                      <span className="text-green-300">+{Math.round(value as number)}</span>
                       {equippedItem && diff !== 0 && (
                         <span className={`text-xs ${diff > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ({diff > 0 ? '+' : ''}{diff})
+                          ({diff > 0 ? '+' : ''}{Math.round(diff)})
                         </span>
                       )}
                     </div>
@@ -145,7 +195,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
           {/* Sell Value */}
           <div className="flex items-center justify-between text-sm mb-4 p-3 bg-[#1a1a2e] rounded-md border border-[#2d2d5e]">
             <span className="text-gray-400">Valor de venda:</span>
-            <span className="text-yellow-300 font-bold">🪙 {item.sellValue}</span>
+            <span className="text-yellow-300 font-bold">🪙 {Math.round(item.sellValue)}</span>
           </div>
 
           {/* Action Buttons */}
@@ -162,7 +212,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
                   onClick={onSell}
                   className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm"
                 >
-                  Vender (🪙 {item.sellValue})
+                  Vender (🪙 {Math.round(item.sellValue)})
                 </button>
               </>
             ) : (
@@ -273,14 +323,36 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
         </div>
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {inventory.map((item) => {
+            const isItemUpgrade = isUpgrade(item, equipment);
+            const upgradeLevel = item.upgradeLevel || 0;
+            
             return (
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item, null)}
-                className={`w-full aspect-square border-2 rounded-md flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors hover:border-purple-500 ${rarityColors[item.rarity]}`}
+                className={`w-full aspect-square border-2 rounded-md flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors hover:border-purple-500 relative ${rarityColors[item.rarity]} ${upgradeLevelGlow[upgradeLevel]}`}
               >
+                {/* Slot Badge - Bottom Left */}
+                <div className="absolute bottom-0.5 left-0.5 text-[8px] sm:text-[9px] bg-black/60 rounded px-0.5">
+                  {slotIcons[item.slot]}
+                </div>
+                
+                {/* Upgrade Indicator - Top Right */}
+                {isItemUpgrade && (
+                  <div className="absolute top-0.5 right-0.5 text-[10px] sm:text-xs animate-bounce-subtle">
+                    ⬆️
+                  </div>
+                )}
+                
+                {/* Upgrade Level Badge - Top Left */}
+                {upgradeLevel > 0 && (
+                  <div className={`absolute top-0.5 left-0.5 text-[8px] sm:text-[9px] font-bold ${upgradeLevelColors[upgradeLevel]}`}>
+                    +{upgradeLevel}
+                  </div>
+                )}
+                
                 <span className="text-lg sm:text-xl">{item.icon}</span>
-                <span className={`text-[9px] sm:text-xs ${rarityTextColors[item.rarity]} text-center leading-tight px-0.5 sm:px-1`}>
+                <span className={`text-[9px] sm:text-xs ${upgradeLevel > 0 ? upgradeLevelColors[upgradeLevel] : rarityTextColors[item.rarity]} text-center leading-tight px-0.5 sm:px-1 font-bold`}>
                   {item.name}
                 </span>
               </button>

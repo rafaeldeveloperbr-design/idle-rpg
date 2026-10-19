@@ -2,8 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import PlayerStatus from './components/PlayerStatus';
 import GameViewport from './components/GameViewport';
 import BottomPanel from './components/BottomPanel';
+import CharacterCreationModal from './components/modals/CharacterCreationModal';
+import SettingsModal from './components/modals/SettingsModal';
+import MerchantShop from './components/modals/MerchantShop';
+import ToastContainer from './components/ToastContainer';
+import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
-type GamePhase = 'approaching' | 'fighting' | 'waiting';
+type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
 
 export interface HeroAttributes {
   attack: number;
@@ -49,6 +54,26 @@ export interface Skill {
   effect: 'damage' | 'heal' | 'buff';
   effectValue: number;
   buffDuration?: number; // seconds (for buffs)
+  requiredLevel?: number; // minimum level to unlock
+}
+
+export interface Consumable {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  cost: number;
+  requiredLevel: number;
+  effect: 'heal' | 'buff_attack' | 'buff_defense' | 'buff_speed';
+  value: number;
+  duration: number; // seconds
+}
+
+export interface ActiveConsumable {
+  id: string;
+  consumableId: string;
+  expiresAt: number;
+  value: number;
 }
 
 export interface ActiveBuff {
@@ -69,6 +94,8 @@ export interface Item {
   rarity: ItemRarity;
   bonuses: Partial<HeroAttributes>;
   sellValue: number;
+  requiredLevel?: number;
+  upgradeLevel?: number; // 0-5, onde 5 é Lendário
 }
 
 export interface Equipment {
@@ -97,40 +124,76 @@ export interface Biome {
     groundColor: string;
     mountainColor: string;
   };
+  enemies: {
+    normal: Enemy[];
+    boss: Enemy;
+  };
+}
+
+export interface Enemy {
+  id: string;
+  name: string;
+  type: 'normal' | 'boss';
+  sprite: {
+    bodyColor: string;
+    headColor: string;
+    eyeColor: string;
+    accentColor?: string;
+  };
+  scale: number; // 1.0 = normal, 1.3-1.5 = boss
+  glowColor?: string; // para bosses
+}
+
+export interface Toast {
+  id: string;
+  message: string;
+  type: 'levelup' | 'drop' | 'boss' | 'info';
+  duration?: number;
+  timestamp: number;
 }
 
 export default function App() {
   // === Hero State (fixed position) ===
   const heroX = 150;
-  const [heroHp, setHeroHp] = useState(85);
-  const [heroLevel, setHeroLevel] = useState(7);
-  const [heroXp, setHeroXp] = useState(340);
-  const [heroGold, setHeroGold] = useState(1250);
+  const [heroName, setHeroName] = useState('Herói');
+  const [heroHp, setHeroHp] = useState(100);
+  const [heroLevel, setHeroLevel] = useState(1);
+  const [heroXp, setHeroXp] = useState(0);
+  const [heroGold, setHeroGold] = useState(10);
 
-  // Hero attributes (upgradable)
+  // === Modal States ===
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showMerchantShop, setShowMerchantShop] = useState(false);
+  const [isFirstTime, setIsFirstTime] = useState(true);
+
+  // === Toast Notifications ===
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  // Hero attributes (upgradable) - New Game defaults
   const [heroAttributes, setHeroAttributes] = useState<HeroAttributes>({
-    attack: 10,
-    defense: 5,
+    attack: 5,
+    defense: 2,
     maxHp: 100,
-    speed: 8,
-    critChance: 5,
-    regen: 2,
+    speed: 5,
+    critChance: 2,
+    regen: 1,
   });
 
-  // Attribute upgrade costs
+  // Attribute upgrade costs - New Game defaults
   const [attributeCosts, setAttributeCosts] = useState<AttributeCosts>({
-    attack: 50,
-    defense: 40,
-    maxHp: 60,
-    speed: 70,
-    critChance: 80,
-    regen: 90,
+    attack: 20,
+    defense: 15,
+    maxHp: 25,
+    speed: 30,
+    critChance: 35,
+    regen: 40,
   });
 
   // Combat timing (based on speed attribute)
   const heroAttackSpeed = Math.max(300, 1500 - heroAttributes.speed * 50);
 
-  // === Skills System ===
+  // === Skills System === - New Game defaults (3 initial skills)
   const [skills, setSkills] = useState<Skill[]>([
     {
       id: 'power_strike',
@@ -140,12 +203,13 @@ export default function App() {
       level: 1,
       maxLevel: 10,
       cooldown: 5,
-      cost: 100,
+      cost: 30,
       unlocked: true,
       autoCast: false,
       lastUsed: 0,
       effect: 'damage',
       effectValue: 2.5,
+      requiredLevel: 1,
     },
     {
       id: 'quick_heal',
@@ -155,12 +219,13 @@ export default function App() {
       level: 1,
       maxLevel: 10,
       cooldown: 10,
-      cost: 150,
+      cost: 50,
       unlocked: true,
       autoCast: false,
       lastUsed: 0,
       effect: 'heal',
       effectValue: 0.3,
+      requiredLevel: 1,
     },
     {
       id: 'fury',
@@ -170,17 +235,249 @@ export default function App() {
       level: 1,
       maxLevel: 8,
       cooldown: 12,
-      cost: 200,
+      cost: 80,
       unlocked: true,
       autoCast: false,
       lastUsed: 0,
       effect: 'buff',
       effectValue: 2.0,
       buffDuration: 5,
+      requiredLevel: 1,
+    },
+    {
+      id: 'shield_bash',
+      name: 'Golpe de Escudo',
+      icon: '🛡️',
+      description: 'Causa 200% de dano e atordoa',
+      level: 1,
+      maxLevel: 8,
+      cooldown: 8,
+      cost: 150,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'damage',
+      effectValue: 2.0,
+      requiredLevel: 5,
+    },
+    {
+      id: 'life_drain',
+      name: 'Drenar Vida',
+      icon: '🩸',
+      description: 'Causa 180% de dano e cura 50%',
+      level: 1,
+      maxLevel: 8,
+      cooldown: 15,
+      cost: 200,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'damage',
+      effectValue: 1.8,
+      requiredLevel: 8,
+    },
+    {
+      id: 'berserker',
+      name: 'Berserker',
+      icon: '😡',
+      description: 'Aumenta Ataque em 150% por 8s',
+      level: 1,
+      maxLevel: 6,
+      cooldown: 20,
+      cost: 300,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'buff',
+      effectValue: 2.5,
+      buffDuration: 8,
+      requiredLevel: 10,
+    },
+    {
+      id: 'healing_aura',
+      name: 'Aura de Cura',
+      icon: '💚',
+      description: 'Restaura 50% da Vida Máxima',
+      level: 1,
+      maxLevel: 8,
+      cooldown: 20,
+      cost: 250,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'heal',
+      effectValue: 0.5,
+      requiredLevel: 12,
+    },
+    {
+      id: 'thunder_strike',
+      name: 'Golpe Trovejante',
+      icon: '⚡',
+      description: 'Causa 350% de dano em um único golpe',
+      level: 1,
+      maxLevel: 6,
+      cooldown: 12,
+      cost: 500,
+      unlocked: false,
+      autoCast: false,
+      lastUsed: 0,
+      effect: 'damage',
+      effectValue: 3.5,
+      requiredLevel: 15,
     },
   ]);
 
   const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>([]);
+
+  // === Skill Deck System ===
+  const [equippedSkillIds, setEquippedSkillIds] = useState<string[]>(['power_strike', 'quick_heal', 'fury']);
+
+  // === Consumables System ===
+  const [consumables, setConsumables] = useState<Consumable[]>([
+    {
+      id: 'potion_strength',
+      name: 'Poção de Força',
+      icon: '💪',
+      description: '+50% Ataque por 10s',
+      cost: 25,
+      requiredLevel: 3,
+      effect: 'buff_attack',
+      value: 1.5,
+      duration: 10,
+    },
+    {
+      id: 'potion_defense',
+      name: 'Poção de Proteção',
+      icon: '🛡️',
+      description: '+50% Defesa por 10s',
+      cost: 25,
+      requiredLevel: 5,
+      effect: 'buff_defense',
+      value: 1.5,
+      duration: 10,
+    },
+    {
+      id: 'potion_speed',
+      name: 'Poção de Velocidade',
+      icon: '⚡',
+      description: '+50% Velocidade por 10s',
+      cost: 30,
+      requiredLevel: 7,
+      effect: 'buff_speed',
+      value: 1.5,
+      duration: 10,
+    },
+    {
+      id: 'potion_heal',
+      name: 'Poção de Cura',
+      icon: '❤️',
+      description: 'Restaura 50% HP',
+      cost: 20,
+      requiredLevel: 2,
+      effect: 'heal',
+      value: 0.5,
+      duration: 0,
+    },
+  ]);
+
+  const [activeConsumables, setActiveConsumables] = useState<ActiveConsumable[]>([]);
+
+  // === Shop Items (Equipment Catalog) ===
+  const shopItems: Item[] = [
+    // Armas
+    {
+      id: 'shop_iron_sword',
+      name: 'Espada de Ferro',
+      icon: '🗡️',
+      slot: 'weapon',
+      rarity: 'common',
+      bonuses: { attack: 8 },
+      sellValue: 50,
+      requiredLevel: 1,
+    },
+    {
+      id: 'shop_steel_sword',
+      name: 'Espada de Aço',
+      icon: '⚔️',
+      slot: 'weapon',
+      rarity: 'rare',
+      bonuses: { attack: 15, critChance: 3 },
+      sellValue: 150,
+      requiredLevel: 5,
+    },
+    {
+      id: 'shop_dragon_blade',
+      name: 'Lâmina do Dragão',
+      icon: '🔥',
+      slot: 'weapon',
+      rarity: 'epic',
+      bonuses: { attack: 30, critChance: 8, speed: 5 },
+      sellValue: 500,
+      requiredLevel: 12,
+    },
+    // Armaduras
+    {
+      id: 'shop_leather_armor',
+      name: 'Armadura de Couro',
+      icon: '🦺',
+      slot: 'armor',
+      rarity: 'common',
+      bonuses: { defense: 5, maxHp: 20 },
+      sellValue: 60,
+      requiredLevel: 2,
+    },
+    {
+      id: 'shop_chain_mail',
+      name: 'Cota de Malha',
+      icon: '⛓️',
+      slot: 'armor',
+      rarity: 'rare',
+      bonuses: { defense: 12, maxHp: 40 },
+      sellValue: 180,
+      requiredLevel: 7,
+    },
+    {
+      id: 'shop_dragon_armor',
+      name: 'Armadura Dracônica',
+      icon: '🛡️',
+      slot: 'armor',
+      rarity: 'epic',
+      bonuses: { defense: 25, maxHp: 80, regen: 3 },
+      sellValue: 600,
+      requiredLevel: 15,
+    },
+    // Acessórios
+    {
+      id: 'shop_speed_ring',
+      name: 'Anel de Velocidade',
+      icon: '💍',
+      slot: 'accessory',
+      rarity: 'common',
+      bonuses: { speed: 5, critChance: 2 },
+      sellValue: 70,
+      requiredLevel: 3,
+    },
+    {
+      id: 'shop_life_amulet',
+      name: 'Amuleto da Vida',
+      icon: '📿',
+      slot: 'accessory',
+      rarity: 'rare',
+      bonuses: { maxHp: 50, regen: 2, defense: 5 },
+      sellValue: 200,
+      requiredLevel: 8,
+    },
+    {
+      id: 'shop_dragon_crown',
+      name: 'Coroa do Dragão',
+      icon: '👑',
+      slot: 'accessory',
+      rarity: 'epic',
+      bonuses: { attack: 15, defense: 15, maxHp: 60, speed: 8, critChance: 10 },
+      sellValue: 800,
+      requiredLevel: 18,
+    },
+  ];
 
   // === Inventory System ===
   const [inventory, setInventory] = useState<Item[]>([]);
@@ -209,6 +506,47 @@ export default function App() {
         groundColor: 'from-green-700 to-green-900',
         mountainColor: '#2a1a4e',
       },
+      enemies: {
+        normal: [
+          {
+            id: 'goblin',
+            name: 'Goblin Selvagem',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-green-600 to-green-800',
+              headColor: 'from-green-400 to-green-600',
+              eyeColor: 'bg-red-500',
+              accentColor: 'border-green-400',
+            },
+            scale: 1.0,
+          },
+          {
+            id: 'wolf',
+            name: 'Lobo das Sombras',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-slate-600 to-slate-800',
+              headColor: 'from-slate-400 to-slate-600',
+              eyeColor: 'bg-blue-400',
+              accentColor: 'border-slate-400',
+            },
+            scale: 1.0,
+          },
+        ],
+        boss: {
+          id: 'ent',
+          name: 'Ent Ancestral',
+          type: 'boss',
+          sprite: {
+            bodyColor: 'from-amber-800 to-amber-950',
+            headColor: 'from-green-800 to-green-950',
+            eyeColor: 'bg-yellow-400',
+            accentColor: 'border-amber-700',
+          },
+          scale: 1.4,
+          glowColor: 'rgba(34, 197, 94, 0.6)',
+        },
+      },
     },
     {
       id: 'cave',
@@ -222,6 +560,47 @@ export default function App() {
         groundColor: 'from-stone-600 to-stone-800',
         mountainColor: '#3d3d3d',
       },
+      enemies: {
+        normal: [
+          {
+            id: 'skeleton',
+            name: 'Esqueleto Guerreiro',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-gray-300 to-gray-500',
+              headColor: 'from-gray-100 to-gray-300',
+              eyeColor: 'bg-red-600',
+              accentColor: 'border-gray-400',
+            },
+            scale: 1.0,
+          },
+          {
+            id: 'golem',
+            name: 'Golem de Pedra',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-stone-500 to-stone-700',
+              headColor: 'from-stone-400 to-stone-600',
+              eyeColor: 'bg-purple-500',
+              accentColor: 'border-stone-500',
+            },
+            scale: 1.0,
+          },
+        ],
+        boss: {
+          id: 'rock_dragon',
+          name: 'Dragão de Rocha',
+          type: 'boss',
+          sprite: {
+            bodyColor: 'from-orange-700 to-red-900',
+            headColor: 'from-red-600 to-orange-800',
+            eyeColor: 'bg-yellow-300',
+            accentColor: 'border-orange-600',
+          },
+          scale: 1.5,
+          glowColor: 'rgba(249, 115, 22, 0.6)',
+        },
+      },
     },
     {
       id: 'castle',
@@ -234,6 +613,47 @@ export default function App() {
         skyGradient: 'from-red-900 via-orange-900 to-amber-900',
         groundColor: 'from-red-800 to-red-950',
         mountainColor: '#4a1a1a',
+      },
+      enemies: {
+        normal: [
+          {
+            id: 'knight',
+            name: 'Cavaleiro Amaldiçoado',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-purple-900 to-gray-900',
+              headColor: 'from-purple-700 to-purple-900',
+              eyeColor: 'bg-red-500',
+              accentColor: 'border-purple-600',
+            },
+            scale: 1.0,
+          },
+          {
+            id: 'mage',
+            name: 'Mago Negro',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-fuchsia-800 to-purple-950',
+              headColor: 'from-fuchsia-600 to-fuchsia-800',
+              eyeColor: 'bg-cyan-400',
+              accentColor: 'border-fuchsia-500',
+            },
+            scale: 1.0,
+          },
+        ],
+        boss: {
+          id: 'demon_king',
+          name: 'Rei Demônio',
+          type: 'boss',
+          sprite: {
+            bodyColor: 'from-yellow-600 to-red-800',
+            headColor: 'from-yellow-500 to-red-700',
+            eyeColor: 'bg-red-600',
+            accentColor: 'border-yellow-500',
+          },
+          scale: 1.5,
+          glowColor: 'rgba(234, 179, 8, 0.7)',
+        },
       },
     },
   ];
@@ -265,25 +685,35 @@ export default function App() {
   // === Item Database ===
   const itemDatabase: Omit<Item, 'id'>[] = [
     // Weapons
+    { name: 'Adaga Enferrujada', icon: '🔪', slot: 'weapon', rarity: 'common', bonuses: { attack: 3 }, sellValue: 10 },
     { name: 'Espada de Ferro', icon: '🗡️', slot: 'weapon', rarity: 'common', bonuses: { attack: 5 }, sellValue: 20 },
+    { name: 'Machado de Batalha', icon: '🪓', slot: 'weapon', rarity: 'common', bonuses: { attack: 6, critChance: 1 }, sellValue: 25 },
     { name: 'Machado de Guerra', icon: '🪓', slot: 'weapon', rarity: 'rare', bonuses: { attack: 12, critChance: 2 }, sellValue: 50 },
+    { name: 'Espada Longa', icon: '⚔️', slot: 'weapon', rarity: 'rare', bonuses: { attack: 14, speed: 2 }, sellValue: 65 },
     { name: 'Lâmina Élfica', icon: '⚔️', slot: 'weapon', rarity: 'epic', bonuses: { attack: 25, critChance: 5, speed: 3 }, sellValue: 150 },
+    { name: 'Espada do Caos', icon: '🗡️', slot: 'weapon', rarity: 'epic', bonuses: { attack: 28, critChance: 8 }, sellValue: 180 },
     // Armor
     { name: 'Escudo de Madeira', icon: '🛡️', slot: 'armor', rarity: 'common', bonuses: { defense: 4, maxHp: 10 }, sellValue: 15 },
-    { name: 'Armadura de Couro', icon: '🦺', slot: 'armor', rarity: 'rare', bonuses: { defense: 10, maxHp: 25 }, sellValue: 60 },
+    { name: 'Armadura de Couro', icon: '🦺', slot: 'armor', rarity: 'common', bonuses: { defense: 5, maxHp: 15 }, sellValue: 20 },
+    { name: 'Cota de Malha', icon: '⛓️', slot: 'armor', rarity: 'rare', bonuses: { defense: 10, maxHp: 25 }, sellValue: 60 },
+    { name: 'Armadura de Placas', icon: '🛡️', slot: 'armor', rarity: 'rare', bonuses: { defense: 12, maxHp: 30, regen: 1 }, sellValue: 75 },
     { name: 'Peitoral de Aço', icon: '⛓️', slot: 'armor', rarity: 'epic', bonuses: { defense: 20, maxHp: 50, regen: 2 }, sellValue: 180 },
+    { name: 'Armadura Dracônica', icon: '🛡️', slot: 'armor', rarity: 'epic', bonuses: { defense: 25, maxHp: 60, regen: 3 }, sellValue: 220 },
     // Accessories
     { name: 'Anel de Vida', icon: '💍', slot: 'accessory', rarity: 'common', bonuses: { maxHp: 15, regen: 1 }, sellValue: 25 },
+    { name: 'Anel de Rubi', icon: '💍', slot: 'accessory', rarity: 'common', bonuses: { attack: 3, critChance: 2 }, sellValue: 30 },
     { name: 'Amuleto de Velocidade', icon: '📿', slot: 'accessory', rarity: 'rare', bonuses: { speed: 5, critChance: 3 }, sellValue: 70 },
+    { name: 'Colar de Esmeralda', icon: '📿', slot: 'accessory', rarity: 'rare', bonuses: { maxHp: 25, regen: 2, defense: 3 }, sellValue: 85 },
     { name: 'Coroa do Rei', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 10, defense: 10, maxHp: 30, speed: 5 }, sellValue: 200 },
+    { name: 'Coroa do Dragão', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 15, defense: 12, maxHp: 40, speed: 6, critChance: 5 }, sellValue: 250 },
   ];
 
-  // === Wave System ===
+  // === Wave System === - Balanced for Level 1 hero
   const [wave, setWave] = useState(1);
-  const baseEnemyHp = 50;
-  const baseEnemyGold = 15;
-  const baseEnemyXp = 20;
-  const baseEnemyAttack = 5;
+  const baseEnemyHp = 30;
+  const baseEnemyGold = 10;
+  const baseEnemyXp = 15;
+  const baseEnemyAttack = 3;
   
   // Scaled enemy stats per wave + biome multiplier
   const biomeMultiplier = currentBiome.enemyMultiplier;
@@ -298,6 +728,7 @@ export default function App() {
   // === Enemy State (moves toward hero) ===
   const [enemyX, setEnemyX] = useState(700);
   const [enemyHp, setEnemyHp] = useState(enemyMaxHp);
+  const [currentEnemy, setCurrentEnemy] = useState<Enemy>(biomes[0].enemies.normal[0]);
   const enemyAttackSpeed = 2000;
 
   // Reset enemy HP when wave changes or biome changes
@@ -325,6 +756,131 @@ export default function App() {
 
   // XP formula: level * 100
   const xpToNextLevel = heroLevel * 100;
+
+  // === Load Game on Mount ===
+  useEffect(() => {
+    const savedData = loadGameData();
+    
+    if (savedData) {
+      console.log('[Load] Restoring saved game...');
+      console.log('[Load] Hero Level:', savedData.heroLevel);
+      console.log('[Load] Hero XP:', savedData.heroXp);
+      console.log('[Load] Hero Gold:', savedData.heroGold);
+      console.log('[Load] Current Biome:', savedData.currentBiomeId);
+      console.log('[Load] Wave:', savedData.wave);
+      
+      // Restore hero state
+      setHeroName(savedData.heroName || 'Herói');
+      setHeroHp(savedData.heroHp);
+      setHeroLevel(savedData.heroLevel);
+      setHeroXp(savedData.heroXp);
+      setHeroGold(savedData.heroGold);
+      
+      // Restore attributes
+      setHeroAttributes(savedData.heroAttributes);
+      setAttributeCosts(savedData.attributeCosts);
+      
+      // Restore skills
+      setSkills(savedData.skills);
+      
+      // Restore inventory & equipment
+      setInventory(savedData.inventory);
+      setEquipment(savedData.equipment);
+      
+      // Restore biome & progress
+      setCurrentBiomeId(savedData.currentBiomeId);
+      setBiomeKills(savedData.biomeKills);
+      setTotalKills(savedData.totalKills);
+      setWave(savedData.wave);
+      
+      // Restore current enemy (spawn random enemy for the biome)
+      const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
+      const randomEnemy = restoredBiome.enemies.normal[Math.floor(Math.random() * restoredBiome.enemies.normal.length)];
+      setCurrentEnemy(randomEnemy);
+      
+      setIsFirstTime(false);
+      console.log('[Load] Game restored successfully!');
+    } else {
+      console.log('[New Game] Starting fresh game...');
+      console.log('[New Game] Hero Level: 1');
+      console.log('[New Game] Hero XP: 0/100');
+      console.log('[New Game] Hero Gold: 10');
+      setIsFirstTime(true);
+      setShowCharacterCreation(true);
+      console.log('[New Game] Current Biome: forest');
+      console.log('[New Game] Wave: 1');
+      console.log('[New Game] Game initialized successfully!');
+    }
+  }, []);
+
+  // === Auto-Save System ===
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
+      saveGameData({
+        heroName,
+        heroHp,
+        heroLevel,
+        heroXp,
+        heroGold,
+        heroAttributes,
+        attributeCosts,
+        skills,
+        inventory,
+        equipment,
+        currentBiomeId,
+        biomeKills,
+        totalKills,
+        wave,
+      });
+    }, 5000); // Save every 5 seconds
+
+    // Save on page close/refresh
+    const handleBeforeUnload = () => {
+      saveGameData({
+        heroName,
+        heroHp,
+        heroLevel,
+        heroXp,
+        heroGold,
+        heroAttributes,
+        attributeCosts,
+        skills,
+        inventory,
+        equipment,
+        currentBiomeId,
+        biomeKills,
+        totalKills,
+        wave,
+      });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(saveInterval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroAttributes, attributeCosts, skills, inventory, equipment, currentBiomeId, biomeKills, totalKills, wave]);
+
+  // === Reset Game ===
+  const resetGame = useCallback(() => {
+    clearSaveData();
+    window.location.reload();
+  }, []);
+
+  // === Handle Start Adventure (First Time) ===
+  const handleStartAdventure = useCallback((name: string) => {
+    setHeroName(name);
+    setShowCharacterCreation(false);
+    setIsFirstTime(false);
+    console.log('[Character Creation] Adventure started with hero:', name);
+  }, []);
+
+  // === Handle Change Name ===
+  const handleChangeName = useCallback((name: string) => {
+    setHeroName(name);
+    console.log('[Settings] Hero name changed to:', name);
+  }, []);
 
   // === Refs for game loop ===
   const enemyXRef = useRef(enemyX);
@@ -365,16 +921,65 @@ export default function App() {
     }, 900);
   }, []);
 
+  // === Toast Notification System ===
+  const addToast = useCallback((message: string, type: Toast['type'], duration: number = 3000) => {
+    const id = `toast_${Date.now()}_${Math.random()}`;
+    const newToast: Toast = {
+      id,
+      message,
+      type,
+      duration,
+      timestamp: Date.now(),
+    };
+    
+    setToasts((prev) => [...prev, newToast]);
+    
+    // Auto-remove toast after duration
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
+  }, []);
+
   // === Level Up Logic ===
   useEffect(() => {
-    if (heroXp >= xpToNextLevel) {
-      setHeroLevel((prev) => prev + 1);
-      setHeroXp((prev) => prev - xpToNextLevel);
-      setHeroHp(heroAttributes.maxHp); // Full heal on level up
+    let currentXp = heroXp;
+    let currentLevel = heroLevel;
+    let leveled = false;
+    
+    // Loop to handle multiple level ups at once (prevents skipping levels)
+    while (currentXp >= currentLevel * 100) {
+      currentXp -= currentLevel * 100;
+      currentLevel += 1;
+      leveled = true;
     }
-  }, [heroXp, xpToNextLevel, heroAttributes.maxHp]);
+    
+    if (leveled) {
+      console.log('[Level Up] Hero leveled up to', currentLevel);
+      setHeroLevel(currentLevel);
+      setHeroXp(currentXp);
+      setHeroHp(heroAttributes.maxHp); // Full heal on level up
+      
+      // Show level up toast
+      addToast(`🌟 LEVEL UP! Você alcançou o Nível ${currentLevel}!`, 'levelup');
+    }
+  }, [heroXp, heroAttributes.maxHp, addToast]);
 
   // === Spawn new enemy after delay ===
+  // === Spawn Random Enemy ===
+  const spawnRandomEnemy = useCallback((isBoss: boolean) => {
+    const currentBiomeData = biomes.find(b => b.id === currentBiomeId) || biomes[0];
+    
+    if (isBoss) {
+      // Spawn boss
+      setCurrentEnemy(currentBiomeData.enemies.boss);
+    } else {
+      // Spawn random normal enemy
+      const normalEnemies = currentBiomeData.enemies.normal;
+      const randomIndex = Math.floor(Math.random() * normalEnemies.length);
+      setCurrentEnemy(normalEnemies[randomIndex]);
+    }
+  }, [currentBiomeId, biomes]);
+
   const spawnNewEnemy = useCallback(() => {
     const newWave = wave + 1;
     setWave(newWave);
@@ -389,11 +994,14 @@ export default function App() {
     const nextIsBoss = newBiomeKills > 0 && newBiomeKills % 10 === 0;
     setIsBossWave(nextIsBoss);
     
+    // Spawn random enemy based on boss status
+    spawnRandomEnemy(nextIsBoss);
+    
     setEnemyX(enemySpawnX);
     setGamePhase('approaching');
     lastHeroAttackRef.current = Date.now();
     lastEnemyAttackRef.current = Date.now();
-  }, [wave, biomeKills, totalKills, enemySpawnX]);
+  }, [wave, biomeKills, totalKills, enemySpawnX, spawnRandomEnemy]);
 
   // === Attribute Upgrade Functions ===
   const upgradeAttribute = useCallback((attribute: keyof HeroAttributes) => {
@@ -441,7 +1049,7 @@ export default function App() {
         // Power Strike - deal extra damage to enemy
         const baseDamage = heroAttributes.attack * skill.effectValue;
         const isCrit = Math.random() * 100 < heroAttributes.critChance;
-        const damage = isCrit ? baseDamage * 2 : baseDamage;
+        const damage = Math.round(isCrit ? baseDamage * 2 : baseDamage);
         
         spawnDamagePopup(damage, enemyXRef.current, isCrit, false, true);
         setEnemyHitFlash(true);
@@ -461,6 +1069,12 @@ export default function App() {
             const droppedItem = generateItemDrop();
             if (droppedItem) {
               setInventory((prev) => [...prev, droppedItem]);
+              
+              // Show toast for rare/epic items
+              if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
+                const rarityEmoji = droppedItem.rarity === 'rare' ? '💎' : '👑';
+                addToast(`${rarityEmoji} Item Encontrado: ${droppedItem.name}!`, 'drop');
+              }
             }
             
             setTimeout(() => spawnNewEnemy(), waitDuration);
@@ -525,6 +1139,95 @@ export default function App() {
     ));
   }, []);
 
+  // === Skill Deck Management ===
+  const equipSkill = useCallback((skillId: string) => {
+    const skill = skills.find(s => s.id === skillId);
+    if (!skill || !skill.unlocked) return;
+
+    // If already equipped, unequip it
+    if (equippedSkillIds.includes(skillId)) {
+      setEquippedSkillIds(prev => prev.filter(id => id !== skillId));
+      return;
+    }
+
+    // If 3 skills already equipped, replace the first one
+    if (equippedSkillIds.length >= 3) {
+      setEquippedSkillIds(prev => [...prev.slice(1), skillId]);
+    } else {
+      setEquippedSkillIds(prev => [...prev, skillId]);
+    }
+  }, [skills, equippedSkillIds]);
+
+  // === Buy Skill from Market ===
+  const buySkill = useCallback((skillId: string) => {
+    const skill = skills.find(s => s.id === skillId);
+    if (!skill || skill.unlocked) return;
+    if (heroGold < skill.cost) return;
+    if (skill.requiredLevel && heroLevel < skill.requiredLevel) return;
+
+    setHeroGold(prev => prev - skill.cost);
+    setSkills(prev => prev.map(s => 
+      s.id === skillId ? { ...s, unlocked: true } : s
+    ));
+
+    // Auto-equip if less than 3 equipped
+    if (equippedSkillIds.length < 3) {
+      setEquippedSkillIds(prev => [...prev, skillId]);
+    }
+
+    addToast(`🎉 Habilidade desbloqueada: ${skill.name}!`, 'info');
+  }, [skills, heroGold, heroLevel, equippedSkillIds, addToast]);
+
+  // === Buy Consumable ===
+  const buyConsumable = useCallback((consumableId: string) => {
+    const consumable = consumables.find(c => c.id === consumableId);
+    if (!consumable) return;
+    if (heroGold < consumable.cost) return;
+    if (heroLevel < consumable.requiredLevel) return;
+
+    setHeroGold(prev => prev - consumable.cost);
+
+    // Apply consumable effect immediately
+    if (consumable.effect === 'heal') {
+      const healAmount = Math.floor(heroAttributes.maxHp * consumable.value);
+      setHeroHp(prev => Math.min(heroAttributes.maxHp, prev + healAmount));
+      addToast(`❤️ +${healAmount} HP restaurado!`, 'info');
+    } else {
+      // Buff effect
+      const activeConsumable: ActiveConsumable = {
+        id: `${consumableId}_${Date.now()}`,
+        consumableId,
+        expiresAt: Date.now() + consumable.duration * 1000,
+        value: consumable.value,
+      };
+      setActiveConsumables(prev => [...prev, activeConsumable]);
+      addToast(`${consumable.icon} ${consumable.name} ativada!`, 'info');
+    }
+  }, [consumables, heroGold, heroLevel, heroAttributes.maxHp, addToast]);
+
+  // === Buy Item from Shop ===
+  const buyShopItem = useCallback((itemId: string) => {
+    const item = shopItems.find(i => i.id === itemId);
+    if (!item) return;
+    if (heroGold < item.sellValue) return;
+    if (heroLevel < (item.requiredLevel || 1)) return;
+    if (inventory.length >= 20) {
+      addToast('⚠️ Inventário cheio!', 'info');
+      return;
+    }
+
+    setHeroGold(prev => prev - item.sellValue);
+    
+    // Create new item instance with unique ID
+    const newItem: Item = {
+      ...item,
+      id: `${item.id}_${Date.now()}_${Math.random()}`,
+    };
+    
+    setInventory(prev => [...prev, newItem]);
+    addToast(`🛡️ ${item.name} comprado!`, 'info');
+  }, [shopItems, heroGold, heroLevel, inventory.length, addToast]);
+
   // === Generate Random Item Drop ===
   const generateItemDrop = useCallback((): Item | null => {
     // 30% chance to drop an item
@@ -544,22 +1247,71 @@ export default function App() {
     // Pick random item from filtered list
     const template = availableItems[Math.floor(Math.random() * availableItems.length)];
     
+    // === Upgrade Level System ===
+    // Base probabilities for upgrade levels
+    let upgradeLevel = 0;
+    const upgradeRoll = Math.random();
+    
+    // Boss drops have better upgrade chances
+    const bossBonus = isBossWave ? 0.15 : 0;
+    
+    // Biome bonus: higher biomes have better upgrade chances
+    const biomeIndex = biomes.findIndex(b => b.id === currentBiomeId);
+    const biomeBonus = biomeIndex * 0.05; // +5% per biome tier
+    
+    // Progressive upgrade chances
+    const upgradeChances = [
+      0.65 - bossBonus - biomeBonus, // +0: ~65% (reduced by bonuses)
+      0.20, // +1: 20%
+      0.09, // +2: 9%
+      0.04, // +3: 4%
+      0.018, // +4: 1.8%
+      0.002, // +5: 0.2% (Legendary)
+    ];
+    
+    let cumulative = 0;
+    for (let i = 0; i < upgradeChances.length; i++) {
+      cumulative += upgradeChances[i];
+      if (upgradeRoll < cumulative) {
+        upgradeLevel = i;
+        break;
+      }
+    }
+    
     // Scale bonuses based on wave
     const waveBonus = Math.floor((wave - 1) * 0.1); // +10% per wave
+    
+    // Apply upgrade level multiplier (each +1 adds 25% to base stats)
+    const upgradeMultiplier = 1 + (upgradeLevel * 0.25);
+    
     const scaledBonuses: Partial<HeroAttributes> = {};
     Object.entries(template.bonuses).forEach(([key, value]) => {
       if (value !== undefined) {
-        scaledBonuses[key as keyof HeroAttributes] = value + Math.floor(value * waveBonus);
+        const waveScaled = value + Math.floor(value * waveBonus);
+        scaledBonuses[key as keyof HeroAttributes] = Math.round(waveScaled * upgradeMultiplier);
       }
     });
+
+    // Calculate final name with upgrade suffix
+    let finalName = template.name;
+    if (upgradeLevel > 0) {
+      finalName = `${template.name} +${upgradeLevel}`;
+    }
+
+    // Calculate sell value with upgrade bonus
+    const baseSellValue = template.sellValue * (1 + waveBonus);
+    const upgradeSellBonus = 1 + (upgradeLevel * 0.5); // +50% per upgrade level
+    const finalSellValue = Math.round(baseSellValue * upgradeSellBonus);
 
     return {
       ...template,
       id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: finalName,
       bonuses: scaledBonuses,
-      sellValue: Math.floor(template.sellValue * (1 + waveBonus)),
+      sellValue: finalSellValue,
+      upgradeLevel: upgradeLevel,
     };
-  }, [wave]);
+  }, [wave, isBossWave, currentBiomeId, biomes]);
 
   // === Equip Item ===
   const equipItem = useCallback((itemId: string) => {
@@ -641,6 +1393,27 @@ export default function App() {
     regen: heroAttributes.regen + equipmentBonuses.regen,
   };
 
+  // === Hero Death Handler ===
+  const handleHeroDeath = useCallback(() => {
+    console.log('[Death] Hero has been defeated!');
+    setGamePhase('respawning');
+    
+    // Apply penalty: if died to boss, reduce wave by 1
+    if (isBossWave) {
+      console.log('[Death] Died to boss - reducing wave by 1');
+      setWave((prev) => Math.max(1, prev - 1));
+      setIsBossWave(false);
+    }
+    
+    // Reset enemy position after 2 seconds and restore HP
+    setTimeout(() => {
+      setHeroHp(effectiveAttributes.maxHp);
+      setEnemyX(enemySpawnX);
+      setGamePhase('approaching');
+      console.log('[Respawn] Hero respawned with full HP');
+    }, 2000);
+  }, [isBossWave, effectiveAttributes.maxHp, enemySpawnX]);
+
   // === Main Game Loop ===
   useEffect(() => {
     const interval = setInterval(() => {
@@ -685,7 +1458,7 @@ export default function App() {
 
           const isCrit = Math.random() * 100 < combatAttrs.critChance;
           const baseDamage = combatAttrs.attack * attackMultiplier;
-          const damage = isCrit ? baseDamage * 2 : baseDamage;
+          const damage = Math.round(isCrit ? baseDamage * 2 : baseDamage);
 
           // Spawn damage popup on enemy
           spawnDamagePopup(damage, currentEnemyX, isCrit);
@@ -705,11 +1478,22 @@ export default function App() {
               setHeroGold((g) => g + goldReward);
               setHeroXp((x) => x + xpReward);
               setGamePhase('waiting');
+              
+              // Show boss defeated toast
+              if (isBossWave) {
+                addToast('☠️ CHEFÃO DERROTADO! Recompensas Triplicadas!', 'boss');
+              }
 
               // Generate item drop
               const droppedItem = generateItemDrop();
               if (droppedItem) {
                 setInventory((prev) => [...prev, droppedItem]);
+                
+                // Show toast for rare/epic items
+                if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
+                  const rarityEmoji = droppedItem.rarity === 'rare' ? '💎' : '👑';
+                  addToast(`${rarityEmoji} Item Encontrado: ${droppedItem.name}!`, 'drop');
+                }
               }
 
               setTimeout(() => {
@@ -727,7 +1511,7 @@ export default function App() {
           lastEnemyAttackRef.current = now;
           const currentWave = waveRef.current;
           const currentEnemyAttack = baseEnemyAttack + Math.floor((currentWave - 1) * 2);
-          const damage = Math.max(1, currentEnemyAttack - combatAttrs.defense);
+          const damage = Math.max(1, Math.round(currentEnemyAttack - combatAttrs.defense));
           
           // Spawn damage popup on hero
           spawnDamagePopup(damage, heroX, false);
@@ -736,7 +1520,16 @@ export default function App() {
           setHeroHitFlash(true);
           setTimeout(() => setHeroHitFlash(false), 200);
           
-          setHeroHp((prev) => Math.max(0, prev - damage));
+          setHeroHp((prev) => {
+            const newHp = Math.max(0, prev - damage);
+            
+            // Check if hero died
+            if (newHp <= 0) {
+              handleHeroDeath();
+            }
+            
+            return newHp;
+          });
         }
 
         // HP Regeneration (every 2 seconds)
@@ -748,11 +1541,32 @@ export default function App() {
             spawnDamagePopup(healAmount, heroX, false, true);
           }
         }
+      } else if (currentPhase === 'respawning') {
+        // Do nothing during respawn - hero is recovering
+        // The setTimeout in handleHeroDeath will handle the respawn logic
       }
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath]);
+
+  // === Consistency Check ===
+  useEffect(() => {
+    console.log('[Consistency Check] Game State:');
+    console.log('  - Hero Level:', heroLevel);
+    console.log('  - Hero XP:', heroXp, '/', heroLevel * 100);
+    console.log('  - Hero HP:', heroHp, '/', heroAttributes.maxHp);
+    console.log('  - Hero Gold:', heroGold);
+    console.log('  - Current Biome:', currentBiomeId);
+    console.log('  - Wave:', wave);
+    console.log('  - Enemy HP:', enemyHp, '/', enemyMaxHp);
+    console.log('  - Inventory:', inventory.length, '/20');
+    console.log('  - Equipment:', {
+      weapon: equipment.weapon?.name || 'Empty',
+      armor: equipment.armor?.name || 'Empty',
+      accessory: equipment.accessory?.name || 'Empty',
+    });
+  }, []);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
@@ -769,10 +1583,15 @@ export default function App() {
         totalKills={totalKills}
         isBiomeUnlocked={isBiomeUnlocked}
         onChangeBiome={changeBiome}
+        onOpenSettings={() => setShowSettings(true)}
+        onOpenMerchant={() => setShowMerchantShop(true)}
       />
+
+      <ToastContainer toasts={toasts} />
 
       <GameViewport
         heroX={heroX}
+        heroName={heroName}
         enemyX={enemyX}
         enemyHp={enemyHp}
         enemyMaxHp={enemyMaxHp}
@@ -783,9 +1602,11 @@ export default function App() {
         heroHitFlash={heroHitFlash}
         enemyHitFlash={enemyHitFlash}
         skills={skills}
+        equippedSkillIds={equippedSkillIds}
         activeBuffs={activeBuffs}
         onUseSkill={useSkill}
         currentBiome={currentBiome}
+        currentEnemy={currentEnemy}
         isBossWave={isBossWave}
         biomeKills={biomeKills}
       />
@@ -796,14 +1617,50 @@ export default function App() {
         heroGold={heroGold}
         onUpgradeAttribute={upgradeAttribute}
         skills={skills}
+        equippedSkillIds={equippedSkillIds}
         onUpgradeSkill={upgradeSkill}
         onToggleAutoCast={toggleAutoCast}
+        onEquipSkill={equipSkill}
         inventory={inventory}
         equipment={equipment}
         onEquipItem={equipItem}
         onUnequipItem={unequipItem}
         onSellItem={sellItem}
+        onResetGame={resetGame}
       />
+
+      {/* Character Creation Modal (First Time) */}
+      {showCharacterCreation && (
+        <CharacterCreationModal onStartAdventure={handleStartAdventure} />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          heroName={heroName}
+          onChangeName={handleChangeName}
+          onResetGame={resetGame}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {/* Merchant Shop Modal */}
+      {showMerchantShop && (
+        <MerchantShop
+          skills={skills}
+          consumables={consumables}
+          shopItems={shopItems}
+          heroGold={heroGold}
+          heroLevel={heroLevel}
+          equippedSkillIds={equippedSkillIds}
+          inventoryCount={inventory.length}
+          onBuySkill={buySkill}
+          onBuyConsumable={buyConsumable}
+          onBuyItem={buyShopItem}
+          onEquipSkill={equipSkill}
+          onClose={() => setShowMerchantShop(false)}
+        />
+      )}
     </div>
   );
 }

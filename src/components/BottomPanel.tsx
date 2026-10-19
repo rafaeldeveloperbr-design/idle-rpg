@@ -18,13 +18,16 @@ interface BottomPanelProps {
   heroGold: number;
   onUpgradeAttribute: (attribute: keyof HeroAttributes) => void;
   skills: Skill[];
+  equippedSkillIds: string[];
   onUpgradeSkill: (skillId: string) => void;
   onToggleAutoCast: (skillId: string) => void;
+  onEquipSkill: (skillId: string) => void;
   inventory: Item[];
   equipment: Equipment;
   onEquipItem: (itemId: string) => void;
   onUnequipItem: (slot: keyof Equipment) => void;
   onSellItem: (itemId: string) => void;
+  onResetGame: () => void;
 }
 
 const tabs: Tab[] = [
@@ -39,13 +42,16 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   heroGold,
   onUpgradeAttribute,
   skills,
+  equippedSkillIds,
   onUpgradeSkill,
   onToggleAutoCast,
+  onEquipSkill,
   inventory,
   equipment,
   onEquipItem,
   onUnequipItem,
   onSellItem,
+  onResetGame,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('attributes');
 
@@ -65,8 +71,10 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
           <SkillsTab
             skills={skills}
             heroGold={heroGold}
+            equippedSkillIds={equippedSkillIds}
             onUpgradeSkill={onUpgradeSkill}
             onToggleAutoCast={onToggleAutoCast}
+            onEquipSkill={onEquipSkill}
           />
         );
       case 'inventory':

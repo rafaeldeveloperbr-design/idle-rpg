@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import type { DamagePopup, Skill, ActiveBuff, Biome } from '../App';
+import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../App';
 
-type GamePhase = 'approaching' | 'fighting' | 'waiting';
+type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
 
 interface GameViewportProps {
   heroX: number;
+  heroName: string;
   enemyX: number;
   enemyHp: number;
   enemyMaxHp: number;
@@ -15,9 +16,11 @@ interface GameViewportProps {
   heroHitFlash: boolean;
   enemyHitFlash: boolean;
   skills: Skill[];
+  equippedSkillIds: string[];
   activeBuffs: ActiveBuff[];
   onUseSkill: (skillId: string) => void;
   currentBiome: Biome;
+  currentEnemy: Enemy;
   isBossWave: boolean;
   biomeKills: number;
 }
@@ -140,6 +143,7 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
 
 const GameViewport: React.FC<GameViewportProps> = ({
   heroX,
+  heroName,
   enemyX,
   enemyHp,
   enemyMaxHp,
@@ -150,9 +154,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
   heroHitFlash,
   enemyHitFlash,
   skills,
+  equippedSkillIds,
   activeBuffs,
   onUseSkill,
   currentBiome,
+  currentEnemy,
   isBossWave,
   biomeKills,
 }) => {
@@ -196,7 +202,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
               style={{ width: `${enemyHpPercent}%` }}
             />
             <span className="absolute inset-0 flex items-center justify-center text-[8px] sm:text-[9px] text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-              {Math.max(0, enemyHp)}/{enemyMaxHp}
+              {Math.max(0, Math.floor(enemyHp))}/{Math.floor(enemyMaxHp)}
             </span>
           </div>
         </div>
@@ -261,7 +267,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
         } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
         style={{ left: `max(60px, min(${heroX}px, 20%))` }}
       >
-        <div className="flex flex-col items-center">
+        <div className="relative">
+          {/* Hero Name - Above head */}
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-green-500/60 rounded-sm z-20 pointer-events-none">
+            <span className="text-[9px] sm:text-[10px] text-green-300 font-bold">{heroName}</span>
+          </div>
           <div className="relative">
             {/* Hit flash overlay */}
             {heroHitFlash && (
@@ -295,7 +305,6 @@ const GameViewport: React.FC<GameViewportProps> = ({
               <div className={`w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
             </div>
           </div>
-          <span className="text-[8px] text-green-300 mt-1 bg-black/50 px-1 rounded">Herói</span>
         </div>
       </div>
 
@@ -303,47 +312,71 @@ const GameViewport: React.FC<GameViewportProps> = ({
       <div
         className={`absolute bottom-16 transition-opacity duration-500 ${
           isEnemyDead ? 'opacity-0' : ''
-        } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''} ${
-          isBossWave ? 'scale-125' : ''
-        }`}
+        } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
         style={{ 
           left: `${enemyX}px`,
-          filter: isBossWave ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.6))' : undefined,
         }}
       >
-        <div className="flex flex-col items-center">
-          <div className="relative">
+        <div className="relative">
+          {/* Enemy Name - Above head (inside scaled container) */}
+          <div 
+            className={`absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-red-500/60 rounded-sm z-20 pointer-events-none ${
+              isBossWave ? 'scale-125' : ''
+            }`}
+            style={{
+              filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 8px ${currentEnemy.glowColor})` : undefined,
+            }}
+          >
+            <span className="text-[9px] sm:text-[10px] text-red-300 font-bold">
+              {currentEnemy.name}
+            </span>
+          </div>
+          <div 
+            className={`relative`}
+            style={{
+              transform: `scale(${currentEnemy.scale})`,
+              transformOrigin: 'bottom center',
+              filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 12px ${currentEnemy.glowColor})` : undefined,
+            }}
+          >
             {/* Hit flash overlay */}
             {enemyHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
             )}
-            <div className="w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b from-green-600 to-green-800 border-2 border-green-400 rounded-t-md relative">
+            {/* Enemy Body */}
+            <div className={`w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border-2 ${currentEnemy.sprite.accentColor} rounded-t-md relative`}>
               {/* Head */}
-              <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b from-green-400 to-green-600 border-2 border-green-800 rounded-sm">
-                <div className="absolute top-1.5 left-1 w-2 h-2 bg-red-500 rounded-full" />
-                <div className="absolute top-1.5 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                <div className="absolute -left-2 top-0 w-2 h-3 bg-green-500 border border-green-800 rounded-sm rotate-[-15deg]" />
-                <div className="absolute -right-2 top-0 w-2 h-3 bg-green-500 border border-green-800 rounded-sm rotate-[15deg]" />
+              <div className={`absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b ${currentEnemy.sprite.headColor} border-2 ${currentEnemy.sprite.accentColor} rounded-sm`}>
+                {/* Eyes */}
+                <div className={`absolute top-1.5 left-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                <div className={`absolute top-1.5 right-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                {/* Ears/Horns (only for some enemies) */}
+                {currentEnemy.id !== 'skeleton' && currentEnemy.id !== 'golem' && (
+                  <>
+                    <div className={`absolute -left-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[-15deg]`} />
+                    <div className={`absolute -right-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[15deg]`} />
+                  </>
+                )}
+                {/* Mouth */}
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-gray-900 rounded-sm" />
               </div>
-              {/* Club weapon */}
+              {/* Weapon */}
               <div className="absolute -left-4 top-4 w-3 h-8 bg-gradient-to-b from-amber-700 to-amber-900 border border-amber-950 rounded-sm">
                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-3 bg-amber-800 border border-amber-950 rounded-sm" />
               </div>
             </div>
             {/* Legs */}
             <div className="flex justify-center gap-0.5">
-              <div className={`w-3 h-2.5 bg-green-900 border border-green-950 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
-              <div className={`w-3 h-2.5 bg-green-900 border border-green-950 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
+              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
+              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
             </div>
           </div>
-          <span className="text-[8px] text-red-300 mt-1 bg-black/50 px-1 rounded">Inimigo</span>
         </div>
       </div>
 
       {/* Skill Bar - Quick Access (positioned near the ground) */}
       <SkillBar
-        skills={skills.filter(s => s.unlocked)}
+        skills={skills.filter(s => equippedSkillIds.includes(s.id))}
         activeBuffs={activeBuffs}
         onUseSkill={onUseSkill}
       />
@@ -404,6 +437,20 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       )}
 
+      {/* Respawning phase indicator */}
+      {gamePhase === 'respawning' && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse-glow">
+          <div className="bg-black/80 border-2 border-red-500/70 rounded-md px-6 py-4 flex flex-col items-center gap-2 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+            <span className="text-[14px] text-red-400 font-bold">💀 DERROTADO!</span>
+            <span className="text-[10px] text-gray-300">Recuando para treinar...</span>
+            <div className="w-32 h-1.5 bg-[#0f0f1a] border border-red-900/50 rounded-sm overflow-hidden mt-1">
+              <div className="h-full bg-red-500 animate-waiting-bar" style={{ animationDuration: '2s' }} />
+            </div>
+            <span className="text-[8px] text-gray-400">Recuperando HP...</span>
+          </div>
+        </div>
+      )}
+
       {/* Zone and Wave indicators moved to top container */}
 
       {/* Boss Wave Banner */}
@@ -420,10 +467,12 @@ const GameViewport: React.FC<GameViewportProps> = ({
         <span className={`text-[9px] ${
           gamePhase === 'approaching' ? 'text-cyan-300' :
           gamePhase === 'fighting' ? (isBossWave ? 'text-red-400' : 'text-red-300') :
+          gamePhase === 'respawning' ? 'text-red-500' :
           'text-yellow-300'
         }`}>
           {gamePhase === 'approaching' ? (isBossWave ? '💀 Chefão se aproximando' : '🚶 Aproximando') :
            gamePhase === 'fighting' ? (isBossWave ? '💀 COMBATE DE CHEFÃO' : '⚔️ Combate') :
+           gamePhase === 'respawning' ? '💀 DERROTADO - Recuperação' :
            '💤 Aguardando'}
         </span>
       </div>

@@ -4,21 +4,62 @@ import type { Skill } from '../../App';
 interface SkillsTabProps {
   skills: Skill[];
   heroGold: number;
+  equippedSkillIds: string[];
   onUpgradeSkill: (skillId: string) => void;
   onToggleAutoCast: (skillId: string) => void;
+  onEquipSkill: (skillId: string) => void;
 }
 
 const SkillsTab: React.FC<SkillsTabProps> = ({
   skills,
   heroGold,
+  equippedSkillIds,
   onUpgradeSkill,
   onToggleAutoCast,
+  onEquipSkill,
 }) => {
+  const unlockedSkills = skills.filter(s => s.unlocked);
+
   return (
     <div className="p-4">
       <h3 className="text-sm text-purple-300 mb-4 flex items-center gap-2">
         <span>⚡</span> Habilidades
       </h3>
+      
+      {/* Deck Section */}
+      <div className="mb-4">
+        <h4 className="text-xs text-purple-300 mb-2">Deck Equipado ({equippedSkillIds.length}/3)</h4>
+        <div className="grid grid-cols-3 gap-2">
+          {[0, 1, 2].map((slot) => {
+            const skillId = equippedSkillIds[slot];
+            const skill = skills.find(s => s.id === skillId);
+            
+            return (
+              <div
+                key={slot}
+                className={`border-2 rounded-md p-2 flex flex-col items-center gap-1 min-h-[80px] ${
+                  skill
+                    ? 'border-purple-500 bg-purple-900/20 cursor-pointer hover:bg-purple-900/30'
+                    : 'border-[#2d2d5e] bg-[#0a0a12]'
+                }`}
+                onClick={() => skill && onEquipSkill(skill.id)}
+              >
+                {skill ? (
+                  <>
+                    <span className="text-xl">{skill.icon}</span>
+                    <span className="text-[10px] text-purple-300 text-center">{skill.name}</span>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-gray-600">Vazio</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Skills List */}
+      <h4 className="text-xs text-gray-400 mb-2">Habilidades Desbloqueadas</h4>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {skills.map((skill) => {
           const now = Date.now();
@@ -86,6 +127,18 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 
               {/* Actions */}
               <div className="flex items-center justify-between mt-2 gap-2">
+                {/* Equip/Unequip button */}
+                <button
+                  onClick={() => onEquipSkill(skill.id)}
+                  className={`pixel-btn text-xs px-2 py-2 rounded-sm ${
+                    equippedSkillIds.includes(skill.id)
+                      ? 'text-red-300 border-red-500/50 bg-red-900/20'
+                      : 'text-blue-300 border-blue-500/50 bg-blue-900/20'
+                  }`}
+                >
+                  {equippedSkillIds.includes(skill.id) ? '❌' : '✅'}
+                </button>
+
                 {/* Auto-cast toggle */}
                 <button
                   onClick={() => onToggleAutoCast(skill.id)}
