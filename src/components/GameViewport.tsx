@@ -6,6 +6,10 @@ type GamePhase = 'approaching' | 'fighting' | 'respawning';
 interface GameViewportProps {
   heroX: number;
   heroName: string;
+  heroHp: number;
+  heroMaxHp: number;
+  heroXp: number;
+  heroMaxXp: number;
   enemyX: number;
   enemyHp: number;
   enemyMaxHp: number;
@@ -36,7 +40,7 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
 
   return (
-    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-20">
+    <div className="flex gap-1.5 sm:gap-2">
       {skills.map((skill) => {
         const now = Date.now();
         const cooldownMs = skill.cooldown * 1000;
@@ -144,6 +148,10 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
 const GameViewport: React.FC<GameViewportProps> = ({
   heroX,
   heroName,
+  heroHp,
+  heroMaxHp,
+  heroXp,
+  heroMaxXp,
   enemyX,
   enemyHp,
   enemyMaxHp,
@@ -168,7 +176,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const isEnemyDead = enemyHp <= 0;
 
   return (
-    <div className={`flex-1 w-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient} pixel-border rounded-md`}>
+    <div className={`w-full h-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient}`}>
       {/* Top Info Container - Reorganized for mobile */}
       <div className="absolute top-2 left-2 right-2 z-10 flex flex-col gap-2">
         {/* Line 1: Biome & Wave Info */}
@@ -328,10 +336,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
 
       {/* === GROUND WITH TEXTURES === */}
-      <div
-        className="absolute bottom-0 left-0 w-[200%] h-20"
-        style={{ transform: `translateX(${-(scrollOffset * 0.8) % 800}px)` }}
-      >
+      <div className="absolute bottom-0 left-0 right-0 h-20 overflow-hidden">
+        <div
+          className="absolute bottom-0 left-0 w-[300%] h-full"
+          style={{ transform: `translateX(${-(scrollOffset * 0.8) % 1200}px)` }}
+        >
         {/* Forest Ground */}
         {currentBiome.id === 'forest' && (
           <>
@@ -437,6 +446,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
               <circle key={i} cx={(i * 37) % 800} cy={(i * 23) % 80} r={1 + (i % 2)} fill="#000" />
             ))}
           </svg>
+        </div>
         </div>
       </div>
 
@@ -565,12 +575,43 @@ const GameViewport: React.FC<GameViewportProps> = ({
         </div>
       </div>
 
-      {/* Skill Bar - Quick Access (positioned near the ground) */}
-      <SkillBar
-        skills={skills.filter(s => equippedSkillIds.includes(s.id))}
-        activeBuffs={activeBuffs}
-        onUseSkill={onUseSkill}
-      />
+      {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
+      <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-1 gap-1 z-20">
+        {/* HP Bar - Left of Skills */}
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-1 flex-1 max-w-[200px]">
+          <span className="text-sm text-red-400 whitespace-nowrap">❤️</span>
+          <div className="relative flex-1 h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+            <div
+              className="hp-bar h-full transition-all duration-300 rounded-sm"
+              style={{ width: `${Math.max(0, Math.round((heroHp / heroMaxHp) * 100))}%` }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {Math.floor(heroHp)}/{Math.floor(heroMaxHp)}
+            </span>
+          </div>
+        </div>
+
+        {/* Skill Bar - Center */}
+        <SkillBar
+          skills={skills.filter(s => equippedSkillIds.includes(s.id))}
+          activeBuffs={activeBuffs}
+          onUseSkill={onUseSkill}
+        />
+
+        {/* XP Bar - Right of Skills */}
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-1 flex-1 max-w-[200px]">
+          <span className="text-sm text-blue-400 whitespace-nowrap">⭐</span>
+          <div className="relative flex-1 h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+            <div
+              className="xp-bar h-full transition-all duration-300 rounded-sm"
+              style={{ width: `${Math.max(0, Math.round((heroXp / heroMaxXp) * 100))}%` }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {Math.floor(heroXp)}/{Math.floor(heroMaxXp)}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Active Buffs Indicator */}
       {activeBuffs.length > 0 && (

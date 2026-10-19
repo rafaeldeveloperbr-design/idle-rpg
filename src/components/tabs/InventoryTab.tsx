@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import type { Item, Equipment, HeroAttributes } from '../../App';
+import { GoldIcon } from '../../App';
 
 interface InventoryTabProps {
   inventory: Item[];
   equipment: Equipment;
+  inventoryCapacity: number;
   onEquipItem: (itemId: string) => void;
   onUnequipItem: (slot: keyof Equipment) => void;
   onSellItem: (itemId: string) => void;
@@ -115,7 +117,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div
         className="bg-[#0f0f1a] border-2 border-purple-500/70 rounded-lg max-w-sm w-full shadow-[0_0_30px_rgba(139,92,246,0.4)]"
         onClick={(e) => e.stopPropagation()}
@@ -195,7 +197,9 @@ const ItemModal: React.FC<ItemModalProps> = ({
           {/* Sell Value */}
           <div className="flex items-center justify-between text-sm mb-4 p-3 bg-[#1a1a2e] rounded-md border border-[#2d2d5e]">
             <span className="text-gray-400">Valor de venda:</span>
-            <span className="text-yellow-300 font-bold">🪙 {Math.round(item.sellValue)}</span>
+            <span className="text-yellow-300 font-bold flex items-center gap-1">
+              <GoldIcon size="sm" /> {Math.round(item.sellValue)}
+            </span>
           </div>
 
           {/* Action Buttons */}
@@ -210,9 +214,9 @@ const ItemModal: React.FC<ItemModalProps> = ({
                 </button>
                 <button
                   onClick={onSell}
-                  className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm"
+                  className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm flex items-center justify-center gap-1"
                 >
-                  Vender (🪙 {Math.round(item.sellValue)})
+                  Vender (<GoldIcon size="sm" /> {Math.round(item.sellValue)})
                 </button>
               </>
             ) : (
@@ -239,6 +243,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
 const InventoryTab: React.FC<InventoryTabProps> = ({
   inventory,
   equipment,
+  inventoryCapacity,
   onEquipItem,
   onUnequipItem,
   onSellItem,
@@ -319,7 +324,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
       {/* Inventory Grid */}
       <div>
         <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <span className="text-xs text-gray-400">Itens ({inventory.length}/20):</span>
+          <span className="text-xs text-gray-400">Itens ({inventory.length}/{inventoryCapacity}):</span>
         </div>
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {inventory.map((item) => {
@@ -359,7 +364,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
             );
           })}
           {/* Empty slots */}
-          {[...Array(Math.max(0, 20 - inventory.length))].map((_, i) => (
+          {[...Array(Math.max(0, inventoryCapacity - inventory.length))].map((_, i) => (
             <div
               key={`empty-${i}`}
               className="aspect-square bg-[#0a0a12] border border-[#1a1a2e] rounded-md flex items-center justify-center"

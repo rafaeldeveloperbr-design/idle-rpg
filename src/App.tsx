@@ -5,11 +5,31 @@ import BottomPanel from './components/BottomPanel';
 import CharacterCreationModal from './components/modals/CharacterCreationModal';
 import SettingsModal from './components/modals/SettingsModal';
 import MerchantShop from './components/modals/MerchantShop';
+import DiamondShopModal from './components/modals/DiamondShopModal';
 import PathChoiceModal from './components/modals/PathChoiceModal';
 import NPCDialogueModal from './components/modals/NPCDialogueModal';
 import ToastContainer from './components/ToastContainer';
+import Drawer from './components/Drawer';
 import { questsData, type Quest } from './data/questsData';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
+
+// Universal Gold Icon Component (replaces emoji 🪙)
+export const GoldIcon = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg'; className?: string }) => {
+  const sizeClasses = {
+    sm: 'w-3 h-3 text-[8px]',
+    md: 'w-4 h-4 text-[10px]',
+    lg: 'w-5 h-5 text-xs'
+  };
+  
+  return (
+    <span 
+      className={`inline-flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900 font-bold border border-yellow-700 ${sizeClasses[size]} ${className}`}
+      style={{ lineHeight: 1 }}
+    >
+      G
+    </span>
+  );
+};
 
 type GamePhase = 'approaching' | 'fighting' | 'respawning';
 
@@ -84,6 +104,25 @@ export interface ActiveBuff {
   skillId: string;
   expiresAt: number;
   multiplier: number;
+}
+
+export interface PremiumItem {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  price: number; // diamonds
+  type: 'speed_boost' | 'no_ads' | 'revive' | 'xp_boost' | 'inventory_expansion' | 'diamond_pack';
+  duration?: number; // seconds (for temporary effects)
+  value?: number; // for inventory expansion or diamond packs
+  realPrice?: string; // for diamond packs (e.g., "R$ 4,90")
+}
+
+export interface ActivePremiumEffect {
+  id: string;
+  itemId: string;
+  expiresAt?: number; // undefined for permanent effects
+  value: number;
 }
 
 export type ItemRarity = 'common' | 'rare' | 'epic';
@@ -163,14 +202,24 @@ export default function App() {
   const [heroLevel, setHeroLevel] = useState(1);
   const [heroXp, setHeroXp] = useState(0);
   const [heroGold, setHeroGold] = useState(10);
+  const [heroDiamonds, setHeroDiamonds] = useState(0); // Premium currency
+
+  // === Premium Effects ===
+  const [isSpeedBoosted, setIsSpeedBoosted] = useState(false);
+  const [hasNoAds, setHasNoAds] = useState(false);
+  const [activePremiumEffects, setActivePremiumEffects] = useState<ActivePremiumEffect[]>([]);
+  const [inventoryCapacity, setInventoryCapacity] = useState(20); // Can be expanded with premium items
 
   // === Modal States ===
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMerchantShop, setShowMerchantShop] = useState(false);
+  const [showDiamondShop, setShowDiamondShop] = useState(false);
   const [showPathChoice, setShowPathChoice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false); // Pause state for modals
+  const [activeDrawer, setActiveDrawer] = useState<'attributes' | 'skills' | 'inventory' | 'quests' | null>(null);
 
   // === Reset Control Flag ===
   const isResetting = useRef(false);
@@ -397,7 +446,9 @@ export default function App() {
   const [currentNPCQuest, setCurrentNPCQuest] = useState<Quest | null>(null);
   const lastNPCSpawnWave = useRef(0);
   const [wavesSinceLastEvent, setWavesSinceLastEvent] = useState(0);
-  const MIN_WAVES_BETWEEN_EVENTS = 15; // Minimum waves between events
+  const [completedQuestsSinceLastPath, setCompletedQuestsSinceLastPath] = useState(0);
+  const MIN_WAVES_BETWEEN_EVENTS = 10; // Minimum waves between events
+  const QUESTS_UNTIL_PATH = 2; // Number of quests to complete before forcing a path choice
 
   // === Path Difficulty System ===
   const [pathDifficultyMultiplier, setPathDifficultyMultiplier] = useState<{
@@ -508,6 +559,84 @@ export default function App() {
       bonuses: { attack: 15, defense: 15, maxHp: 60, speed: 8, critChance: 10 },
       sellValue: 800,
       requiredLevel: 18,
+    },
+  ];
+
+  // === Premium Items Catalog ===
+  const premiumItems: PremiumItem[] = [
+    {
+      id: 'speed_boost',
+      name: 'Acelerador de Velocidade',
+      icon: '⚡',
+      description: 'Ativa modo 2x velocidade no jogo por 1 hora',
+      price: 50,
+      type: 'speed_boost',
+      duration: 3600, // 1 hour
+    },
+    {
+      id: 'no_ads',
+      name: 'Pacote Sem Anúncios',
+      icon: '🚫',
+      description: 'Remove todos os anúncios permanentemente',
+      price: 200,
+      type: 'no_ads',
+    },
+    {
+      id: 'revive',
+      name: 'Ressuscitar / Vida Extra',
+      icon: '❤️',
+      description: 'Item consumível para reviver ao morrer (1 uso)',
+      price: 30,
+      type: 'revive',
+    },
+    {
+      id: 'xp_boost',
+      name: 'Bônus 2x XP/Ouro',
+      icon: '🍀',
+      description: 'Dobra ganhos de XP e Ouro por 1 hora',
+      price: 75,
+      type: 'xp_boost',
+      duration: 3600, // 1 hour
+    },
+    {
+      id: 'inventory_expansion',
+      name: 'Expansão de Inventário',
+      icon: '🎒',
+      description: 'Aumenta capacidade do inventário em +10 slots',
+      price: 100,
+      type: 'inventory_expansion',
+      value: 10,
+    },
+    // Diamond Packs
+    {
+      id: 'diamond_pack_100',
+      name: 'Pacote de 100 Diamantes',
+      icon: '💎',
+      description: 'Pacote inicial de diamantes',
+      price: 0,
+      type: 'diamond_pack',
+      value: 100,
+      realPrice: 'R$ 4,90',
+    },
+    {
+      id: 'diamond_pack_500',
+      name: 'Pacote de 500 Diamantes',
+      icon: '💎',
+      description: 'Pacote médio com bônus',
+      price: 0,
+      type: 'diamond_pack',
+      value: 500,
+      realPrice: 'R$ 19,90',
+    },
+    {
+      id: 'diamond_pack_1200',
+      name: 'Pacote de 1200 Diamantes',
+      icon: '💎',
+      description: 'Pacote grande - Melhor valor!',
+      price: 0,
+      type: 'diamond_pack',
+      value: 1200,
+      realPrice: 'R$ 39,90',
     },
   ];
 
@@ -848,6 +977,7 @@ export default function App() {
       setHeroLevel(savedData.heroLevel);
       setHeroXp(savedData.heroXp);
       setHeroGold(savedData.heroGold);
+      setHeroDiamonds(savedData.heroDiamonds || 0);
       
       // Restore attributes
       setHeroAttributes(savedData.heroAttributes);
@@ -868,6 +998,13 @@ export default function App() {
       
       // Restore event management
       setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
+      setCompletedQuestsSinceLastPath(savedData.completedQuestsSinceLastPath || 0);
+      
+      // Restore premium effects
+      setInventoryCapacity(savedData.inventoryCapacity || 20);
+      setIsSpeedBoosted(savedData.isSpeedBoosted || false);
+      setHasNoAds(savedData.hasNoAds || false);
+      setActivePremiumEffects(savedData.activePremiumEffects || []);
       
       // Restore current enemy (spawn random enemy for the biome)
       const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
@@ -902,16 +1039,22 @@ export default function App() {
         heroLevel,
         heroXp,
         heroGold,
+        heroDiamonds,
         heroAttributes,
         attributeCosts,
         skills,
         inventory,
         equipment,
+        inventoryCapacity,
         currentBiomeId,
         biomeKills,
         totalKills,
         wave,
         wavesSinceLastEvent,
+        completedQuestsSinceLastPath,
+        isSpeedBoosted,
+        hasNoAds,
+        activePremiumEffects,
       });
     }, 5000); // Save every 5 seconds
 
@@ -926,16 +1069,22 @@ export default function App() {
         heroLevel,
         heroXp,
         heroGold,
+        heroDiamonds,
         heroAttributes,
         attributeCosts,
         skills,
         inventory,
         equipment,
+        inventoryCapacity,
         currentBiomeId,
         biomeKills,
         totalKills,
         wave,
         wavesSinceLastEvent,
+        completedQuestsSinceLastPath,
+        isSpeedBoosted,
+        hasNoAds,
+        activePremiumEffects,
       });
     };
 
@@ -945,7 +1094,7 @@ export default function App() {
       clearInterval(saveInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroAttributes, attributeCosts, skills, inventory, equipment, currentBiomeId, biomeKills, totalKills, wave]);
+  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroDiamonds, heroAttributes, attributeCosts, skills, inventory, equipment, inventoryCapacity, currentBiomeId, biomeKills, totalKills, wave, wavesSinceLastEvent, completedQuestsSinceLastPath, isSpeedBoosted, hasNoAds, activePremiumEffects]);
 
   // === Reset Game ===
   const resetGame = useCallback(() => {
@@ -1076,6 +1225,7 @@ export default function App() {
   const handlePathChoice = useCallback((choice: 'safe' | 'challenging' | 'deadly') => {
     setShowPathChoice(false);
     setWavesSinceLastEvent(0); // Reset event counter after path choice
+    setCompletedQuestsSinceLastPath(0); // Reset quest completion counter
     
     // Apply difficulty multiplier based on choice
     switch (choice) {
@@ -1124,8 +1274,25 @@ export default function App() {
 
   // === Open Shop from Path Choice ===
   const handleOpenShopFromPath = useCallback(() => {
+    setIsPaused(true); // Pause game when opening shop from path choice
     setShowMerchantShop(true);
   }, []);
+
+  // === Close Merchant Shop ===
+  const handleCloseMerchantShop = useCallback(() => {
+    setShowMerchantShop(false);
+    // Only unpause if we're not in a path choice (which should keep game paused)
+    if (!showPathChoice) {
+      setIsPaused(false);
+    }
+  }, [showPathChoice]);
+
+  // === Pause Game When Modals Are Open ===
+  useEffect(() => {
+    // Pause game when important modals are open
+    const shouldPause = showSettings || showDiamondShop || showMerchantShop || showPathChoice || currentNPCQuest !== null;
+    setIsPaused(shouldPause);
+  }, [showSettings, showDiamondShop, showMerchantShop, showPathChoice, currentNPCQuest]);
 
   // === Quest System Functions ===
   const checkAndSpawnNPC = useCallback(() => {
@@ -1162,13 +1329,25 @@ export default function App() {
   }, [wave, quests, heroLevel, showPathChoice, currentNPCQuest, wavesSinceLastEvent]);
 
   const acceptQuest = useCallback((quest: Quest) => {
+    // Store reference values when quest is accepted
+    const questWithReference = {
+      ...quest,
+      active: true,
+      progress: 0, // Reset progress to 0
+      // Store current values as reference points
+      currentGoldAtAccept: quest.objectiveType === 'collect_gold' ? heroGold : undefined,
+      currentWaveAtAccept: quest.objectiveType === 'reach_wave' ? wave : undefined,
+      currentKillsAtAccept: quest.objectiveType === 'kill_monsters' ? totalKills : undefined,
+      currentBossKillsAtAccept: quest.objectiveType === 'defeat_boss' ? Math.floor(totalKills / 10) : undefined,
+    };
+    
     setQuests(prev => prev.map(q => 
-      q.id === quest.id ? { ...q, active: true } : q
+      q.id === quest.id ? questWithReference : q
     ));
     setCurrentNPCQuest(null);
     setWavesSinceLastEvent(0); // Reset event counter after quest event
     addToast(`📜 Quest aceita: ${quest.title}`, 'info');
-  }, [addToast]);
+  }, [addToast, heroGold, wave, totalKills]);
 
   const declineQuest = useCallback(() => {
     setCurrentNPCQuest(null);
@@ -1197,30 +1376,46 @@ export default function App() {
       setInventory(prev => [...prev, newItem]);
     }
     
+    // Increment quest completion counter
+    const newQuestCount = completedQuestsSinceLastPath + 1;
+    setCompletedQuestsSinceLastPath(newQuestCount);
+    
     addToast(`✅ Quest concluída: ${quest.title}!`, 'info');
     addToast(`💰 +${quest.reward.gold} ouro, +${quest.reward.xp} XP`, 'info');
-  }, [quests, addToast]);
+    
+    // Check if we should force a path choice (after completing QUESTS_UNTIL_PATH quests)
+    if (newQuestCount >= QUESTS_UNTIL_PATH) {
+      // Heal hero to 100% when showing path choice
+      setHeroHp(heroAttributes.maxHp);
+      setShowPathChoice(true);
+      addToast(`🛤️ Bifurcação disponível! Escolha seu caminho.`, 'info');
+    }
+  }, [quests, addToast, completedQuestsSinceLastPath, heroAttributes.maxHp]);
 
   // Update quest progress based on game events
   const updateQuestProgress = useCallback(() => {
     setQuests(prev => prev.map(quest => {
       if (!quest.active || quest.completed) return quest;
       
-      let newProgress = quest.progress;
+      let newProgress = 0;
       
       switch (quest.objectiveType) {
         case 'kill_monsters':
-          newProgress = totalKills;
+          // Calculate kills since quest was accepted
+          newProgress = Math.max(0, totalKills - (quest.currentKillsAtAccept || 0));
           break;
         case 'reach_wave':
-          newProgress = wave;
+          // Calculate waves since quest was accepted
+          newProgress = Math.max(0, wave - (quest.currentWaveAtAccept || 0));
           break;
         case 'collect_gold':
-          newProgress = heroGold;
+          // Calculate gold earned since quest was accepted
+          newProgress = Math.max(0, heroGold - (quest.currentGoldAtAccept || 0));
           break;
         case 'defeat_boss':
-          // Track boss kills (every 10 kills is a boss)
-          newProgress = Math.floor(totalKills / 10);
+          // Calculate boss kills since quest was accepted (every 10 kills is a boss)
+          const currentBossKills = Math.floor(totalKills / 10);
+          newProgress = Math.max(0, currentBossKills - (quest.currentBossKillsAtAccept || 0));
           break;
       }
       
@@ -1261,16 +1456,8 @@ export default function App() {
       return; // Already showing path choice, don't spawn enemy yet
     }
     
-    // SPACING CHECK: Ensure minimum waves between events for path choice
-    const shouldShowPathChoice = (newWave % 10 === 0 && newWave > 0) || (nextIsBoss && newBiomeKills % 10 === 9);
-    
-    if (shouldShowPathChoice && wavesSinceLastEvent >= MIN_WAVES_BETWEEN_EVENTS) {
-      // Heal hero to 100% when showing path choice
-      setHeroHp(heroAttributes.maxHp);
-      setShowPathChoice(true);
-      setWavesSinceLastEvent(0); // Reset event counter
-      return; // Don't spawn enemy yet, wait for choice
-    }
+    // Path choice is now triggered by quest completion, not by wave count
+    // The completeQuest function will handle showing the path choice modal
     
     // Spawn random enemy based on boss status
     spawnRandomEnemy(nextIsBoss);
@@ -1506,7 +1693,7 @@ export default function App() {
     if (!item) return;
     if (heroGold < item.sellValue) return;
     if (heroLevel < (item.requiredLevel || 1)) return;
-    if (inventory.length >= 20) {
+    if (inventory.length >= inventoryCapacity) {
       addToast('⚠️ Inventário cheio!', 'info');
       return;
     }
@@ -1522,6 +1709,85 @@ export default function App() {
     setInventory(prev => [...prev, newItem]);
     addToast(`🛡️ ${item.name} comprado!`, 'info');
   }, [shopItems, heroGold, heroLevel, inventory.length, addToast]);
+
+  // === Buy Premium Item ===
+  const buyPremiumItem = useCallback((itemId: string) => {
+    const item = premiumItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Diamond packs are free (simulated purchase)
+    if (item.type === 'diamond_pack') {
+      setHeroDiamonds(prev => prev + (item.value || 0));
+      addToast(`💎 +${item.value} diamantes adquiridos!`, 'info');
+      return;
+    }
+    
+    // Check if player has enough diamonds
+    if (heroDiamonds < item.price) {
+      addToast('❌ Diamantes insuficientes!', 'info');
+      return;
+    }
+    
+    // Deduct diamonds
+    setHeroDiamonds(prev => prev - item.price);
+    
+    // Apply effect based on type
+    switch (item.type) {
+      case 'speed_boost':
+        setIsSpeedBoosted(true);
+        setActivePremiumEffects(prev => [...prev, {
+          id: `speed_${Date.now()}`,
+          itemId: item.id,
+          expiresAt: Date.now() + (item.duration || 0) * 1000,
+          value: 2,
+        }]);
+        addToast(`⚡ Velocidade 2x ativada por 1 hora!`, 'info');
+        break;
+        
+      case 'no_ads':
+        setHasNoAds(true);
+        addToast(`🚫 Anúncios removidos permanentemente!`, 'info');
+        break;
+        
+      case 'revive':
+        // Revive is stored as consumable, not immediately applied
+        addToast(`❤️ Vida Extra adquirida! Use ao morrer.`, 'info');
+        break;
+        
+      case 'xp_boost':
+        setActivePremiumEffects(prev => [...prev, {
+          id: `xp_${Date.now()}`,
+          itemId: item.id,
+          expiresAt: Date.now() + (item.duration || 0) * 1000,
+          value: 2,
+        }]);
+        addToast(`🍀 Bônus 2x XP/Ouro ativado por 1 hora!`, 'info');
+        break;
+        
+      case 'inventory_expansion':
+        setInventoryCapacity(prev => prev + (item.value || 10));
+        addToast(`🎒 Inventário expandido em +${item.value} slots!`, 'info');
+        break;
+    }
+  }, [premiumItems, heroDiamonds, addToast]);
+
+  // === Use Revive (Premium Item) ===
+  const useRevive = useCallback(() => {
+    // Check if player has revive item
+    const hasRevive = activePremiumEffects.some(e => e.itemId === 'revive');
+    if (!hasRevive) {
+      addToast('❌ Você não tem Vida Extra!', 'info');
+      return false;
+    }
+    
+    // Remove revive effect
+    setActivePremiumEffects(prev => prev.filter(e => e.itemId !== 'revive'));
+    
+    // Restore HP
+    setHeroHp(heroAttributes.maxHp);
+    addToast(`❤️ Ressuscitado com vida cheia!`, 'info');
+    return true;
+  }, [activePremiumEffects, heroAttributes.maxHp, addToast]);
 
   // === Generate Random Item Drop ===
   const generateItemDrop = useCallback((): Item | null => {
@@ -1717,8 +1983,8 @@ export default function App() {
 
   // === Main Game Loop ===
   useEffect(() => {
-    // Don't run game loop if game hasn't started yet
-    if (!isGameStarted) return;
+    // Don't run game loop if game hasn't started yet or is paused
+    if (!isGameStarted || isPaused) return;
     
     const interval = setInterval(() => {
       const currentPhase = gamePhaseRef.current;
@@ -1892,7 +2158,7 @@ export default function App() {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused]);
 
   // === Consistency Check ===
   useEffect(() => {
@@ -1913,7 +2179,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950">
       {/* Game Paused Overlay */}
       {!isGameStarted && !showCharacterCreation && (
         <div className="fixed inset-0 bg-black/80 z-[90] flex items-center justify-center">
@@ -1925,48 +2191,108 @@ export default function App() {
         </div>
       )}
 
-      <PlayerStatus
-        hp={heroHp}
-        maxHp={heroAttributes.maxHp}
-        level={heroLevel}
-        xp={heroXp}
-        maxXp={xpToNextLevel}
-        gold={heroGold}
-        currentBiome={currentBiome}
-        biomes={biomes}
-        biomeKills={biomeKills}
-        totalKills={totalKills}
-        isBiomeUnlocked={isBiomeUnlocked}
-        onChangeBiome={changeBiome}
-        onOpenSettings={() => setShowSettings(true)}
-        onOpenMerchant={() => setShowMerchantShop(true)}
-      />
+      {/* Top: HUD/Header */}
+      <div className="h-12 w-full shrink-0 z-[20]">
+        <PlayerStatus
+          level={heroLevel}
+          gold={heroGold}
+          diamonds={heroDiamonds}
+          currentBiome={currentBiome}
+          biomes={biomes}
+          biomeKills={biomeKills}
+          totalKills={totalKills}
+          isBiomeUnlocked={isBiomeUnlocked}
+          onChangeBiome={changeBiome}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenMerchant={() => setShowMerchantShop(true)}
+          onOpenDiamondShop={() => setShowDiamondShop(true)}
+        />
+      </div>
 
-      <ToastContainer toasts={toasts} />
+      {/* Center: Game Viewport + Skills + HP/XP Bars */}
+      <div className="flex-1 w-full overflow-hidden relative z-[10] bg-slate-950">
+        <div className="w-full h-full relative">
+          <ToastContainer toasts={toasts} />
+          <GameViewport
+          heroX={heroX}
+          heroName={heroName}
+          heroHp={heroHp}
+          heroMaxHp={heroAttributes.maxHp}
+          heroXp={heroXp}
+          heroMaxXp={xpToNextLevel}
+          enemyX={enemyX}
+          enemyHp={enemyHp}
+          enemyMaxHp={enemyMaxHp}
+          scrollOffset={scrollOffset}
+          gamePhase={gamePhase}
+          wave={wave}
+          damagePopups={damagePopups}
+          heroHitFlash={heroHitFlash}
+          enemyHitFlash={enemyHitFlash}
+          skills={skills}
+          equippedSkillIds={equippedSkillIds}
+          activeBuffs={activeBuffs}
+          onUseSkill={useSkill}
+          currentBiome={currentBiome}
+          currentEnemy={currentEnemy}
+          isBossWave={isBossWave}
+          biomeKills={biomeKills}
+        />
+        </div>
+      </div>
 
-      <GameViewport
-        heroX={heroX}
-        heroName={heroName}
-        enemyX={enemyX}
-        enemyHp={enemyHp}
-        enemyMaxHp={enemyMaxHp}
-        scrollOffset={scrollOffset}
-        gamePhase={gamePhase}
-        wave={wave}
-        damagePopups={damagePopups}
-        heroHitFlash={heroHitFlash}
-        enemyHitFlash={enemyHitFlash}
-        skills={skills}
-        equippedSkillIds={equippedSkillIds}
-        activeBuffs={activeBuffs}
-        onUseSkill={useSkill}
-        currentBiome={currentBiome}
-        currentEnemy={currentEnemy}
-        isBossWave={isBossWave}
-        biomeKills={biomeKills}
-      />
+      {/* Bottom: Bottom Bar Fixed */}
+      <div className="h-16 w-full shrink-0 z-[30] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
+        <button
+          onClick={() => setActiveDrawer('attributes')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'attributes'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">⚔️</span>
+          <span className="text-[10px] font-medium">Atributos</span>
+        </button>
+        <button
+          onClick={() => setActiveDrawer('skills')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'skills'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">✨</span>
+          <span className="text-[10px] font-medium">Skills</span>
+        </button>
+        <button
+          onClick={() => setActiveDrawer('inventory')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'inventory'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">🎒</span>
+          <span className="text-[10px] font-medium">Bag</span>
+        </button>
+        <button
+          onClick={() => setActiveDrawer('quests')}
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
+            activeDrawer === 'quests'
+              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+          }`}
+        >
+          <span className="text-2xl">📜</span>
+          <span className="text-[10px] font-medium">Quests</span>
+        </button>
+      </div>
 
-      <BottomPanel
+      {/* Drawer Portal */}
+      <Drawer
+        activeDrawer={activeDrawer}
+        onClose={() => setActiveDrawer(null)}
         heroAttributes={heroAttributes}
         attributeCosts={attributeCosts}
         heroGold={heroGold}
@@ -1978,10 +2304,10 @@ export default function App() {
         onEquipSkill={equipSkill}
         inventory={inventory}
         equipment={equipment}
+        inventoryCapacity={inventoryCapacity}
         onEquipItem={equipItem}
         onUnequipItem={unequipItem}
         onSellItem={sellItem}
-        onResetGame={resetGame}
         quests={quests}
         onCompleteQuest={completeQuest}
       />
@@ -2011,11 +2337,22 @@ export default function App() {
           heroLevel={heroLevel}
           equippedSkillIds={equippedSkillIds}
           inventoryCount={inventory.length}
+          inventoryCapacity={inventoryCapacity}
           onBuySkill={buySkill}
           onBuyConsumable={buyConsumable}
           onBuyItem={buyShopItem}
           onEquipSkill={equipSkill}
-          onClose={() => setShowMerchantShop(false)}
+          onClose={handleCloseMerchantShop}
+        />
+      )}
+
+      {/* Diamond Shop Modal */}
+      {showDiamondShop && (
+        <DiamondShopModal
+          premiumItems={premiumItems}
+          heroDiamonds={heroDiamonds}
+          onBuyItem={buyPremiumItem}
+          onClose={() => setShowDiamondShop(false)}
         />
       )}
 

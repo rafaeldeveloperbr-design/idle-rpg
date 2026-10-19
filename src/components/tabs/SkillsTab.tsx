@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Skill } from '../../App';
+import { GoldIcon } from '../../App';
 
 interface SkillsTabProps {
   skills: Skill[];
@@ -158,13 +159,13 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                   <button
                     onClick={() => onUpgradeSkill(skill.id)}
                     disabled={!canAfford}
-                    className={`pixel-btn text-xs px-3 py-2 rounded-sm ${
+                    className={`pixel-btn text-xs px-3 py-2 rounded-sm flex items-center gap-1 ${
                       canAfford
                         ? 'text-yellow-300 hover:border-yellow-400'
                         : 'text-gray-600 cursor-not-allowed opacity-50'
                     }`}
                   >
-                    🪙 {skill.cost}
+                    <GoldIcon size="sm" /> {skill.cost}
                   </button>
                 ) : isMaxLevel ? (
                   <span className="text-xs text-purple-400 px-3 py-2">MAX</span>
