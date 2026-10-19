@@ -103,35 +103,35 @@ export interface Biome {
 export default function App() {
   // === Hero State (fixed position) ===
   const heroX = 150;
-  const [heroHp, setHeroHp] = useState(85);
-  const [heroLevel, setHeroLevel] = useState(7);
-  const [heroXp, setHeroXp] = useState(340);
-  const [heroGold, setHeroGold] = useState(1250);
+  const [heroHp, setHeroHp] = useState(100);
+  const [heroLevel, setHeroLevel] = useState(1);
+  const [heroXp, setHeroXp] = useState(0);
+  const [heroGold, setHeroGold] = useState(10);
 
-  // Hero attributes (upgradable)
+  // Hero attributes (upgradable) - New Game defaults
   const [heroAttributes, setHeroAttributes] = useState<HeroAttributes>({
-    attack: 10,
-    defense: 5,
+    attack: 5,
+    defense: 2,
     maxHp: 100,
-    speed: 8,
-    critChance: 5,
-    regen: 2,
+    speed: 5,
+    critChance: 2,
+    regen: 1,
   });
 
-  // Attribute upgrade costs
+  // Attribute upgrade costs - New Game defaults
   const [attributeCosts, setAttributeCosts] = useState<AttributeCosts>({
-    attack: 50,
-    defense: 40,
-    maxHp: 60,
-    speed: 70,
-    critChance: 80,
-    regen: 90,
+    attack: 20,
+    defense: 15,
+    maxHp: 25,
+    speed: 30,
+    critChance: 35,
+    regen: 40,
   });
 
   // Combat timing (based on speed attribute)
   const heroAttackSpeed = Math.max(300, 1500 - heroAttributes.speed * 50);
 
-  // === Skills System ===
+  // === Skills System === - New Game defaults
   const [skills, setSkills] = useState<Skill[]>([
     {
       id: 'power_strike',
@@ -141,7 +141,7 @@ export default function App() {
       level: 1,
       maxLevel: 10,
       cooldown: 5,
-      cost: 100,
+      cost: 30,
       unlocked: true,
       autoCast: false,
       lastUsed: 0,
@@ -156,7 +156,7 @@ export default function App() {
       level: 1,
       maxLevel: 10,
       cooldown: 10,
-      cost: 150,
+      cost: 50,
       unlocked: true,
       autoCast: false,
       lastUsed: 0,
@@ -171,7 +171,7 @@ export default function App() {
       level: 1,
       maxLevel: 8,
       cooldown: 12,
-      cost: 200,
+      cost: 80,
       unlocked: true,
       autoCast: false,
       lastUsed: 0,
@@ -279,12 +279,12 @@ export default function App() {
     { name: 'Coroa do Rei', icon: '👑', slot: 'accessory', rarity: 'epic', bonuses: { attack: 10, defense: 10, maxHp: 30, speed: 5 }, sellValue: 200 },
   ];
 
-  // === Wave System ===
+  // === Wave System === - Balanced for Level 1 hero
   const [wave, setWave] = useState(1);
-  const baseEnemyHp = 50;
-  const baseEnemyGold = 15;
-  const baseEnemyXp = 20;
-  const baseEnemyAttack = 5;
+  const baseEnemyHp = 30;
+  const baseEnemyGold = 10;
+  const baseEnemyXp = 15;
+  const baseEnemyAttack = 3;
   
   // Scaled enemy stats per wave + biome multiplier
   const biomeMultiplier = currentBiome.enemyMultiplier;
@@ -333,6 +333,11 @@ export default function App() {
     
     if (savedData) {
       console.log('[Load] Restoring saved game...');
+      console.log('[Load] Hero Level:', savedData.heroLevel);
+      console.log('[Load] Hero XP:', savedData.heroXp);
+      console.log('[Load] Hero Gold:', savedData.heroGold);
+      console.log('[Load] Current Biome:', savedData.currentBiomeId);
+      console.log('[Load] Wave:', savedData.wave);
       
       // Restore hero state
       setHeroHp(savedData.heroHp);
@@ -356,6 +361,16 @@ export default function App() {
       setBiomeKills(savedData.biomeKills);
       setTotalKills(savedData.totalKills);
       setWave(savedData.wave);
+      
+      console.log('[Load] Game restored successfully!');
+    } else {
+      console.log('[New Game] Starting fresh game...');
+      console.log('[New Game] Hero Level: 1');
+      console.log('[New Game] Hero XP: 0/100');
+      console.log('[New Game] Hero Gold: 10');
+      console.log('[New Game] Current Biome: forest');
+      console.log('[New Game] Wave: 1');
+      console.log('[New Game] Game initialized successfully!');
     }
   }, []);
 
@@ -455,12 +470,24 @@ export default function App() {
 
   // === Level Up Logic ===
   useEffect(() => {
-    if (heroXp >= xpToNextLevel) {
-      setHeroLevel((prev) => prev + 1);
-      setHeroXp((prev) => prev - xpToNextLevel);
+    let currentXp = heroXp;
+    let currentLevel = heroLevel;
+    let leveled = false;
+    
+    // Loop to handle multiple level ups at once (prevents skipping levels)
+    while (currentXp >= currentLevel * 100) {
+      currentXp -= currentLevel * 100;
+      currentLevel += 1;
+      leveled = true;
+    }
+    
+    if (leveled) {
+      console.log('[Level Up] Hero leveled up to', currentLevel);
+      setHeroLevel(currentLevel);
+      setHeroXp(currentXp);
       setHeroHp(heroAttributes.maxHp); // Full heal on level up
     }
-  }, [heroXp, xpToNextLevel, heroAttributes.maxHp]);
+  }, [heroXp, heroAttributes.maxHp]);
 
   // === Spawn new enemy after delay ===
   const spawnNewEnemy = useCallback(() => {
@@ -841,6 +868,24 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, waitDuration, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes]);
+
+  // === Consistency Check ===
+  useEffect(() => {
+    console.log('[Consistency Check] Game State:');
+    console.log('  - Hero Level:', heroLevel);
+    console.log('  - Hero XP:', heroXp, '/', heroLevel * 100);
+    console.log('  - Hero HP:', heroHp, '/', heroAttributes.maxHp);
+    console.log('  - Hero Gold:', heroGold);
+    console.log('  - Current Biome:', currentBiomeId);
+    console.log('  - Wave:', wave);
+    console.log('  - Enemy HP:', enemyHp, '/', enemyMaxHp);
+    console.log('  - Inventory:', inventory.length, '/20');
+    console.log('  - Equipment:', {
+      weapon: equipment.weapon?.name || 'Empty',
+      armor: equipment.armor?.name || 'Empty',
+      accessory: equipment.accessory?.name || 'Empty',
+    });
+  }, []);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f1a] overflow-hidden">
