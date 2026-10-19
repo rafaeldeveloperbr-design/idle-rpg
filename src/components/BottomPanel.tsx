@@ -117,17 +117,6 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
       <div className="max-h-[240px] overflow-y-auto">
         {renderTabContent()}
       </div>
-
-      {/* Reset Button */}
-      <div className="border-t border-[#2d2d5e] p-2">
-        <button
-          onClick={onResetGame}
-          className="w-full py-2 px-3 bg-red-900/30 hover:bg-red-900/50 border border-red-700/50 text-red-300 text-xs rounded transition-colors flex items-center justify-center gap-2"
-        >
-          <span>🔄</span>
-          <span>Resetar Progresso</span>
-        </button>
-      </div>
     </div>
   );
 };

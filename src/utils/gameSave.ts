@@ -4,6 +4,7 @@ const SAVE_KEY = 'idle_rpg_save_v1';
 
 export interface GameSaveData {
   // Hero State
+  heroName: string;
   heroHp: number;
   heroLevel: number;
   heroXp: number;

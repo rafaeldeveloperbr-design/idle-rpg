@@ -14,6 +14,7 @@ interface PlayerStatusProps {
   totalKills: number;
   isBiomeUnlocked: (biome: Biome) => boolean;
   onChangeBiome: (biomeId: string) => void;
+  onOpenSettings: () => void;
 }
 
 const PlayerStatus: React.FC<PlayerStatusProps> = ({
@@ -28,6 +29,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   biomeKills,
   totalKills,
   isBiomeUnlocked,
+  onOpenSettings,
   onChangeBiome,
 }) => {
   const hpPercent = Math.round((hp / maxHp) * 100);
@@ -168,6 +170,15 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
               </div>
             )}
           </div>
+
+          {/* Settings Button */}
+          <button
+            onClick={onOpenSettings}
+            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
+            title="Configurações"
+          >
+            <span className="text-base sm:text-lg">⚙️</span>
+          </button>
         </div>
       </div>
     </header>

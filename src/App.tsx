@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import PlayerStatus from './components/PlayerStatus';
 import GameViewport from './components/GameViewport';
 import BottomPanel from './components/BottomPanel';
-import { saveGameData, loadGameData, clearSaveData } from './utils/gameSave';
+import CharacterCreationModal from './components/modals/CharacterCreationModal';
+import SettingsModal from './components/modals/SettingsModal';
+import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
 type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
 
@@ -103,10 +105,16 @@ export interface Biome {
 export default function App() {
   // === Hero State (fixed position) ===
   const heroX = 150;
+  const [heroName, setHeroName] = useState('Herói');
   const [heroHp, setHeroHp] = useState(100);
   const [heroLevel, setHeroLevel] = useState(1);
   const [heroXp, setHeroXp] = useState(0);
   const [heroGold, setHeroGold] = useState(10);
+
+  // === Modal States ===
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isFirstTime, setIsFirstTime] = useState(true);
 
   // Hero attributes (upgradable) - New Game defaults
   const [heroAttributes, setHeroAttributes] = useState<HeroAttributes>({
@@ -340,6 +348,7 @@ export default function App() {
       console.log('[Load] Wave:', savedData.wave);
       
       // Restore hero state
+      setHeroName(savedData.heroName || 'Herói');
       setHeroHp(savedData.heroHp);
       setHeroLevel(savedData.heroLevel);
       setHeroXp(savedData.heroXp);
@@ -362,12 +371,15 @@ export default function App() {
       setTotalKills(savedData.totalKills);
       setWave(savedData.wave);
       
+      setIsFirstTime(false);
       console.log('[Load] Game restored successfully!');
     } else {
       console.log('[New Game] Starting fresh game...');
       console.log('[New Game] Hero Level: 1');
       console.log('[New Game] Hero XP: 0/100');
       console.log('[New Game] Hero Gold: 10');
+      setIsFirstTime(true);
+      setShowCharacterCreation(true);
       console.log('[New Game] Current Biome: forest');
       console.log('[New Game] Wave: 1');
       console.log('[New Game] Game initialized successfully!');
@@ -378,6 +390,7 @@ export default function App() {
   useEffect(() => {
     const saveInterval = setInterval(() => {
       saveGameData({
+        heroName,
         heroHp,
         heroLevel,
         heroXp,
@@ -397,6 +410,7 @@ export default function App() {
     // Save on page close/refresh
     const handleBeforeUnload = () => {
       saveGameData({
+        heroName,
         heroHp,
         heroLevel,
         heroXp,
@@ -419,14 +433,26 @@ export default function App() {
       clearInterval(saveInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [heroHp, heroLevel, heroXp, heroGold, heroAttributes, attributeCosts, skills, inventory, equipment, currentBiomeId, biomeKills, totalKills, wave]);
+  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroAttributes, attributeCosts, skills, inventory, equipment, currentBiomeId, biomeKills, totalKills, wave]);
 
   // === Reset Game ===
   const resetGame = useCallback(() => {
-    if (window.confirm('Tem certeza que deseja resetar todo o progresso? Esta ação não pode ser desfeita!')) {
-      clearSaveData();
-      window.location.reload();
-    }
+    clearSaveData();
+    window.location.reload();
+  }, []);
+
+  // === Handle Start Adventure (First Time) ===
+  const handleStartAdventure = useCallback((name: string) => {
+    setHeroName(name);
+    setShowCharacterCreation(false);
+    setIsFirstTime(false);
+    console.log('[Character Creation] Adventure started with hero:', name);
+  }, []);
+
+  // === Handle Change Name ===
+  const handleChangeName = useCallback((name: string) => {
+    setHeroName(name);
+    console.log('[Settings] Hero name changed to:', name);
   }, []);
 
   // === Refs for game loop ===
@@ -935,10 +961,12 @@ export default function App() {
         totalKills={totalKills}
         isBiomeUnlocked={isBiomeUnlocked}
         onChangeBiome={changeBiome}
+        onOpenSettings={() => setShowSettings(true)}
       />
 
       <GameViewport
         heroX={heroX}
+        heroName={heroName}
         enemyX={enemyX}
         enemyHp={enemyHp}
         enemyMaxHp={enemyMaxHp}
@@ -971,6 +999,21 @@ export default function App() {
         onSellItem={sellItem}
         onResetGame={resetGame}
       />
+
+      {/* Character Creation Modal (First Time) */}
+      {showCharacterCreation && (
+        <CharacterCreationModal onStartAdventure={handleStartAdventure} />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          heroName={heroName}
+          onChangeName={handleChangeName}
+          onResetGame={resetGame}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

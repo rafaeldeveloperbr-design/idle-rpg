@@ -5,6 +5,7 @@ type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
 
 interface GameViewportProps {
   heroX: number;
+  heroName: string;
   enemyX: number;
   enemyHp: number;
   enemyMaxHp: number;
@@ -140,6 +141,7 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
 
 const GameViewport: React.FC<GameViewportProps> = ({
   heroX,
+  heroName,
   enemyX,
   enemyHp,
   enemyMaxHp,
@@ -262,6 +264,10 @@ const GameViewport: React.FC<GameViewportProps> = ({
         style={{ left: `max(60px, min(${heroX}px, 20%))` }}
       >
         <div className="flex flex-col items-center">
+          {/* Hero Name */}
+          <div className="mb-1 px-2 py-0.5 bg-black/60 border border-green-500/50 rounded-sm">
+            <span className="text-[9px] sm:text-[10px] text-green-300 font-bold">{heroName}</span>
+          </div>
           <div className="relative">
             {/* Hit flash overlay */}
             {heroHitFlash && (
