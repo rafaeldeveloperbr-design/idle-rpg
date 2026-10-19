@@ -4,6 +4,7 @@ import GameViewport from './components/GameViewport';
 import BottomPanel from './components/BottomPanel';
 import CharacterCreationModal from './components/modals/CharacterCreationModal';
 import SettingsModal from './components/modals/SettingsModal';
+import ToastContainer from './components/ToastContainer';
 import { saveGameData, loadGameData, clearSaveData, hasSaveData } from './utils/gameSave';
 
 type GamePhase = 'approaching' | 'fighting' | 'waiting' | 'respawning';
@@ -120,6 +121,14 @@ export interface Enemy {
   glowColor?: string; // para bosses
 }
 
+export interface Toast {
+  id: string;
+  message: string;
+  type: 'levelup' | 'drop' | 'boss' | 'info';
+  duration?: number;
+  timestamp: number;
+}
+
 export default function App() {
   // === Hero State (fixed position) ===
   const heroX = 150;
@@ -133,6 +142,9 @@ export default function App() {
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
+
+  // === Toast Notifications ===
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Hero attributes (upgradable) - New Game defaults
   const [heroAttributes, setHeroAttributes] = useState<HeroAttributes>({
@@ -641,6 +653,25 @@ export default function App() {
     }, 900);
   }, []);
 
+  // === Toast Notification System ===
+  const addToast = useCallback((message: string, type: Toast['type'], duration: number = 3000) => {
+    const id = `toast_${Date.now()}_${Math.random()}`;
+    const newToast: Toast = {
+      id,
+      message,
+      type,
+      duration,
+      timestamp: Date.now(),
+    };
+    
+    setToasts((prev) => [...prev, newToast]);
+    
+    // Auto-remove toast after duration
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
+  }, []);
+
   // === Level Up Logic ===
   useEffect(() => {
     let currentXp = heroXp;
@@ -659,8 +690,11 @@ export default function App() {
       setHeroLevel(currentLevel);
       setHeroXp(currentXp);
       setHeroHp(heroAttributes.maxHp); // Full heal on level up
+      
+      // Show level up toast
+      addToast(`🌟 LEVEL UP! Você alcançou o Nível ${currentLevel}!`, 'levelup');
     }
-  }, [heroXp, heroAttributes.maxHp]);
+  }, [heroXp, heroAttributes.maxHp, addToast]);
 
   // === Spawn new enemy after delay ===
   // === Spawn Random Enemy ===
@@ -767,6 +801,12 @@ export default function App() {
             const droppedItem = generateItemDrop();
             if (droppedItem) {
               setInventory((prev) => [...prev, droppedItem]);
+              
+              // Show toast for rare/epic items
+              if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
+                const rarityEmoji = droppedItem.rarity === 'rare' ? '💎' : '👑';
+                addToast(`${rarityEmoji} Item Encontrado: ${droppedItem.name}!`, 'drop');
+              }
             }
             
             setTimeout(() => spawnNewEnemy(), waitDuration);
@@ -1032,11 +1072,22 @@ export default function App() {
               setHeroGold((g) => g + goldReward);
               setHeroXp((x) => x + xpReward);
               setGamePhase('waiting');
+              
+              // Show boss defeated toast
+              if (isBossWave) {
+                addToast('☠️ CHEFÃO DERROTADO! Recompensas Triplicadas!', 'boss');
+              }
 
               // Generate item drop
               const droppedItem = generateItemDrop();
               if (droppedItem) {
                 setInventory((prev) => [...prev, droppedItem]);
+                
+                // Show toast for rare/epic items
+                if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
+                  const rarityEmoji = droppedItem.rarity === 'rare' ? '💎' : '👑';
+                  addToast(`${rarityEmoji} Item Encontrado: ${droppedItem.name}!`, 'drop');
+                }
               }
 
               setTimeout(() => {
@@ -1128,6 +1179,8 @@ export default function App() {
         onChangeBiome={changeBiome}
         onOpenSettings={() => setShowSettings(true)}
       />
+
+      <ToastContainer toasts={toasts} />
 
       <GameViewport
         heroX={heroX}
