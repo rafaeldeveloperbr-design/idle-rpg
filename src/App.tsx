@@ -396,6 +396,21 @@ export default function App() {
   const [currentNPCQuest, setCurrentNPCQuest] = useState<Quest | null>(null);
   const lastNPCSpawnWave = useRef(0);
 
+  // === Path Difficulty System ===
+  const [pathDifficultyMultiplier, setPathDifficultyMultiplier] = useState<{
+    hpMultiplier: number;
+    attackMultiplier: number;
+    rewardMultiplier: number;
+    dropChanceBonus: number;
+    remainingEnemies: number;
+  }>({
+    hpMultiplier: 1.0,
+    attackMultiplier: 1.0,
+    rewardMultiplier: 1.0,
+    dropChanceBonus: 0,
+    remainingEnemies: 0,
+  });
+
   // === Shop Items (Equipment Catalog) ===
   const shopItems: Item[] = [
     // Armas
@@ -737,23 +752,25 @@ export default function App() {
   // Hero level scaling factor (enemies scale with player level)
   const heroLevelScale = 1 + (heroLevel - 1) * 0.15; // +15% per hero level
   
-  // Enemy HP: scales with wave, biome, boss, AND hero level
+  // Enemy HP: scales with wave, biome, boss, hero level, AND path difficulty
   const enemyMaxHp = Math.floor(
     (baseEnemyHp + (wave - 1) * 15) * 
     biomeMultiplier.hp * 
     bossMultiplier * 
-    heroLevelScale
+    heroLevelScale *
+    pathDifficultyMultiplier.hpMultiplier
   );
   
-  // Enemy Attack: smooth logarithmic scaling
-  // Formula: base * (1 + log(wave) * 0.5) * biome * level scaling
+  // Enemy Attack: smooth logarithmic scaling + path difficulty
+  // Formula: base * (1 + log(wave) * 0.5) * biome * level * path difficulty
   // This ensures damage stays between 5-15% of hero max HP per hit
   const waveAttackScale = 1 + Math.log(wave) * 0.5; // Logarithmic growth (much smoother)
   const enemyAttackPower = Math.floor(
     baseEnemyAttack * 
     waveAttackScale * 
     biomeMultiplier.attack * 
-    heroLevelScale
+    heroLevelScale *
+    pathDifficultyMultiplier.attackMultiplier
   );
   
   // Rewards: logarithmic scaling to prevent exponential growth
@@ -766,7 +783,8 @@ export default function App() {
     waveRewardMultiplier * 
     biomeMultiplier.gold * 
     (isBoss ? 3 : 1) * 
-    levelRewardMultiplier
+    levelRewardMultiplier *
+    pathDifficultyMultiplier.rewardMultiplier
   );
   
   const enemyXpReward = Math.floor(
@@ -774,7 +792,8 @@ export default function App() {
     waveRewardMultiplier * 
     biomeMultiplier.xp * 
     (isBoss ? 3 : 1) * 
-    levelRewardMultiplier
+    levelRewardMultiplier *
+    pathDifficultyMultiplier.rewardMultiplier
   );
 
   // === Enemy State (moves toward hero) ===
@@ -1044,51 +1063,58 @@ export default function App() {
   }, [currentBiomeId, biomes]);
 
   // === Handle Path Choice ===
-  const handlePathChoice = useCallback((choice: 'risk' | 'rest' | 'mine') => {
+  const handlePathChoice = useCallback((choice: 'safe' | 'challenging' | 'deadly') => {
     setShowPathChoice(false);
     
+    // Apply difficulty multiplier based on choice
     switch (choice) {
-      case 'risk':
-        // Spawn mini-boss with guaranteed rare/epic drop
-        addToast('⚔️ Você escolheu o Caminho do Risco!', 'info');
-        setIsBossWave(true);
-        spawnRandomEnemy(true);
-        setEnemyX(enemySpawnX);
-        setGamePhase('approaching');
-        lastHeroAttackRef.current = Date.now();
-        lastEnemyAttackRef.current = Date.now();
+      case 'safe':
+        setPathDifficultyMultiplier({
+          hpMultiplier: 1.0,
+          attackMultiplier: 1.0,
+          rewardMultiplier: 1.0,
+          dropChanceBonus: 0,
+          remainingEnemies: 5,
+        });
+        addToast('🟢 Caminho Seguro escolhido! Dificuldade normal.', 'info');
         break;
         
-      case 'rest':
-        // Full heal + temporary buff
-        addToast('🔥 Você escolheu o Caminho do Descanso!', 'info');
-        setHeroHp(heroAttributes.maxHp);
-        // TODO: Implement temporary buff system
-        // For now, just continue with next enemy
-        const nextIsBoss = biomeKills > 0 && biomeKills % 10 === 0;
-        spawnRandomEnemy(nextIsBoss);
-        setEnemyX(enemySpawnX);
-        setGamePhase('approaching');
-        lastHeroAttackRef.current = Date.now();
-        lastEnemyAttackRef.current = Date.now();
+      case 'challenging':
+        setPathDifficultyMultiplier({
+          hpMultiplier: 1.3,
+          attackMultiplier: 1.3,
+          rewardMultiplier: 1.5,
+          dropChanceBonus: 0.2, // +20% rare drop chance
+          remainingEnemies: 5,
+        });
+        addToast('🟡 Caminho Desafiador escolhido! +30% dificuldade, +50% recompensas!', 'info');
         break;
         
-      case 'mine':
-        // Extra gold and materials
-        addToast('⛏️ Você escolheu o Caminho da Mineração!', 'info');
-        const miningGold = 50 + wave * 10;
-        setHeroGold(prev => prev + miningGold);
-        addToast(`💰 +${miningGold} ouro coletado!`, 'info');
-        // Continue with next enemy
-        const nextIsBossMine = biomeKills > 0 && biomeKills % 10 === 0;
-        spawnRandomEnemy(nextIsBossMine);
-        setEnemyX(enemySpawnX);
-        setGamePhase('approaching');
-        lastHeroAttackRef.current = Date.now();
-        lastEnemyAttackRef.current = Date.now();
+      case 'deadly':
+        setPathDifficultyMultiplier({
+          hpMultiplier: 1.8,
+          attackMultiplier: 1.8,
+          rewardMultiplier: 2.0,
+          dropChanceBonus: 0.5, // +50% epic/legendary drop chance
+          remainingEnemies: 5,
+        });
+        addToast('🔴 Caminho Mortal escolhido! +80% dificuldade, x2 recompensas, drops épicos!', 'info');
         break;
     }
-  }, [heroAttributes.maxHp, wave, biomeKills, enemySpawnX, spawnRandomEnemy, addToast]);
+    
+    // Continue with next enemy
+    const nextIsBoss = biomeKills > 0 && biomeKills % 10 === 0;
+    spawnRandomEnemy(nextIsBoss);
+    setEnemyX(enemySpawnX);
+    setGamePhase('approaching');
+    lastHeroAttackRef.current = Date.now();
+    lastEnemyAttackRef.current = Date.now();
+  }, [biomeKills, enemySpawnX, spawnRandomEnemy, addToast]);
+
+  // === Open Shop from Path Choice ===
+  const handleOpenShopFromPath = useCallback(() => {
+    setShowMerchantShop(true);
+  }, []);
 
   // === Quest System Functions ===
   const checkAndSpawnNPC = useCallback(() => {
@@ -1198,6 +1224,8 @@ export default function App() {
     const shouldShowPathChoice = (newWave % 10 === 0 && newWave > 0) || (nextIsBoss && newBiomeKills % 10 === 9);
     
     if (shouldShowPathChoice) {
+      // Heal hero to 100% when showing path choice
+      setHeroHp(heroAttributes.maxHp);
       setShowPathChoice(true);
       return; // Don't spawn enemy yet, wait for choice
     }
@@ -1284,6 +1312,23 @@ export default function App() {
               }
             }
             
+            // Decrement path difficulty remaining enemies
+            if (pathDifficultyMultiplier.remainingEnemies > 0) {
+              setPathDifficultyMultiplier(prev => {
+                const newRemaining = prev.remainingEnemies - 1;
+                if (newRemaining <= 0) {
+                  return {
+                    hpMultiplier: 1.0,
+                    attackMultiplier: 1.0,
+                    rewardMultiplier: 1.0,
+                    dropChanceBonus: 0,
+                    remainingEnemies: 0,
+                  };
+                }
+                return { ...prev, remainingEnemies: newRemaining };
+              });
+            }
+
             // Spawn next enemy immediately
             spawnNewEnemy();
             return 0;
@@ -1438,14 +1483,20 @@ export default function App() {
 
   // === Generate Random Item Drop ===
   const generateItemDrop = useCallback((): Item | null => {
-    // 30% chance to drop an item
-    if (Math.random() > 0.3) return null;
+    // 30% base chance to drop an item + path difficulty bonus
+    const dropChance = 0.3 + pathDifficultyMultiplier.dropChanceBonus;
+    if (Math.random() > dropChance) return null;
 
-    // Rarity weights: common 60%, rare 30%, epic 10%
+    // Rarity weights adjusted by path difficulty bonus
+    // Base: common 60%, rare 30%, epic 10%
+    // With bonus: shift towards higher rarities
     const rarityRoll = Math.random();
     let targetRarity: ItemRarity;
-    if (rarityRoll < 0.6) targetRarity = 'common';
-    else if (rarityRoll < 0.9) targetRarity = 'rare';
+    const epicBonus = pathDifficultyMultiplier.dropChanceBonus * 0.5; // Half of bonus goes to epic
+    const rareBonus = pathDifficultyMultiplier.dropChanceBonus * 0.3; // 30% goes to rare
+    
+    if (rarityRoll < 0.6 - rareBonus - epicBonus) targetRarity = 'common';
+    else if (rarityRoll < 0.9 - epicBonus + rareBonus) targetRarity = 'rare';
     else targetRarity = 'epic';
 
     // Filter items by rarity
@@ -1703,6 +1754,24 @@ export default function App() {
                 }
               }
 
+              // Decrement path difficulty remaining enemies
+              if (pathDifficultyMultiplier.remainingEnemies > 0) {
+                setPathDifficultyMultiplier(prev => {
+                  const newRemaining = prev.remainingEnemies - 1;
+                  if (newRemaining <= 0) {
+                    // Reset to default when path ends
+                    return {
+                      hpMultiplier: 1.0,
+                      attackMultiplier: 1.0,
+                      rewardMultiplier: 1.0,
+                      dropChanceBonus: 0,
+                      remainingEnemies: 0,
+                    };
+                  }
+                  return { ...prev, remainingEnemies: newRemaining };
+                });
+              }
+
               // Spawn next enemy immediately
               spawnNewEnemy();
 
@@ -1894,7 +1963,7 @@ export default function App() {
 
       {/* Path Choice Modal */}
       {showPathChoice && (
-        <PathChoiceModal onChoose={handlePathChoice} />
+        <PathChoiceModal onChoose={handlePathChoice} onOpenShop={handleOpenShopFromPath} />
       )}
 
       {/* NPC Dialogue Modal */}
