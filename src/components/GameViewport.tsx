@@ -496,7 +496,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       <div
         className={`absolute z-10 bottom-12 sm:bottom-16 ${!isMoving && !isAttacking ? 'animate-float' : ''
           } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
-        style={{ left: `max(60px, min(${heroX}px, 20%))` }}
+        style={{ left: `${heroX}px` }}
       >
         {/* Hero shadow on ground */}
         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/40 rounded-full blur-sm" />
@@ -507,9 +507,6 @@ const GameViewport: React.FC<GameViewportProps> = ({
           </div>
           <div className="relative">
             {/* Hit flash overlay */}
-            {heroHitFlash && (
-              <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
-            )}
             <div
               className="w-[64px] h-[80px]"
               role="img"
@@ -562,9 +559,8 @@ const GameViewport: React.FC<GameViewportProps> = ({
             }}
           >
             {/* Hit flash overlay */}
-            {enemyHitFlash && (
-              <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
-            )}{ENEMY_SPRITES[currentEnemy.id] ? (
+
+            {ENEMY_SPRITES[currentEnemy.id] ? (
               <EnemySprite
                 key={currentEnemy.id}
                 src={ENEMY_SPRITES[currentEnemy.id]}
