@@ -2197,7 +2197,7 @@ export default function App() {
       )}
 
       {/* Top: HUD/Header */}
-      <div className="h-12 w-full shrink-0 z-[20]">
+      <div className="relative h-12 w-full shrink-0 z-[60]">
         <PlayerStatus
           level={heroLevel}
           gold={heroGold}

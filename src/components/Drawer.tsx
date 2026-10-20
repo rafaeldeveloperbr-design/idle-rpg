@@ -112,12 +112,12 @@ const Drawer: React.FC<DrawerProps> = ({
     <>
       {/* Overlay */}
       <div 
-        className="fixed inset-x-0 top-0 bottom-16 bg-black/50 z-[40]"
+        className="fixed inset-x-0 top-12 bottom-16 bg-black/50 z-[40]"
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
-      <div className="fixed inset-x-0 bottom-16 h-[80vh] z-[50] rounded-t-2xl bg-slate-950/95 backdrop-blur-md border-t-2 border-slate-600 flex flex-col">
+      <div className="fixed inset-x-0 top-12 bottom-16 z-[50] rounded-t-2xl bg-slate-950/95 backdrop-blur-md border-t-2 border-slate-600 flex flex-col">
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700 shrink-0">
           <h2 className="text-lg font-bold text-purple-300 flex items-center gap-2">
