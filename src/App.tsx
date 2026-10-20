@@ -1123,6 +1123,11 @@ export default function App() {
     console.log('[Settings] Hero name changed to:', name);
   }, []);
 
+  // === Handle Drawer Toggle ===
+  const handleDrawerToggle = useCallback((drawer: 'attributes' | 'skills' | 'inventory' | 'quests') => {
+    setActiveDrawer(prev => prev === drawer ? null : drawer);
+  }, []);
+
   // === Refs for game loop ===
   const enemyXRef = useRef(enemyX);
   const enemyHpRef = useRef(enemyHp);
@@ -2244,7 +2249,7 @@ export default function App() {
       {/* Bottom: Bottom Bar Fixed */}
       <div className="h-16 w-full shrink-0 z-[30] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
         <button
-          onClick={() => setActiveDrawer('attributes')}
+          onClick={() => handleDrawerToggle('attributes')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
             activeDrawer === 'attributes'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
@@ -2255,7 +2260,7 @@ export default function App() {
           <span className="text-[10px] font-medium">Atributos</span>
         </button>
         <button
-          onClick={() => setActiveDrawer('skills')}
+          onClick={() => handleDrawerToggle('skills')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
             activeDrawer === 'skills'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
@@ -2266,7 +2271,7 @@ export default function App() {
           <span className="text-[10px] font-medium">Skills</span>
         </button>
         <button
-          onClick={() => setActiveDrawer('inventory')}
+          onClick={() => handleDrawerToggle('inventory')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
             activeDrawer === 'inventory'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
@@ -2277,7 +2282,7 @@ export default function App() {
           <span className="text-[10px] font-medium">Bag</span>
         </button>
         <button
-          onClick={() => setActiveDrawer('quests')}
+          onClick={() => handleDrawerToggle('quests')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
             activeDrawer === 'quests'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
