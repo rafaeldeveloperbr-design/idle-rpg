@@ -112,7 +112,7 @@ const Drawer: React.FC<DrawerProps> = ({
     <>
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/50 z-[40]"
+        className="fixed inset-x-0 top-0 bottom-16 bg-black/50 z-[40]"
         onClick={onClose}
       />
 

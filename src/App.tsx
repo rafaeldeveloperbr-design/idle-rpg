@@ -2251,7 +2251,7 @@ export default function App() {
       </div>
 
       {/* Bottom: Bottom Bar Fixed */}
-      <div className="h-16 w-full shrink-0 z-[30] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
+      <div className="relative h-16 w-full shrink-0 z-[60] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
         <button
           onClick={() => handleDrawerToggle('attributes')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'attributes'
