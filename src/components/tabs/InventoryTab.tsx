@@ -256,6 +256,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
   onSellItem,
 }) => {
   const [selectedItem, setSelectedItem] = useState<{ item: Item; fromSlot: keyof Equipment | null } | null>(null);
+  const [itemPendingSale, setItemPendingSale] = useState<Item | null>(null);
 
   const slots: (keyof Equipment)[] = ['weapon', 'armor', 'accessory'];
 
@@ -282,21 +283,26 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
   };
 
   const handleSell = () => {
-  if (!selectedItem) return;
+    if (!selectedItem) return;
 
-  const item = selectedItem.item;
+    const item = selectedItem.item;
 
-  if (item.rarity === 'rare' || item.rarity === 'epic') {
-    const confirmed = window.confirm(
-      `⚠️ Deseja realmente vender "${item.name}" por ${Math.round(item.sellValue)} de ouro?`
-    );
+    if (item.rarity === 'rare' || item.rarity === 'epic') {
+      setItemPendingSale(item);
+      return;
+    }
 
-    if (!confirmed) return;
-  }
+    onSellItem(item.id);
+    setSelectedItem(null);
+  };
 
-  onSellItem(item.id);
-  setSelectedItem(null);
-};
+  const confirmSale = () => {
+    if (!itemPendingSale) return;
+
+    onSellItem(itemPendingSale.id);
+    setItemPendingSale(null);
+    setSelectedItem(null);
+  };
 
   return (
     <div className="p-3 sm:p-4">
@@ -316,8 +322,8 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
                 key={slot}
                 onClick={() => item && handleItemClick(item, slot)}
                 className={`w-full border-2 rounded-md p-2 sm:p-3 flex flex-col items-center gap-1.5 transition-colors min-h-[80px] ${item
-                    ? `${rarityColors[item.rarity]} cursor-pointer hover:border-purple-500`
-                    : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
+                  ? `${rarityColors[item.rarity]} cursor-pointer hover:border-purple-500`
+                  : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
                   }`}
               >
                 <span className="text-xs text-gray-500">{slotLabels[slot]}</span>
@@ -402,6 +408,44 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
           onSell={handleSell}
           onClose={handleCloseModal}
         />
+      )}
+      {/* Sale Confirmation Modal */}
+      {itemPendingSale && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-[#15152b] border-2 border-purple-500 rounded-lg p-5 shadow-[0_0_30px_rgba(168,85,247,0.3)] text-center">
+            <h3 className="text-sm font-bold text-yellow-300 mb-4">
+              ⚠️ Confirmar venda
+            </h3>
+
+            <p className="text-xs text-gray-300 mb-3 leading-relaxed">
+              Deseja realmente vender este equipamento?
+            </p>
+
+            <p className="text-sm font-bold text-purple-300 mb-3">
+              {itemPendingSale.name}
+            </p>
+
+            <p className="text-xs text-yellow-400 mb-5">
+              💰 {Math.round(itemPendingSale.sellValue)} de ouro
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setItemPendingSale(null)}
+                className="min-h-[48px] bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-md"
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={confirmSale}
+                className="min-h-[48px] bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-md"
+              >
+                Confirmar venda
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
