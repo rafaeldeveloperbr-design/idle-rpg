@@ -282,11 +282,21 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
   };
 
   const handleSell = () => {
-    if (selectedItem) {
-      onSellItem(selectedItem.item.id);
-      setSelectedItem(null);
-    }
-  };
+  if (!selectedItem) return;
+
+  const item = selectedItem.item;
+
+  if (item.rarity === 'rare' || item.rarity === 'epic') {
+    const confirmed = window.confirm(
+      `⚠️ Deseja realmente vender "${item.name}" por ${Math.round(item.sellValue)} de ouro?`
+    );
+
+    if (!confirmed) return;
+  }
+
+  onSellItem(item.id);
+  setSelectedItem(null);
+};
 
   return (
     <div className="p-3 sm:p-4">
