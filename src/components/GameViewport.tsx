@@ -176,6 +176,21 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const isEnemyDead = enemyHp <= 0;
   const [walkFrame, setWalkFrame] = useState(0);
 
+  const [attackFrame, setAttackFrame] = useState(0);
+
+useEffect(() => {
+  if (!isAttacking) {
+    setAttackFrame(0);
+    return;
+  }
+
+  const timer = setInterval(() => {
+    setAttackFrame(prev => (prev + 1) % 10);
+  }, 100);
+
+  return () => clearInterval(timer);
+}, [isAttacking]);
+
   useEffect(() => {
     if (!isMoving) {
       setWalkFrame(0);
@@ -190,7 +205,9 @@ const GameViewport: React.FC<GameViewportProps> = ({
   }, [isMoving]);
 
   const heroSprite = isMoving
-    ? `/sprites/player1/conteudo_${31 + walkFrame}.png`
+  ? `/sprites/player1/conteudo_${31 + walkFrame}.png`
+  : isAttacking
+    ? `/sprites/player1/conteudo_${11 + attackFrame}.png`
     : '/sprites/player1/conteudo_41.png';
 
   return (
