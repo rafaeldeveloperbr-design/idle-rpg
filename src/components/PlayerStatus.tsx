@@ -36,7 +36,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   return (
     <header className="w-full h-full px-2 sm:px-4 bg-[#1a1a2e] border-b-2 border-[#2d2d5e] flex items-center">
       {/* Single Row Layout */}
-      <div className="flex items-center gap-2 sm:gap-3 justify-between w-full">
+      <div className="flex items-center gap-1 sm:gap-3 justify-between w-full">
         {/* Left: Level */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] sm:text-[11px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm font-bold">
@@ -45,7 +45,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
         </div>
 
         {/* Center: Gold and Diamonds */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           {/* Gold Counter */}
           <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm">
             <GoldIcon size="sm" />
@@ -69,19 +69,19 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
         </div>
 
         {/* Right: Biome Selector */}
-        <div className="relative">
+        <div className="relative min-w-0">
           <button
             onClick={() => setShowBiomeSelector(!showBiomeSelector)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
+            className="flex items-center gap-1 bg-[#0f0f1a] px-1.5 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors min-w-0 max-w-[140px]"
           >
             <span className="text-xs sm:text-sm">{currentBiome.icon}</span>
-            <span className="text-[9px] sm:text-[10px] text-purple-300 hidden sm:inline">{currentBiome.name}</span>
+            <span className="text-[8px] sm:text-[10px] text-purple-300 truncate">{currentBiome.name}</span>
             <span className="text-[8px] sm:text-[9px] text-gray-500">▼</span>
           </button>
 
             {/* Biome Dropdown */}
             {showBiomeSelector && (
-              <div className="absolute top-full right-0 mt-2 w-72 bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md shadow-[0_0_20px_rgba(139,92,246,0.3)] z-[100]">
+              <div className="absolute top-full right-0 mt-2 w-[min(20rem,calc(100vw-1rem))] bg-[#0f0f1a] border-2 border-purple-500/70 rounded-md shadow-[0_0_20px_rgba(139,92,246,0.3)] z-[100]">
                 <div className="p-3 border-b border-purple-500/30">
                   <span className="text-[11px] text-purple-300 font-bold">Selecionar Bioma</span>
                 </div>
