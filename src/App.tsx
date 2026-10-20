@@ -1410,6 +1410,22 @@ export default function App() {
     }
   }, [quests, addToast, completedQuestsSinceLastPath, heroAttributes.maxHp]);
 
+  // Complete quests automatically when their objectives are reached
+  useEffect(() => {
+    if (!isGameStarted) return;
+
+    const readyQuest = quests.find(
+      quest =>
+        quest.active &&
+        !quest.completed &&
+        quest.progress >= quest.objectiveTarget
+    );
+
+    if (readyQuest) {
+      completeQuest(readyQuest.id);
+    }
+  }, [quests, isGameStarted, completeQuest]);
+
   // Update quest progress based on game events
   const updateQuestProgress = useCallback(() => {
     setQuests(prev => prev.map(quest => {
