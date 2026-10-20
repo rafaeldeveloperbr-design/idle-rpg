@@ -5,6 +5,7 @@ import { GoldIcon } from '../../App';
 interface DiamondShopModalProps {
   premiumItems: PremiumItem[];
   heroDiamonds: number;
+  speedBoostRemainingSeconds: number;
   onBuyItem: (itemId: string) => void;
   onClose: () => void;
 }
@@ -12,15 +13,25 @@ interface DiamondShopModalProps {
 const DiamondShopModal: React.FC<DiamondShopModalProps> = ({
   premiumItems,
   heroDiamonds,
+  speedBoostRemainingSeconds,
   onBuyItem,
   onClose,
 }) => {
   const regularItems = premiumItems.filter(item => item.type !== 'diamond_pack');
   const diamondPacks = premiumItems.filter(item => item.type === 'diamond_pack');
+  const formatRemainingTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    return [hours, minutes, secs]
+      .map(value => String(value).padStart(2, '0'))
+      .join(':');
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={onClose}>
-      <div 
+      <div
         className="bg-gradient-to-b from-blue-900 to-indigo-950 border-2 border-cyan-400/70 rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(34,211,238,0.4)]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -53,20 +64,24 @@ const DiamondShopModal: React.FC<DiamondShopModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {regularItems.map((item) => {
                 const canAfford = heroDiamonds >= item.price;
-                
+
                 return (
                   <div
                     key={item.id}
-                    className={`border rounded-md p-3 flex items-start gap-3 transition-colors ${
-                      canAfford
-                        ? 'border-cyan-400/50 bg-cyan-900/10 hover:bg-cyan-900/20'
-                        : 'border-[#2d2d5e] bg-[#0a0a12] opacity-60'
-                    }`}
+                    className={`border rounded-md p-3 flex items-start gap-3 transition-colors ${canAfford
+                      ? 'border-cyan-400/50 bg-cyan-900/10 hover:bg-cyan-900/20'
+                      : 'border-[#2d2d5e] bg-[#0a0a12] opacity-60'
+                      }`}
                   >
                     <span className="text-3xl">{item.icon}</span>
                     <div className="flex-1">
                       <div className="text-sm text-gray-200 font-bold mb-1">{item.name}</div>
                       <p className="text-xs text-gray-400 mb-2">{item.description}</p>
+                      {item.type === 'speed_boost' && speedBoostRemainingSeconds > 0 && (
+                        <div className="mb-2 rounded-md border border-yellow-500/40 bg-yellow-950/40 px-3 py-2 text-xs font-bold text-yellow-300">
+                          ⚡ 2× ativo — {formatRemainingTime(speedBoostRemainingSeconds)}
+                        </div>
+                      )}
                       {item.duration && (
                         <p className="text-[10px] text-cyan-400 mb-2">
                           ⏱️ Duração: {item.duration >= 3600 ? `${item.duration / 3600} hora(s)` : `${item.duration / 60} minuto(s)`}
@@ -79,13 +94,14 @@ const DiamondShopModal: React.FC<DiamondShopModalProps> = ({
                         <button
                           onClick={() => onBuyItem(item.id)}
                           disabled={!canAfford}
-                          className={`text-xs min-w-[96px] min-h-[44px] px-3 py-2 rounded-md font-bold flex items-center justify-center shrink-0 transition-colors ${
-                            canAfford
-                              ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
-                              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                          }`}
+                          className={`text-xs min-w-[96px] min-h-[44px] px-3 py-2 rounded-md font-bold flex items-center justify-center shrink-0 transition-colors ${canAfford
+                            ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            }`}
                         >
-                          Comprar
+                          {item.type === 'speed_boost' && speedBoostRemainingSeconds > 0
+                            ? 'Renovar +1h'
+                            : 'Comprar'}
                         </button>
                       </div>
                     </div>

@@ -1794,16 +1794,36 @@ export default function App() {
 
     // Apply effect based on type
     switch (item.type) {
-      case 'speed_boost':
-        setIsSpeedBoosted(true);
-        setActivePremiumEffects(prev => [...prev, {
-          id: `speed_${Date.now()}`,
-          itemId: item.id,
-          expiresAt: Date.now() + (item.duration || 0) * 1000,
-          value: 2,
-        }]);
-        addToast(`⚡ Velocidade 2x ativada por 1 hora!`, 'info');
-        break;
+     case 'speed_boost': {
+  const now = Date.now();
+
+  setIsSpeedBoosted(true);
+
+  setActivePremiumEffects(prev => {
+    const currentExpiry = prev
+      .filter(effect => effect.itemId === 'speed_boost')
+      .reduce(
+        (latest, effect) => Math.max(latest, effect.expiresAt ?? 0),
+        now
+      );
+
+    const newExpiry =
+      Math.max(now, currentExpiry) + (item.duration ?? 3600) * 1000;
+
+    return [
+      ...prev.filter(effect => effect.itemId !== 'speed_boost'),
+      {
+        id: `speed_${now}`,
+        itemId: 'speed_boost',
+        expiresAt: newExpiry,
+        value: 2,
+      },
+    ];
+  });
+
+  addToast('⚡ Acelerador 2× renovado! +1 hora', 'info');
+  break;
+}
 
       case 'no_ads':
         setHasNoAds(true);
@@ -2060,6 +2080,18 @@ export default function App() {
 
   const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
 
+  const speedBoostExpiresAt = activePremiumEffects
+  .filter(effect => effect.itemId === 'speed_boost')
+  .reduce(
+    (latest, effect) => Math.max(latest, effect.expiresAt ?? 0),
+    0
+  );
+
+const speedBoostRemainingSeconds = Math.max(
+  0,
+  Math.ceil((speedBoostExpiresAt - speedBoostNow) / 1000)
+);
+
   // === Main Game Loop ===
   useEffect(() => {
     // Don't run game loop if game hasn't started yet or is paused
@@ -2239,7 +2271,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused, gameSpeedMultiplier]);
 
-  
+
   // === Consistency Check ===
   useEffect(() => {
     console.log('[Consistency Check] Game State:');
@@ -2455,6 +2487,7 @@ export default function App() {
           premiumItems={premiumItems}
           heroDiamonds={heroDiamonds}
           onBuyItem={buyPremiumItem}
+          speedBoostRemainingSeconds={speedBoostRemainingSeconds}
           onClose={() => setShowDiamondShop(false)}
         />
       )}
