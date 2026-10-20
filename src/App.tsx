@@ -227,6 +227,8 @@ export default function App() {
   // === Toast Notifications ===
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  const [combatHistory, setCombatHistory] = useState<Toast[]>([]);
+
   // Hero attributes (upgradable) - New Game defaults
   const [heroAttributes, setHeroAttributes] = useState<HeroAttributes>({
     attack: 5,
@@ -1179,6 +1181,8 @@ export default function App() {
     };
 
     setToasts((prev) => [...prev, newToast]);
+
+    setCombatHistory((prev) => [newToast, ...prev].slice(0, 5));
 
     // Auto-remove toast after duration
     setTimeout(() => {
@@ -2246,34 +2250,40 @@ export default function App() {
         </div>
       </div>
 
-      {/* Combat Information Area */}
-<div className="flex-1 min-h-0 w-full overflow-y-auto bg-slate-950 border-t border-purple-900/50 p-3 sm:hidden">
-  <div className="rounded-lg border border-purple-800/60 bg-slate-900/80 p-3">
-    <h3 className="text-sm font-bold text-purple-300 mb-3">
-      ⚔️ Informações do Combate
-    </h3>
+      {/* Combat Activity History */}
+      <div className="flex-1 min-h-0 w-full overflow-y-auto bg-slate-950 border-t border-purple-900/50 p-3 sm:hidden">
+        <div className="rounded-lg border border-purple-800/60 bg-slate-900/80 p-3">
+          <h3 className="text-sm font-bold text-purple-300 mb-3">
+            📜 Atividades Recentes
+          </h3>
 
-    <div className="grid grid-cols-2 gap-2 text-xs">
-      <div className="rounded-md bg-slate-950 p-3">
-        <div className="text-gray-400 mb-1">Wave atual</div>
-        <div className="text-yellow-400 font-bold">{wave}</div>
+          {combatHistory.length === 0 ? (
+            <p className="text-xs text-gray-500">
+              Nenhum evento registrado ainda.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {combatHistory.map((event) => (
+                <div
+                  key={event.id}
+                  className="rounded-md border border-slate-700 bg-slate-950 p-3 text-xs text-gray-200"
+                >
+                  {event.message}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="rounded-md bg-slate-950 p-3">
-        <div className="text-gray-400 mb-1">Inimigos derrotados</div>
-        <div className="text-green-400 font-bold">{totalKills}</div>
-      </div>
-    </div>
-  </div>
-</div>
 
       {/* Bottom: Bottom Bar Fixed */}
       <div className="relative h-16 w-full shrink-0 z-[60] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
         <button
           onClick={() => handleDrawerToggle('attributes')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'attributes'
-              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+            ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
             }`}
         >
           <span className="text-2xl">⚔️</span>
@@ -2282,8 +2292,8 @@ export default function App() {
         <button
           onClick={() => handleDrawerToggle('skills')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'skills'
-              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+            ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
             }`}
         >
           <span className="text-2xl">✨</span>
@@ -2292,8 +2302,8 @@ export default function App() {
         <button
           onClick={() => handleDrawerToggle('inventory')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'inventory'
-              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+            ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
             }`}
         >
           <span className="text-2xl">🎒</span>
@@ -2302,8 +2312,8 @@ export default function App() {
         <button
           onClick={() => handleDrawerToggle('quests')}
           className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'quests'
-              ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
+            ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
+            : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
             }`}
         >
           <span className="text-2xl">📜</span>
