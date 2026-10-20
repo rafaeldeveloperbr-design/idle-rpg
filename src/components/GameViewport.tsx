@@ -193,7 +193,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
     const timer = setInterval(() => {
       frame += 1;
 
-      if (frame >= 10) {
+      if (frame >= 4) {
         setAttackFrame(-1);
         clearInterval(timer);
       } else {
@@ -211,17 +211,19 @@ const GameViewport: React.FC<GameViewportProps> = ({
     }
 
     const timer = setInterval(() => {
-      setWalkFrame(prev => (prev + 1) % 10);
+      setWalkFrame(prev => (prev + 1) % 4);
     }, 120);
 
     return () => clearInterval(timer);
   }, [isMoving]);
 
-  const heroSprite = isMoving
-    ? `/sprites/player1/conteudo_${31 + walkFrame}.png`
+  const heroFrame = isMoving
+    ? walkFrame
     : isAttacking && attackFrame >= 0
-      ? `/sprites/player1/conteudo_${11 + attackFrame}.png`
-      : '/sprites/player1/conteudo_41.png';
+      ? attackFrame
+      : 1;
+
+  const heroRow = !isMoving && isAttacking && attackFrame >= 0 ? 1 : 0;
 
   return (
     <div className={`w-full h-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient}`}>
@@ -486,7 +488,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Hero - FIXED position (responsive) */}
       <div
-        className={`absolute bottom-12 sm:bottom-16 ${isMoving ? 'animate-walk' : isAttacking ? 'animate-attack' : 'animate-float'
+        className={`absolute bottom-12 sm:bottom-16 ${!isMoving && !isAttacking ? 'animate-float' : ''
           } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
         style={{ left: `max(60px, min(${heroX}px, 20%))` }}
       >
@@ -502,15 +504,18 @@ const GameViewport: React.FC<GameViewportProps> = ({
             {heroHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
             )}
-            <div className="w-[64px] h-[80px] flex items-end justify-center">
-              <img
-                src={heroSprite}
-                alt="Herói"
-                className="w-full h-full object-contain object-bottom"
-                style={{ imageRendering: 'pixelated' }}
-                draggable={false}
-              />
-            </div>
+            <div
+              className="w-[64px] h-[80px]"
+              role="img"
+              aria-label="Herói"
+              style={{
+                backgroundImage: "url('/sprites/boy.png')",
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '400% 200%',
+                backgroundPosition: `${heroFrame * 100 / 3}% ${heroRow * 100}%`,
+                imageRendering: 'pixelated',
+              }}
+            />
 
           </div>
         </div>
