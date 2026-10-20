@@ -1094,6 +1094,7 @@ export default function App() {
         isSpeedBoosted,
         hasNoAds,
         activePremiumEffects,
+        combatHistory: combatHistory.slice(0, 5),
       });
     };
 
@@ -1103,7 +1104,7 @@ export default function App() {
       clearInterval(saveInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroDiamonds, heroAttributes, attributeCosts, skills, inventory, equipment, inventoryCapacity, currentBiomeId, biomeKills, totalKills, 
+  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroDiamonds, heroAttributes, attributeCosts, skills, inventory, equipment, inventoryCapacity, currentBiomeId, biomeKills, totalKills,
     wave, wavesSinceLastEvent, completedQuestsSinceLastPath, isSpeedBoosted, hasNoAds, activePremiumEffects, combatHistory]);
 
   // === Reset Game ===
