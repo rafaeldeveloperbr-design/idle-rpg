@@ -1,6 +1,7 @@
-import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment, ActivePremiumEffect } from '../App';
+import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment, ActivePremiumEffect, Toast } from '../types/game';
+import { SAVE_KEY } from '../lib/constants';
+import type { Quest } from '../data/questsData';
 
-const SAVE_KEY = 'idle_rpg_save_v1';
 
 export interface GameSaveData {
   // Hero State
@@ -10,34 +11,39 @@ export interface GameSaveData {
   heroXp: number;
   heroGold: number;
   heroDiamonds: number;
-  
+
   // Hero Attributes
   heroAttributes: HeroAttributes;
   attributeCosts: AttributeCosts;
-  
+
   // Skills
   skills: Skill[];
-  
+
   // Inventory & Equipment
   inventory: Item[];
   equipment: Equipment;
   inventoryCapacity: number;
-  
+
   // Biome & Progress
   currentBiomeId: string;
   biomeKills: number;
   totalKills: number;
   wave: number;
-  
+
   // Event Management
   wavesSinceLastEvent: number;
   completedQuestsSinceLastPath: number;
-  
+
+  quests?: Quest[];
+
   // Premium Effects
   isSpeedBoosted: boolean;
   hasNoAds: boolean;
   activePremiumEffects: ActivePremiumEffect[];
-  
+
+  // Recent Activities
+  combatHistory?: Toast[];
+
   // Metadata
   savedAt: number;
   version: string;
@@ -50,7 +56,7 @@ export const saveGameData = (data: Omit<GameSaveData, 'savedAt' | 'version'>): b
       savedAt: Date.now(),
       version: '1.0.0',
     };
-    
+
     localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
     console.log('[Auto-Save] Game saved successfully at', new Date(saveData.savedAt).toLocaleTimeString());
     return true;
@@ -63,20 +69,20 @@ export const saveGameData = (data: Omit<GameSaveData, 'savedAt' | 'version'>): b
 export const loadGameData = (): GameSaveData | null => {
   try {
     const savedData = localStorage.getItem(SAVE_KEY);
-    
+
     if (!savedData) {
       console.log('[Load] No save data found');
       return null;
     }
-    
+
     const parsedData = JSON.parse(savedData) as GameSaveData;
-    
+
     // Validate version
     if (!parsedData.version || !parsedData.savedAt) {
       console.warn('[Load] Invalid save data structure, starting fresh');
       return null;
     }
-    
+
     // Validate required fields
     if (
       typeof parsedData.heroHp !== 'number' ||
@@ -90,7 +96,7 @@ export const loadGameData = (): GameSaveData | null => {
       console.warn('[Load] Save data missing required fields, starting fresh');
       return null;
     }
-    
+
     console.log('[Load] Game loaded successfully from', new Date(parsedData.savedAt).toLocaleTimeString());
     return parsedData;
   } catch (error) {

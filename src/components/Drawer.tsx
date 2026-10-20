@@ -4,7 +4,7 @@ import AttributesTab from './tabs/AttributesTab';
 import SkillsTab from './tabs/SkillsTab';
 import InventoryTab from './tabs/InventoryTab';
 import QuestsTab from './tabs/QuestsTab';
-import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../App';
+import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../types/game';
 import type { Quest } from '../data/questsData';
 
 type DrawerType = 'attributes' | 'skills' | 'inventory' | 'quests' | null;
@@ -110,14 +110,10 @@ const Drawer: React.FC<DrawerProps> = ({
 
   return createPortal(
     <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/50 z-[40]"
-        onClick={onClose}
-      />
+
 
       {/* Drawer Panel */}
-      <div className="fixed inset-x-0 bottom-16 h-[80vh] z-[50] rounded-t-2xl bg-slate-950/95 backdrop-blur-md border-t-2 border-slate-600 flex flex-col">
+      <div className="fixed inset-x-0 top-[calc(34dvh+3rem)] bottom-16 z-[50] rounded-t-2xl bg-slate-950/95 backdrop-blur-md border-t-2 border-slate-600 flex flex-col min-h-0">
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700 shrink-0">
           <h2 className="text-lg font-bold text-purple-300 flex items-center gap-2">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Item, Equipment, HeroAttributes } from '../../App';
-import { GoldIcon } from '../../App';
+import type { Item, Equipment, HeroAttributes } from '../../types/game';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface InventoryTabProps {
   inventory: Item[];
@@ -85,14 +85,14 @@ const calculateTotalBonus = (item: Item | null): number => {
 
 const isUpgrade = (item: Item, equipment: Equipment): boolean => {
   const equippedItem = equipment[item.slot];
-  
+
   // If slot is empty, any item is an upgrade
   if (!equippedItem) return true;
-  
+
   // Compare total bonuses
   const itemTotal = calculateTotalBonus(item);
   const equippedTotal = calculateTotalBonus(equippedItem);
-  
+
   return itemTotal > equippedTotal;
 };
 
@@ -160,7 +160,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
                 const attrKey = key as keyof HeroAttributes;
                 const equippedValue = equippedItem?.bonuses[attrKey] || 0;
                 const diff = (value as number) - equippedValue;
-                
+
                 return (
                   <div key={key} className="flex items-center justify-between text-sm">
                     <span className="text-gray-300 flex items-center gap-2">
@@ -206,18 +206,25 @@ const ItemModal: React.FC<ItemModalProps> = ({
           <div className="flex flex-col gap-2">
             {isFromInventory ? (
               <>
-                <button
-                  onClick={onEquip}
-                  className="w-full py-3 px-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-md transition-colors text-sm"
-                >
-                  Equipar
-                </button>
-                <button
-                  onClick={onSell}
-                  className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm flex items-center justify-center gap-1"
-                >
-                  Vender (<GoldIcon size="sm" /> {Math.round(item.sellValue)})
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={onEquip}
+                    className="min-h-[52px] w-full px-2 py-3 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold rounded-md transition-colors text-sm"
+                  >
+                    Equipar
+                  </button>
+
+                  <button
+                    onClick={onSell}
+                    className="min-h-[52px] w-full px-2 py-3 bg-red-700 hover:bg-red-600 active:bg-red-800 text-white font-bold rounded-md transition-colors text-xs flex flex-col items-center justify-center gap-1"
+                  >
+                    <span>Vender</span>
+                    <span className="flex items-center gap-1">
+                      <GoldIcon size="sm" />
+                      {Math.round(item.sellValue)}
+                    </span>
+                  </button>
+                </div>
               </>
             ) : (
               <button
@@ -249,6 +256,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
   onSellItem,
 }) => {
   const [selectedItem, setSelectedItem] = useState<{ item: Item; fromSlot: keyof Equipment | null } | null>(null);
+  const [itemPendingSale, setItemPendingSale] = useState<Item | null>(null);
 
   const slots: (keyof Equipment)[] = ['weapon', 'armor', 'accessory'];
 
@@ -275,10 +283,25 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
   };
 
   const handleSell = () => {
-    if (selectedItem) {
-      onSellItem(selectedItem.item.id);
-      setSelectedItem(null);
+    if (!selectedItem) return;
+
+    const item = selectedItem.item;
+
+    if (item.rarity === 'rare' || item.rarity === 'epic') {
+      setItemPendingSale(item);
+      return;
     }
+
+    onSellItem(item.id);
+    setSelectedItem(null);
+  };
+
+  const confirmSale = () => {
+    if (!itemPendingSale) return;
+
+    onSellItem(itemPendingSale.id);
+    setItemPendingSale(null);
+    setSelectedItem(null);
   };
 
   return (
@@ -298,11 +321,10 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
               <button
                 key={slot}
                 onClick={() => item && handleItemClick(item, slot)}
-                className={`w-full border-2 rounded-md p-2 sm:p-3 flex flex-col items-center gap-1.5 transition-colors min-h-[80px] ${
-                  item
-                    ? `${rarityColors[item.rarity]} cursor-pointer hover:border-purple-500`
-                    : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
-                }`}
+                className={`w-full border-2 rounded-md p-2 sm:p-3 flex flex-col items-center gap-1.5 transition-colors min-h-[80px] ${item
+                  ? `${rarityColors[item.rarity]} cursor-pointer hover:border-purple-500`
+                  : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
+                  }`}
               >
                 <span className="text-xs text-gray-500">{slotLabels[slot]}</span>
                 {item ? (
@@ -330,7 +352,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
           {inventory.map((item) => {
             const isItemUpgrade = isUpgrade(item, equipment);
             const upgradeLevel = item.upgradeLevel || 0;
-            
+
             return (
               <button
                 key={item.id}
@@ -341,21 +363,21 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
                 <div className="absolute bottom-0.5 left-0.5 text-[8px] sm:text-[9px] bg-black/60 rounded px-0.5">
                   {slotIcons[item.slot]}
                 </div>
-                
+
                 {/* Upgrade Indicator - Top Right */}
                 {isItemUpgrade && (
                   <div className="absolute top-0.5 right-0.5 text-[10px] sm:text-xs animate-bounce-subtle">
                     ⬆️
                   </div>
                 )}
-                
+
                 {/* Upgrade Level Badge - Top Left */}
                 {upgradeLevel > 0 && (
                   <div className={`absolute top-0.5 left-0.5 text-[8px] sm:text-[9px] font-bold ${upgradeLevelColors[upgradeLevel]}`}>
                     +{upgradeLevel}
                   </div>
                 )}
-                
+
                 <span className="text-lg sm:text-xl">{item.icon}</span>
                 <span className={`text-[9px] sm:text-xs ${upgradeLevel > 0 ? upgradeLevelColors[upgradeLevel] : rarityTextColors[item.rarity]} text-center leading-tight px-0.5 sm:px-1 font-bold`}>
                   {item.name}
@@ -386,6 +408,44 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
           onSell={handleSell}
           onClose={handleCloseModal}
         />
+      )}
+      {/* Sale Confirmation Modal */}
+      {itemPendingSale && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-[#15152b] border-2 border-purple-500 rounded-lg p-5 shadow-[0_0_30px_rgba(168,85,247,0.3)] text-center">
+            <h3 className="text-sm font-bold text-yellow-300 mb-4">
+              ⚠️ Confirmar venda
+            </h3>
+
+            <p className="text-xs text-gray-300 mb-3 leading-relaxed">
+              Deseja realmente vender este equipamento?
+            </p>
+
+            <p className="text-sm font-bold text-purple-300 mb-3">
+              {itemPendingSale.name}
+            </p>
+
+            <p className="text-xs text-yellow-400 mb-5">
+              💰 {Math.round(itemPendingSale.sellValue)} de ouro
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setItemPendingSale(null)}
+                className="min-h-[48px] bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-md"
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={confirmSale}
+                className="min-h-[48px] bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-md"
+              >
+                Confirmar venda
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

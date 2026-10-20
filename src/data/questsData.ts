@@ -1,4 +1,4 @@
-import type { Item } from '../App';
+import type { Item } from '../types/game';
 
 export type QuestObjectiveType = 'kill_monsters' | 'reach_wave' | 'collect_gold' | 'defeat_boss';
 
@@ -24,6 +24,7 @@ export interface Quest {
   currentWaveAtAccept?: number;
   currentKillsAtAccept?: number;
   currentBossKillsAtAccept?: number;
+  completedAt?: number;
 }
 
 export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [

@@ -8,7 +8,10 @@ interface QuestsTabProps {
 
 const QuestsTab: React.FC<QuestsTabProps> = ({ quests, onCompleteQuest }) => {
   const activeQuests = quests.filter(q => q.active && !q.completed);
-  const completedQuests = quests.filter(q => q.completed);
+  const completedQuests = quests
+  .filter(q => q.completed)
+  .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0))
+  .slice(0, 5);
 
   const getObjectiveText = (quest: Quest): string => {
     switch (quest.objectiveType) {
@@ -106,7 +109,7 @@ const QuestsTab: React.FC<QuestsTabProps> = ({ quests, onCompleteQuest }) => {
       {completedQuests.length > 0 && (
         <div>
           <h4 className="text-xs text-green-300 mb-2 flex items-center gap-2">
-            <span>✅</span> Quests Concluídas ({completedQuests.length})
+            <span>✅</span> Últimas Quests Concluídas ({completedQuests.length}/5)
           </h4>
           <div className="space-y-2">
             {completedQuests.map((quest) => (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Skill, Consumable, Item, HeroAttributes } from '../../App';
-import { GoldIcon } from '../../App';
+import type { Skill, Consumable, Item, HeroAttributes } from '../../types/game';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface MerchantShopProps {
   skills: Skill[];

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Toast } from '../App';
+import type { Toast } from '../types/game';
 
 interface ToastContainerProps {
   toasts: Toast[];

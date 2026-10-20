@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Skill } from '../../App';
-import { GoldIcon } from '../../App';
+import type { Skill } from '../../types/game';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface SkillsTabProps {
   skills: Skill[];
@@ -131,7 +131,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                 {/* Equip/Unequip button */}
                 <button
                   onClick={() => onEquipSkill(skill.id)}
-                  className={`pixel-btn text-xs px-2 py-2 rounded-sm ${
+                  className={`pixel-btn min-w-[48px] min-h-[44px] px-3 py-2 text-xs rounded-md flex items-center justify-center shrink-0 ${
                     equippedSkillIds.includes(skill.id)
                       ? 'text-red-300 border-red-500/50 bg-red-900/20'
                       : 'text-blue-300 border-blue-500/50 bg-blue-900/20'
@@ -143,7 +143,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                 {/* Auto-cast toggle */}
                 <button
                   onClick={() => onToggleAutoCast(skill.id)}
-                  className={`pixel-btn text-xs px-3 py-2 rounded-sm flex items-center gap-1 ${
+                  className={`pixel-btn min-w-[88px] min-h-[44px] px-3 py-2 text-xs rounded-md flex items-center justify-center gap-1 shrink-0 ${
                     skill.autoCast
                       ? 'text-green-300 border-green-500/50 bg-green-900/20'
                       : 'text-gray-500'
@@ -159,7 +159,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                   <button
                     onClick={() => onUpgradeSkill(skill.id)}
                     disabled={!canAfford}
-                    className={`pixel-btn text-xs px-3 py-2 rounded-sm flex items-center gap-1 ${
+                    className={`pixel-btn min-w-[88px] min-h-[44px] px-3 py-2 text-xs rounded-md flex items-center justify-center gap-1 shrink-0 ${
                       canAfford
                         ? 'text-yellow-300 hover:border-yellow-400'
                         : 'text-gray-600 cursor-not-allowed opacity-50'
