@@ -178,31 +178,31 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const isEnemyDead = enemyHp <= 0;
   const [walkFrame, setWalkFrame] = useState(0);
 
- const [attackFrame, setAttackFrame] = useState(-1);
+  const [attackFrame, setAttackFrame] = useState(-1);
 
-useEffect(() => {
-  if (!isAttacking || heroAttackCount === 0) {
-    setAttackFrame(-1);
-    return;
-  }
-
-  setAttackFrame(0);
-
-  let frame = 0;
-
-  const timer = setInterval(() => {
-    frame += 1;
-
-    if (frame >= 10) {
+  useEffect(() => {
+    if (!isAttacking || heroAttackCount === 0) {
       setAttackFrame(-1);
-      clearInterval(timer);
-    } else {
-      setAttackFrame(frame);
+      return;
     }
-  }, 65);
 
-  return () => clearInterval(timer);
-}, [heroAttackCount, isAttacking]);
+    setAttackFrame(0);
+
+    let frame = 0;
+
+    const timer = setInterval(() => {
+      frame += 1;
+
+      if (frame >= 10) {
+        setAttackFrame(-1);
+        clearInterval(timer);
+      } else {
+        setAttackFrame(frame);
+      }
+    }, 65);
+
+    return () => clearInterval(timer);
+  }, [heroAttackCount, isAttacking]);
 
   useEffect(() => {
     if (!isMoving) {
@@ -218,10 +218,10 @@ useEffect(() => {
   }, [isMoving]);
 
   const heroSprite = isMoving
-  ? `/sprites/player1/conteudo_${31 + walkFrame}.png`
-  : isAttacking && attackFrame >= 0
-    ? `/sprites/player1/conteudo_${11 + attackFrame}.png`
-    : '/sprites/player1/conteudo_41.png';
+    ? `/sprites/player1/conteudo_${31 + walkFrame}.png`
+    : isAttacking && attackFrame >= 0
+      ? `/sprites/player1/conteudo_${11 + attackFrame}.png`
+      : '/sprites/player1/conteudo_41.png';
 
   return (
     <div className={`w-full h-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient}`}>
@@ -494,7 +494,7 @@ useEffect(() => {
         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/40 rounded-full blur-sm" />
         <div className="relative">
           {/* Hero Name - Above head */}
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-green-500/60 rounded-sm z-20 pointer-events-none">
+          <div className="absolute -top-8 left-0 whitespace-nowrap px-2 py-1 bg-black/80 border border-green-500/60 rounded-sm z-20 pointer-events-none">
             <span className="text-[9px] sm:text-[10px] text-green-300 font-bold">{heroName}</span>
           </div>
           <div className="relative">
@@ -532,7 +532,7 @@ useEffect(() => {
         <div className="relative">
           {/* Enemy Name - Above head (inside scaled container) */}
           <div
-            className={`absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-red-500/60 rounded-sm z-20 pointer-events-none ${isBossWave ? 'scale-125' : ''
+            className={`absolute -top-16 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 bg-black/80 border border-red-500/60 rounded-sm z-20 pointer-events-none ${isBossWave ? 'scale-125' : ''
               }`}
             style={{
               filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 8px ${currentEnemy.glowColor})` : undefined,
@@ -657,7 +657,9 @@ useEffect(() => {
             }`}
           style={{
             left: `${popup.x}px`,
-            bottom: '110px',
+            bottom: popup.isHeal ? '125px' : '155px',
+            transform: 'translateX(-50%)',
+            zIndex: 30,
             textShadow: '0 0 4px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9)',
           }}
         >
