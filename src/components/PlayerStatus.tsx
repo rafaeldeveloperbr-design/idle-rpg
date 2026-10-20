@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Biome } from '../App';
-import { GoldIcon } from '../App';
+import type { Biome } from '../types/game';
+import { GoldIcon } from './ui/GoldIcon';
 
 interface PlayerStatusProps {
   level: number;

@@ -1,6 +1,6 @@
 import React from 'react';
-import type { PremiumItem } from '../../App';
-import { GoldIcon } from '../../App';
+import type { PremiumItem } from '../../types/game';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface DiamondShopModalProps {
   premiumItems: PremiumItem[];

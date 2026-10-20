@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../App';
+import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../types/game';
 
 
 type GamePhase = 'approaching' | 'fighting' | 'respawning';

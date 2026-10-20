@@ -1,8 +1,7 @@
-import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment, ActivePremiumEffect, Toast } from '../App';
+import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment, ActivePremiumEffect, Toast } from '../types/game';
+import { SAVE_KEY } from '../lib/constants';
 import type { Quest } from '../data/questsData';
 
-
-const SAVE_KEY = 'idle_rpg_save_v1';
 
 export interface GameSaveData {
   // Hero State

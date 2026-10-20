@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Quest } from '../../data/questsData';
-import { GoldIcon } from '../../App';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface NPCDialogueModalProps {
   quest: Quest;

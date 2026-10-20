@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Skill } from '../../App';
-import { GoldIcon } from '../../App';
+import type { Skill } from '../../types/game';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface SkillsTabProps {
   skills: Skill[];
