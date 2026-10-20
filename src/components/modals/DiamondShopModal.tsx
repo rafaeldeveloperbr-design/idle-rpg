@@ -79,7 +79,7 @@ const DiamondShopModal: React.FC<DiamondShopModalProps> = ({
                         <button
                           onClick={() => onBuyItem(item.id)}
                           disabled={!canAfford}
-                          className={`text-xs px-3 py-1 rounded-sm transition-colors ${
+                          className={`text-xs min-w-[96px] min-h-[44px] px-3 py-2 rounded-md font-bold flex items-center justify-center shrink-0 transition-colors ${
                             canAfford
                               ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
                               : 'bg-gray-700 text-gray-500 cursor-not-allowed'

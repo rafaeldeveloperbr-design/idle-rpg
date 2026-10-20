@@ -2042,6 +2042,14 @@ export default function App() {
     }, 2000);
   }, [isBossWave, effectiveAttributes.maxHp, enemySpawnX]);
 
+  const speedBoostActive = activePremiumEffects.some(
+    effect =>
+      effect.itemId === 'speed_boost' &&
+      (effect.expiresAt ?? 0) > Date.now()
+  );
+
+  const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
+
   // === Main Game Loop ===
   useEffect(() => {
     // Don't run game loop if game hasn't started yet or is paused
@@ -2058,8 +2066,8 @@ export default function App() {
 
       if (currentPhase === 'approaching') {
         if (distance > attackRange) {
-          setEnemyX((prev) => prev - enemySpeed);
-          setScrollOffset((prev) => prev + enemySpeed * 0.5);
+          setEnemyX((prev) => prev - enemySpeed * gameSpeedMultiplier);
+          setScrollOffset((prev) => prev + enemySpeed * 0.5 * gameSpeedMultiplier);
         } else {
           setGamePhase('fighting');
           lastHeroAttackRef.current = now;
@@ -2084,7 +2092,7 @@ export default function App() {
         });
 
         // Hero attacks enemy
-        if (now - lastHeroAttackRef.current >= heroAttackSpeed) {
+        if (now - lastHeroAttackRef.current >= heroAttackSpeed / gameSpeedMultiplier) {
           lastHeroAttackRef.current = now;
 
           const isCrit = Math.random() * 100 < combatAttrs.critChance;
@@ -2154,7 +2162,7 @@ export default function App() {
         }
 
         // Enemy attacks hero
-        if (enemyHpRef.current > 0 && now - lastEnemyAttackRef.current >= enemyAttackSpeed) {
+        if (enemyHpRef.current > 0 && now - lastEnemyAttackRef.current >= enemyAttackSpeed / gameSpeedMultiplier) {
           lastEnemyAttackRef.current = now;
           const currentWave = waveRef.current;
 
