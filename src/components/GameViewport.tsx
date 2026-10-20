@@ -178,7 +178,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
   return (
     <div className={`w-full h-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient}`}>
       {/* Top Info Container - Reorganized for mobile */}
-      <div className="absolute top-2 left-2 right-2 z-10 flex flex-col gap-2">
+      <div className="absolute top-2 left-2 right-2 z-10 flex flex-col gap-1 sm:gap-2">
         {/* Line 1: Biome & Wave Info */}
         <div className="flex items-center justify-between gap-2">
           {/* Zone indicator */}
@@ -218,7 +218,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       {/* === PARALLAX LAYER 1: Background (10% speed) === */}
       {currentBiome.id === 'forest' && (
         <div
-          className="absolute bottom-16 left-0 w-[200%] h-32 pointer-events-none opacity-40"
+          className="absolute bottom-12 sm:bottom-16 left-0 w-[200%] h-32 pointer-events-none opacity-40"
           style={{ transform: `translateX(${-(scrollOffset * 0.1) % 800}px)` }}
         >
           <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
@@ -236,7 +236,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
       {currentBiome.id === 'castle' && (
         <div
-          className="absolute bottom-16 left-0 w-[200%] h-40 pointer-events-none opacity-30"
+          className="absolute bottom-12 sm:bottom-16 left-0 w-[200%] h-40 pointer-events-none opacity-30"
           style={{ transform: `translateX(${-(scrollOffset * 0.1) % 800}px)` }}
         >
           <svg className="w-full h-full" viewBox="0 0 1600 300" preserveAspectRatio="none">
@@ -252,7 +252,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       {/* === PARALLAX LAYER 2: Midground (30% speed) === */}
       {currentBiome.id === 'forest' && (
         <div
-          className="absolute bottom-16 left-0 w-[200%] h-28 pointer-events-none opacity-50"
+          className="absolute bottom-12 sm:bottom-16 left-0 w-[200%] h-28 pointer-events-none opacity-50"
           style={{ transform: `translateX(${-(scrollOffset * 0.3) % 800}px)` }}
         >
           <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
@@ -276,7 +276,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
       {currentBiome.id === 'castle' && (
         <div
-          className="absolute bottom-16 left-0 w-[200%] h-32 pointer-events-none opacity-40"
+          className="absolute bottom-12 sm:bottom-16 left-0 w-[200%] h-32 pointer-events-none opacity-40"
           style={{ transform: `translateX(${-(scrollOffset * 0.3) % 800}px)` }}
         >
           <svg className="w-full h-full" viewBox="0 0 1600 250" preserveAspectRatio="none">
@@ -291,7 +291,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       {/* === PARALLAX LAYER 3: Foreground (50% speed) === */}
       {currentBiome.id === 'forest' && (
         <div
-          className="absolute bottom-16 left-0 w-[200%] h-24 pointer-events-none opacity-60"
+          className="absolute bottom-12 sm:bottom-16 left-0 w-[200%] h-24 pointer-events-none opacity-60"
           style={{ transform: `translateX(${-(scrollOffset * 0.5) % 800}px)` }}
         >
           <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
@@ -306,7 +306,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
       {currentBiome.id === 'cave' && (
         <div
-          className="absolute bottom-16 left-0 w-[200%] h-20 pointer-events-none opacity-70"
+          className="absolute bottom-12 sm:bottom-16 left-0 w-[200%] h-20 pointer-events-none opacity-70"
           style={{ transform: `translateX(${-(scrollOffset * 0.5) % 800}px)` }}
         >
           <svg className="w-full h-full" viewBox="0 0 1600 150" preserveAspectRatio="none">
@@ -321,7 +321,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
       {currentBiome.id === 'castle' && (
         <div
-          className="absolute bottom-16 left-0 w-[200%] h-24 pointer-events-none opacity-50"
+          className="absolute bottom-12 sm:bottom-16 left-0 w-[200%] h-24 pointer-events-none opacity-50"
           style={{ transform: `translateX(${-(scrollOffset * 0.5) % 800}px)` }}
         >
           <svg className="w-full h-full" viewBox="0 0 1600 200" preserveAspectRatio="none">
@@ -336,7 +336,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
       )}
 
       {/* === GROUND WITH TEXTURES === */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 overflow-hidden">
+      <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 overflow-hidden">
         <div
           className="absolute bottom-0 left-0 w-[300%] h-full"
           style={{ transform: `translateX(${-(scrollOffset * 0.8) % 1200}px)` }}
@@ -452,7 +452,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Hero - FIXED position (responsive) */}
       <div
-        className={`absolute bottom-16 ${
+        className={`absolute bottom-12 sm:bottom-16 ${
           isMoving ? 'animate-walk' : isAttacking ? 'animate-attack' : 'animate-float'
         } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
         style={{ left: `max(60px, min(${heroX}px, 20%))` }}
@@ -504,7 +504,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Enemy - moves from right to left */}
       <div
-        className={`absolute bottom-16 transition-opacity duration-500 ${
+        className={`absolute bottom-12 sm:bottom-16 transition-opacity duration-500 ${
           isEnemyDead ? 'opacity-0' : ''
         } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
         style={{ 
@@ -578,14 +578,14 @@ const GameViewport: React.FC<GameViewportProps> = ({
       {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
       <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-1 gap-1 z-20">
         {/* HP Bar - Left of Skills */}
-        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-1 flex-1 max-w-[200px]">
-          <span className="text-sm text-red-400 whitespace-nowrap">❤️</span>
-          <div className="relative flex-1 h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-0.5 sm:py-1 flex-1 max-w-[200px]">
+          <span className="text-xs sm:text-sm text-red-400 whitespace-nowrap">❤️</span>
+          <div className="relative flex-1 h-6 sm:h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
             <div
               className="hp-bar h-full transition-all duration-300 rounded-sm"
               style={{ width: `${Math.max(0, Math.round((heroHp / heroMaxHp) * 100))}%` }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
               {Math.floor(heroHp)}/{Math.floor(heroMaxHp)}
             </span>
           </div>
@@ -599,14 +599,14 @@ const GameViewport: React.FC<GameViewportProps> = ({
         />
 
         {/* XP Bar - Right of Skills */}
-        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-1 flex-1 max-w-[200px]">
-          <span className="text-sm text-blue-400 whitespace-nowrap">⭐</span>
-          <div className="relative flex-1 h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-0.5 sm:py-1 flex-1 max-w-[200px]">
+          <span className="text-xs sm:text-sm text-blue-400 whitespace-nowrap">⭐</span>
+          <div className="relative flex-1 h-6 sm:h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
             <div
               className="xp-bar h-full transition-all duration-300 rounded-sm"
               style={{ width: `${Math.max(0, Math.round((heroXp / heroMaxXp) * 100))}%` }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
               {Math.floor(heroXp)}/{Math.floor(heroMaxXp)}
             </span>
           </div>
