@@ -262,7 +262,7 @@ export default function App() {
       cooldown: 5,
       cost: 30,
       unlocked: true,
-      autoCast: false,
+      autoCast: true,
       lastUsed: 0,
       effect: 'damage',
       effectValue: 2.5,

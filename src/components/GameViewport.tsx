@@ -180,28 +180,16 @@ const GameViewport: React.FC<GameViewportProps> = ({
       {/* Top Info Container - Reorganized for mobile */}
       <div className="absolute top-2 left-2 right-2 z-10 flex flex-col gap-1 sm:gap-2">
         {/* Line 1: Biome & Wave Info */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Zone indicator */}
-          <div className="bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1 flex-shrink-0">
-            <span className="text-[9px] sm:text-[10px] text-purple-300">{currentBiome.icon} {currentBiome.name}</span>
-          </div>
-          
-          {/* Wave counter & Boss indicator */}
-          <div className="bg-black/60 border border-[#2d2d5e] rounded-sm px-2 py-1 flex flex-col items-end gap-0.5 flex-shrink-0">
-            <span className="text-[9px] sm:text-[10px] text-gray-300">💀 Wave: {wave}</span>
-            <span className="text-[8px] sm:text-[9px] text-purple-400">Kills: {biomeKills}</span>
-            {biomeKills > 0 && biomeKills % 10 < 3 && (
-              <span className="text-[8px] sm:text-[9px] text-red-400 animate-pulse-glow">
-                ⚠️ Boss em {10 - (biomeKills % 10)}!
-              </span>
-            )}
-          </div>
-        </div>
+        {biomeKills > 0 && biomeKills % 10 < 3 && (
+  <div className="self-end rounded-sm bg-black/60 px-2 py-1 text-[9px] text-red-400 animate-pulse-glow">
+    ⚠️ Boss em {10 - (biomeKills % 10)}!
+  </div>
+)}
 
         {/* Line 2: Enemy Name/HP Bar */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-[11px] text-red-300 tracking-wider">
-            {isBossWave ? '💀' : '👹'} {currentEnemy?.name || 'Inimigo'} <span className="text-purple-300">[Wave {wave}]</span>
+            {isBossWave ? '💀' : '👹'} {currentEnemy?.name || 'Inimigo'}
           </span>
           <div className={`relative ${isBossWave ? 'w-48 sm:w-64' : 'w-40 sm:w-48'} h-3 sm:h-4 bg-[#0f0f1a]/80 border ${isBossWave ? 'border-red-500' : 'border-red-900/50'} rounded-sm overflow-hidden`}>
             <div
