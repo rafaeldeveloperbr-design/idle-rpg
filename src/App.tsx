@@ -1025,6 +1025,7 @@ export default function App() {
                 currentWaveAtAccept: savedQuest.currentWaveAtAccept,
                 currentKillsAtAccept: savedQuest.currentKillsAtAccept,
                 currentBossKillsAtAccept: savedQuest.currentBossKillsAtAccept,
+                completedAt: savedQuest.completedAt,
               }
               : { ...defaultQuest, active: false, completed: false, progress: 0 };
           })
@@ -1402,7 +1403,9 @@ export default function App() {
 
     // Mark as completed
     setQuests(prev => prev.map(q =>
-      q.id === questId ? { ...q, completed: true, active: false } : q
+      q.id === questId
+        ? { ...q, completed: true, active: false, completedAt: Date.now() }
+        : q
     ));
 
     // Give rewards

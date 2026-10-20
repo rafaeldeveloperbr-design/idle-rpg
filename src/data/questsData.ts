@@ -24,6 +24,7 @@ export interface Quest {
   currentWaveAtAccept?: number;
   currentKillsAtAccept?: number;
   currentBossKillsAtAccept?: number;
+  completedAt?: number;
 }
 
 export const questsData: Omit<Quest, 'completed' | 'active' | 'progress'>[] = [
