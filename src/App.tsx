@@ -2246,9 +2246,26 @@ export default function App() {
         </div>
       </div>
 
-      {/* Future Events / Drops Area */}
-      <div className="flex-1 min-h-0 w-full bg-slate-950 border-t border-slate-800/50 sm:hidden">
+      {/* Combat Information Area */}
+<div className="flex-1 min-h-0 w-full overflow-y-auto bg-slate-950 border-t border-purple-900/50 p-3 sm:hidden">
+  <div className="rounded-lg border border-purple-800/60 bg-slate-900/80 p-3">
+    <h3 className="text-sm font-bold text-purple-300 mb-3">
+      ⚔️ Informações do Combate
+    </h3>
+
+    <div className="grid grid-cols-2 gap-2 text-xs">
+      <div className="rounded-md bg-slate-950 p-3">
+        <div className="text-gray-400 mb-1">Wave atual</div>
+        <div className="text-yellow-400 font-bold">{wave}</div>
       </div>
+
+      <div className="rounded-md bg-slate-950 p-3">
+        <div className="text-gray-400 mb-1">Inimigos derrotados</div>
+        <div className="text-green-400 font-bold">{totalKills}</div>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Bottom: Bottom Bar Fixed */}
       <div className="relative h-16 w-full shrink-0 z-[60] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
