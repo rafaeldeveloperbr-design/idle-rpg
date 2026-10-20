@@ -326,337 +326,320 @@ const GameViewport: React.FC<GameViewportProps> = ({
       {/* === GROUND WITH TEXTURES === */}
       <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 overflow-hidden">
         <div className="absolute bottom-0 left-0 w-full h-full">
-            {/* Forest Ground */}
-            {currentBiome.id === 'forest' && (
-              <>
-                {/* Grass top layer */}
-                <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-green-600 via-green-700 to-green-800" />
-                {/* Grass texture */}
-                <div className="absolute top-0 left-0 right-0 h-3 opacity-60">
-                  <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
-                    {[...Array(100)].map((_, i) => (
-                      <line key={i} x1={i * 8} y1="20" x2={i * 8 + 2} y2="5" stroke="#2a5a2a" strokeWidth="1" />
-                    ))}
-                  </svg>
-                </div>
-                {/* Dirt middle layer */}
-                <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-amber-900 to-amber-950" />
-                {/* Roots texture */}
-                <div className="absolute top-3 left-0 right-0 h-4 opacity-40">
-                  <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
-                    {[...Array(20)].map((_, i) => (
-                      <path key={i} d={`M${i * 40},0 Q${i * 40 + 10},15 ${i * 40 + 20},30`} stroke="#3a2a1a" strokeWidth="2" fill="none" />
-                    ))}
-                  </svg>
-                </div>
-                {/* Dark base */}
-                <div className="absolute bottom-0 left-0 right-0 h-13 bg-gradient-to-b from-stone-950 to-black" />
-              </>
-            )}
+          {/* Forest Ground */}
+          {currentBiome.id === 'forest' && (
+            <>
+              {/* Grass top layer */}
+              <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-green-600 via-green-700 to-green-800" />
+              {/* Grass texture */}
+              <div className="absolute top-0 left-0 right-0 h-3 opacity-60">
+                <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
+                  {[...Array(100)].map((_, i) => (
+                    <line key={i} x1={i * 8} y1="20" x2={i * 8 + 2} y2="5" stroke="#2a5a2a" strokeWidth="1" />
+                  ))}
+                </svg>
+              </div>
+              {/* Dirt middle layer */}
+              <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-amber-900 to-amber-950" />
+              {/* Roots texture */}
+              <div className="absolute top-3 left-0 right-0 h-4 opacity-40">
+                <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                  {[...Array(20)].map((_, i) => (
+                    <path key={i} d={`M${i * 40},0 Q${i * 40 + 10},15 ${i * 40 + 20},30`} stroke="#3a2a1a" strokeWidth="2" fill="none" />
+                  ))}
+                </svg>
+              </div>
+              {/* Dark base */}
+              <div className="absolute bottom-0 left-0 right-0 h-13 bg-gradient-to-b from-stone-950 to-black" />
+            </>
+          )}
 
-            {/* Cave Ground */}
-            {currentBiome.id === 'cave' && (
-              <>
-                {/* Rock top layer */}
-                <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-stone-600 via-stone-700 to-stone-800" />
-                {/* Rock texture */}
-                <div className="absolute top-0 left-0 right-0 h-3 opacity-50">
-                  <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
-                    {[...Array(50)].map((_, i) => (
-                      <circle key={i} cx={i * 16} cy={10 + (i % 3) * 3} r="3" fill="#2a2a2a" />
-                    ))}
-                  </svg>
-                </div>
-                {/* Dark rock middle */}
-                <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-stone-900 to-stone-950" />
-                {/* Crystal cracks */}
-                <div className="absolute top-3 left-0 right-0 h-4 opacity-60">
-                  <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
-                    {[...Array(15)].map((_, i) => (
-                      <g key={i}>
-                        <line x1={i * 50 + 10} y1="5" x2={i * 50 + 20} y2="25" stroke="#6a4a8a" strokeWidth="1" />
-                        <circle cx={i * 50 + 15} cy="15" r="2" fill="#8a6aaa" opacity="0.7" />
-                      </g>
-                    ))}
-                  </svg>
-                </div>
-                {/* Dark base */}
-                <div className="absolute bottom-0 left-0 right-0 h-13 bg-black" />
-              </>
-            )}
+          {/* Cave Ground */}
+          {currentBiome.id === 'cave' && (
+            <>
+              {/* Rock top layer */}
+              <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-stone-600 via-stone-700 to-stone-800" />
+              {/* Rock texture */}
+              <div className="absolute top-0 left-0 right-0 h-3 opacity-50">
+                <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
+                  {[...Array(50)].map((_, i) => (
+                    <circle key={i} cx={i * 16} cy={10 + (i % 3) * 3} r="3" fill="#2a2a2a" />
+                  ))}
+                </svg>
+              </div>
+              {/* Dark rock middle */}
+              <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-stone-900 to-stone-950" />
+              {/* Crystal cracks */}
+              <div className="absolute top-3 left-0 right-0 h-4 opacity-60">
+                <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                  {[...Array(15)].map((_, i) => (
+                    <g key={i}>
+                      <line x1={i * 50 + 10} y1="5" x2={i * 50 + 20} y2="25" stroke="#6a4a8a" strokeWidth="1" />
+                      <circle cx={i * 50 + 15} cy="15" r="2" fill="#8a6aaa" opacity="0.7" />
+                    </g>
+                  ))}
+                </svg>
+              </div>
+              {/* Dark base */}
+              <div className="absolute bottom-0 left-0 right-0 h-13 bg-black" />
+            </>
+          )}
 
-            {/* Castle Ground */}
-            {currentBiome.id === 'castle' && (
-              <>
-                {/* Stone tiles top */}
-                <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-stone-500 via-stone-600 to-stone-700" />
-                {/* Tile pattern */}
-                <div className="absolute top-0 left-0 right-0 h-3 opacity-70">
-                  <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
-                    {[...Array(40)].map((_, i) => (
-                      <rect key={i} x={i * 20} y="0" width="18" height="18" fill="none" stroke="#1a1a1a" strokeWidth="1" />
-                    ))}
-                  </svg>
-                </div>
-                {/* Brick middle */}
-                <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-stone-800 to-stone-900" />
-                {/* Brick pattern */}
-                <div className="absolute top-3 left-0 right-0 h-4 opacity-50">
-                  <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
-                    {[...Array(20)].map((_, i) => (
-                      <g key={i}>
-                        <rect x={i * 40} y="0" width="38" height="14" fill="none" stroke="#0a0a0a" strokeWidth="1" />
-                        <rect x={i * 40 + 20} y="15" width="38" height="14" fill="none" stroke="#0a0a0a" strokeWidth="1" />
-                      </g>
-                    ))}
-                  </svg>
-                </div>
-                {/* Fire glow cracks */}
-                <div className="absolute top-3 left-0 right-0 h-4 opacity-40">
-                  <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
-                    {[...Array(10)].map((_, i) => (
-                      <circle key={i} cx={i * 80 + 40} cy="15" r="3" fill="#ff4400" opacity="0.6" />
-                    ))}
-                  </svg>
-                </div>
-                {/* Dark base */}
-                <div className="absolute bottom-0 left-0 right-0 h-13 bg-gradient-to-b from-stone-950 to-black" />
-              </>
-            )}
+          {/* Castle Ground */}
+          {currentBiome.id === 'castle' && (
+            <>
+              {/* Stone tiles top */}
+              <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-stone-500 via-stone-600 to-stone-700" />
+              {/* Tile pattern */}
+              <div className="absolute top-0 left-0 right-0 h-3 opacity-70">
+                <svg className="w-full h-full" viewBox="0 0 800 20" preserveAspectRatio="none">
+                  {[...Array(40)].map((_, i) => (
+                    <rect key={i} x={i * 20} y="0" width="18" height="18" fill="none" stroke="#1a1a1a" strokeWidth="1" />
+                  ))}
+                </svg>
+              </div>
+              {/* Brick middle */}
+              <div className="absolute top-3 left-0 right-0 h-4 bg-gradient-to-b from-stone-800 to-stone-900" />
+              {/* Brick pattern */}
+              <div className="absolute top-3 left-0 right-0 h-4 opacity-50">
+                <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                  {[...Array(20)].map((_, i) => (
+                    <g key={i}>
+                      <rect x={i * 40} y="0" width="38" height="14" fill="none" stroke="#0a0a0a" strokeWidth="1" />
+                      <rect x={i * 40 + 20} y="15" width="38" height="14" fill="none" stroke="#0a0a0a" strokeWidth="1" />
+                    </g>
+                  ))}
+                </svg>
+              </div>
+              {/* Fire glow cracks */}
+              <div className="absolute top-3 left-0 right-0 h-4 opacity-40">
+                <svg className="w-full h-full" viewBox="0 0 800 30" preserveAspectRatio="none">
+                  {[...Array(10)].map((_, i) => (
+                    <circle key={i} cx={i * 80 + 40} cy="15" r="3" fill="#ff4400" opacity="0.6" />
+                  ))}
+                </svg>
+              </div>
+              {/* Dark base */}
+              <div className="absolute bottom-0 left-0 right-0 h-13 bg-gradient-to-b from-stone-950 to-black" />
+            </>
+          )}
 
-            {/* Pebbles texture overlay (all biomes) */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
-              <svg className="w-full h-full" viewBox="0 0 800 80" preserveAspectRatio="none">
-                {[...Array(100)].map((_, i) => (
-                  <circle key={i} cx={(i * 37) % 800} cy={(i * 23) % 80} r={1 + (i % 2)} fill="#000" />
-                ))}
-              </svg>
-            </div>
+          {/* Pebbles texture overlay (all biomes) */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
+            <svg className="w-full h-full" viewBox="0 0 800 80" preserveAspectRatio="none">
+              {[...Array(100)].map((_, i) => (
+                <circle key={i} cx={(i * 37) % 800} cy={(i * 23) % 80} r={1 + (i % 2)} fill="#000" />
+              ))}
+            </svg>
           </div>
         </div>
+      </div>
 
-        {/* Hero - FIXED position (responsive) */}
-        <div
-          className={`absolute bottom-12 sm:bottom-16 ${isMoving ? 'animate-walk' : isAttacking ? 'animate-attack' : 'animate-float'
-            } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
-          style={{ left: `max(60px, min(${heroX}px, 20%))` }}
-        >
-          {/* Hero shadow on ground */}
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/40 rounded-full blur-sm" />
+      {/* Hero - FIXED position (responsive) */}
+      <div
+        className={`absolute bottom-12 sm:bottom-16 ${isMoving ? 'animate-walk' : isAttacking ? 'animate-attack' : 'animate-float'
+          } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
+        style={{ left: `max(60px, min(${heroX}px, 20%))` }}
+      >
+        {/* Hero shadow on ground */}
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/40 rounded-full blur-sm" />
+        <div className="relative">
+          {/* Hero Name - Above head */}
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-green-500/60 rounded-sm z-20 pointer-events-none">
+            <span className="text-[9px] sm:text-[10px] text-green-300 font-bold">{heroName}</span>
+          </div>
           <div className="relative">
-            {/* Hero Name - Above head */}
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-green-500/60 rounded-sm z-20 pointer-events-none">
-              <span className="text-[9px] sm:text-[10px] text-green-300 font-bold">{heroName}</span>
-            </div>
-            <div className="relative">
-              {/* Hit flash overlay */}
-              {heroHitFlash && (
-                <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
-              )}
-              <div className="w-10 h-14 sm:w-12 sm:h-16 bg-gradient-to-b from-blue-500 to-blue-700 border-2 border-blue-300 rounded-t-lg relative">
-                {/* Shading overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 rounded-t-lg pointer-events-none" />
-                {/* Head */}
-                <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-200 to-amber-400 border-2 border-amber-600 rounded-sm">
-                  <div className="absolute top-2 left-1 w-1.5 h-1.5 bg-gray-900 rounded-full" />
-                  <div className="absolute top-2 right-1 w-1.5 h-1.5 bg-gray-900 rounded-full" />
-                  <div className="absolute -top-1 left-0 right-0 h-2 bg-amber-700 rounded-t-sm" />
-                </div>
-                {/* Sword */}
-                <div
-                  className={`absolute -right-3 top-1 w-2 h-10 bg-gradient-to-b from-gray-200 to-gray-400 border border-gray-500 rounded-t-sm sword-swing ${isAttacking ? 'animate-sword-swing' : ''
-                    }`}
-                  style={{ transformOrigin: '50% 100%' }}
-                >
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-2 bg-gray-100 border border-gray-400 rounded-t-full" />
-                  <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-2 bg-amber-700 border border-amber-900 rounded-sm" />
-                </div>
-                {/* Shield */}
-                <div className="absolute -left-3 top-3 w-4 h-5 bg-gradient-to-b from-gray-400 to-gray-600 border border-gray-700 rounded-sm">
-                  <div className="absolute inset-0.5 border border-blue-400/50 rounded-sm" />
-                </div>
-              </div>
-              {/* Legs */}
-              <div className="flex justify-center gap-0.5">
-                <div className={`w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
-                <div className={`w-4 h-3 bg-blue-800 border border-blue-900 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
-              </div>
-            </div>
+            {/* Hit flash overlay */}
+            {heroHitFlash && (
+              <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
+            )}
+            <div
+              className="w-[64px] h-[80px]"
+              style={{
+                backgroundImage: "url('/sprites/boy.png')",
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: '0 0',
+                backgroundSize: '640px 400px',
+                imageRendering: 'pixelated',
+              }}
+            />
+            
           </div>
         </div>
+      </div>
 
-        {/* Enemy - moves from right to left */}
+      {/* Enemy - moves from right to left */}
+      <div
+        className={`absolute bottom-12 sm:bottom-16 transition-opacity duration-500 ${isEnemyDead ? 'opacity-0' : ''
+          } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
+        style={{
+          left: `${enemyX}px`,
+        }}
+      >
+        {/* Enemy shadow on ground */}
         <div
-          className={`absolute bottom-12 sm:bottom-16 transition-opacity duration-500 ${isEnemyDead ? 'opacity-0' : ''
-            } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
-          style={{
-            left: `${enemyX}px`,
-          }}
-        >
-          {/* Enemy shadow on ground */}
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-black/40 rounded-full blur-sm"
+          style={{ transform: `translateX(-50%) scale(${currentEnemy.scale})` }}
+        />
+        <div className="relative">
+          {/* Enemy Name - Above head (inside scaled container) */}
           <div
-            className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-black/40 rounded-full blur-sm"
-            style={{ transform: `translateX(-50%) scale(${currentEnemy.scale})` }}
-          />
-          <div className="relative">
-            {/* Enemy Name - Above head (inside scaled container) */}
-            <div
-              className={`absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-red-500/60 rounded-sm z-20 pointer-events-none ${isBossWave ? 'scale-125' : ''
-                }`}
-              style={{
-                filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 8px ${currentEnemy.glowColor})` : undefined,
-              }}
-            >
-              <span className="text-[9px] sm:text-[10px] text-red-300 font-bold">
-                {currentEnemy.name}
-              </span>
-            </div>
-            <div
-              className={`relative`}
-              style={{
-                transform: `scale(${currentEnemy.scale})`,
-                transformOrigin: 'bottom center',
-                filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 12px ${currentEnemy.glowColor})` : undefined,
-              }}
-            >
-              {/* Hit flash overlay */}
-              {enemyHitFlash && (
-                <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
-              )}
-              {/* Enemy Body */}
-              <div className={`w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border-2 ${currentEnemy.sprite.accentColor} rounded-t-md relative`}>
-                {/* Shading overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 rounded-t-md pointer-events-none" />
-                {/* Head */}
-                <div className={`absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b ${currentEnemy.sprite.headColor} border-2 ${currentEnemy.sprite.accentColor} rounded-sm`}>
-                  {/* Eyes */}
-                  <div className={`absolute top-1.5 left-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
-                  <div className={`absolute top-1.5 right-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
-                  {/* Ears/Horns (only for some enemies) */}
-                  {currentEnemy.id !== 'skeleton' && currentEnemy.id !== 'golem' && (
-                    <>
-                      <div className={`absolute -left-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[-15deg]`} />
-                      <div className={`absolute -right-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[15deg]`} />
-                    </>
-                  )}
-                  {/* Mouth */}
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-gray-900 rounded-sm" />
-                </div>
-                {/* Weapon */}
-                <div className="absolute -left-4 top-4 w-3 h-8 bg-gradient-to-b from-amber-700 to-amber-900 border border-amber-950 rounded-sm">
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-3 bg-amber-800 border border-amber-950 rounded-sm" />
-                </div>
-              </div>
-              {/* Legs */}
-              <div className="flex justify-center gap-0.5">
-                <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
-                <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
-        <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-1 gap-1 z-20">
-          {/* HP Bar - Left of Skills */}
-          <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-0.5 sm:py-1 flex-1 max-w-[200px]">
-            <span className="text-xs sm:text-sm text-red-400 whitespace-nowrap">❤️</span>
-            <div className="relative flex-1 h-6 sm:h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
-              <div
-                className="hp-bar h-full transition-all duration-300 rounded-sm"
-                style={{ width: `${Math.max(0, Math.round((heroHp / heroMaxHp) * 100))}%` }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                {Math.floor(heroHp)}/{Math.floor(heroMaxHp)}
-              </span>
-            </div>
-          </div>
-
-          {/* Skill Bar - Center */}
-          <SkillBar
-            skills={skills.filter(s => equippedSkillIds.includes(s.id))}
-            activeBuffs={activeBuffs}
-            onUseSkill={onUseSkill}
-          />
-
-          {/* XP Bar - Right of Skills */}
-          <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-0.5 sm:py-1 flex-1 max-w-[200px]">
-            <span className="text-xs sm:text-sm text-blue-400 whitespace-nowrap">⭐</span>
-            <div className="relative flex-1 h-6 sm:h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
-              <div
-                className="xp-bar h-full transition-all duration-300 rounded-sm"
-                style={{ width: `${Math.max(0, Math.round((heroXp / heroMaxXp) * 100))}%` }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                {Math.floor(heroXp)}/{Math.floor(heroMaxXp)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Active Buffs Indicator */}
-        {activeBuffs.length > 0 && (
-          <div className="absolute top-12 left-3 flex flex-col gap-1">
-            {activeBuffs.map((buff) => {
-              const skill = skills.find(s => s.id === buff.skillId);
-              const timeLeft = Math.max(0, Math.ceil((buff.expiresAt - Date.now()) / 1000));
-              return (
-                <div key={buff.id} className="flex items-center gap-1 bg-yellow-900/40 border border-yellow-600/50 rounded-sm px-1.5 py-0.5 animate-pulse-glow">
-                  <span className="text-[10px]">{skill?.icon}</span>
-                  <span className="text-[7px] text-yellow-300">{timeLeft}s</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Damage Popups */}
-        {damagePopups.map((popup) => (
-          <div
-            key={popup.id}
-            className={`absolute pointer-events-none animate-damage-float font-bold ${popup.isSkill
-              ? popup.isHeal
-                ? 'text-emerald-300 text-[14px]'
-                : 'text-orange-300 text-[14px]'
-              : popup.isHeal
-                ? 'text-green-400 text-[11px]'
-                : popup.isCrit
-                  ? 'text-orange-400 text-[13px]'
-                  : 'text-yellow-300 text-[10px]'
+            className={`absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 mb-3 bg-black/80 border border-red-500/60 rounded-sm z-20 pointer-events-none ${isBossWave ? 'scale-125' : ''
               }`}
             style={{
-              left: `${popup.x}px`,
-              bottom: '110px',
-              textShadow: '0 0 4px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9)',
+              filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 8px ${currentEnemy.glowColor})` : undefined,
             }}
           >
-            {popup.isHeal ? '+' : '-'}{popup.value}
-            {popup.isCrit && ' CRIT!'}
-            {popup.isSkill && !popup.isHeal && ' 💥'}
+            <span className="text-[9px] sm:text-[10px] text-red-300 font-bold">
+              {currentEnemy.name}
+            </span>
           </div>
-        ))}
-
-        {/* Respawning phase indicator */}
-        {gamePhase === 'respawning' && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse-glow">
-            <div className="bg-black/80 border-2 border-red-500/70 rounded-md px-6 py-4 flex flex-col items-center gap-2 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
-              <span className="text-[14px] text-red-400 font-bold">💀 DERROTADO!</span>
-              <span className="text-[10px] text-gray-300">Recuando para treinar...</span>
-              <div className="w-32 h-1.5 bg-[#0f0f1a] border border-red-900/50 rounded-sm overflow-hidden mt-1">
-                <div className="h-full bg-red-500 animate-waiting-bar" style={{ animationDuration: '2s' }} />
+          <div
+            className={`relative`}
+            style={{
+              transform: `scale(${currentEnemy.scale})`,
+              transformOrigin: 'bottom center',
+              filter: isBossWave && currentEnemy.glowColor ? `drop-shadow(0 0 12px ${currentEnemy.glowColor})` : undefined,
+            }}
+          >
+            {/* Hit flash overlay */}
+            {enemyHitFlash && (
+              <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
+            )}
+            {/* Enemy Body */}
+            <div className={`w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border-2 ${currentEnemy.sprite.accentColor} rounded-t-md relative`}>
+              {/* Shading overlay for depth */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 rounded-t-md pointer-events-none" />
+              {/* Head */}
+              <div className={`absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b ${currentEnemy.sprite.headColor} border-2 ${currentEnemy.sprite.accentColor} rounded-sm`}>
+                {/* Eyes */}
+                <div className={`absolute top-1.5 left-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                <div className={`absolute top-1.5 right-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                {/* Ears/Horns (only for some enemies) */}
+                {currentEnemy.id !== 'skeleton' && currentEnemy.id !== 'golem' && (
+                  <>
+                    <div className={`absolute -left-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[-15deg]`} />
+                    <div className={`absolute -right-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[15deg]`} />
+                  </>
+                )}
+                {/* Mouth */}
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-gray-900 rounded-sm" />
               </div>
-              <span className="text-[8px] text-gray-400">Recuperando HP...</span>
+              {/* Weapon */}
+              <div className="absolute -left-4 top-4 w-3 h-8 bg-gradient-to-b from-amber-700 to-amber-900 border border-amber-950 rounded-sm">
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-3 bg-amber-800 border border-amber-950 rounded-sm" />
+              </div>
+            </div>
+            {/* Legs */}
+            <div className="flex justify-center gap-0.5">
+              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
+              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
             </div>
           </div>
-        )}
-
-        {/* Zone and Wave indicators moved to top container */}
-
-
-
-
+        </div>
       </div>
-      );
+
+      {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
+      <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-1 gap-1 z-20">
+        {/* HP Bar - Left of Skills */}
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-0.5 sm:py-1 flex-1 max-w-[200px]">
+          <span className="text-xs sm:text-sm text-red-400 whitespace-nowrap">❤️</span>
+          <div className="relative flex-1 h-6 sm:h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+            <div
+              className="hp-bar h-full transition-all duration-300 rounded-sm"
+              style={{ width: `${Math.max(0, Math.round((heroHp / heroMaxHp) * 100))}%` }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {Math.floor(heroHp)}/{Math.floor(heroMaxHp)}
+            </span>
+          </div>
+        </div>
+
+        {/* Skill Bar - Center */}
+        <SkillBar
+          skills={skills.filter(s => equippedSkillIds.includes(s.id))}
+          activeBuffs={activeBuffs}
+          onUseSkill={onUseSkill}
+        />
+
+        {/* XP Bar - Right of Skills */}
+        <div className="flex items-center gap-1 bg-[#0f0f1a]/90 border border-[#2d2d5e] rounded-sm px-1 py-0.5 sm:py-1 flex-1 max-w-[200px]">
+          <span className="text-xs sm:text-sm text-blue-400 whitespace-nowrap">⭐</span>
+          <div className="relative flex-1 h-6 sm:h-7 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm overflow-hidden">
+            <div
+              className="xp-bar h-full transition-all duration-300 rounded-sm"
+              style={{ width: `${Math.max(0, Math.round((heroXp / heroMaxXp) * 100))}%` }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {Math.floor(heroXp)}/{Math.floor(heroMaxXp)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Buffs Indicator */}
+      {activeBuffs.length > 0 && (
+        <div className="absolute top-12 left-3 flex flex-col gap-1">
+          {activeBuffs.map((buff) => {
+            const skill = skills.find(s => s.id === buff.skillId);
+            const timeLeft = Math.max(0, Math.ceil((buff.expiresAt - Date.now()) / 1000));
+            return (
+              <div key={buff.id} className="flex items-center gap-1 bg-yellow-900/40 border border-yellow-600/50 rounded-sm px-1.5 py-0.5 animate-pulse-glow">
+                <span className="text-[10px]">{skill?.icon}</span>
+                <span className="text-[7px] text-yellow-300">{timeLeft}s</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Damage Popups */}
+      {damagePopups.map((popup) => (
+        <div
+          key={popup.id}
+          className={`absolute pointer-events-none animate-damage-float font-bold ${popup.isSkill
+            ? popup.isHeal
+              ? 'text-emerald-300 text-[14px]'
+              : 'text-orange-300 text-[14px]'
+            : popup.isHeal
+              ? 'text-green-400 text-[11px]'
+              : popup.isCrit
+                ? 'text-orange-400 text-[13px]'
+                : 'text-yellow-300 text-[10px]'
+            }`}
+          style={{
+            left: `${popup.x}px`,
+            bottom: '110px',
+            textShadow: '0 0 4px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9)',
+          }}
+        >
+          {popup.isHeal ? '+' : '-'}{popup.value}
+          {popup.isCrit && ' CRIT!'}
+          {popup.isSkill && !popup.isHeal && ' 💥'}
+        </div>
+      ))}
+
+      {/* Respawning phase indicator */}
+      {gamePhase === 'respawning' && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse-glow">
+          <div className="bg-black/80 border-2 border-red-500/70 rounded-md px-6 py-4 flex flex-col items-center gap-2 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+            <span className="text-[14px] text-red-400 font-bold">💀 DERROTADO!</span>
+            <span className="text-[10px] text-gray-300">Recuando para treinar...</span>
+            <div className="w-32 h-1.5 bg-[#0f0f1a] border border-red-900/50 rounded-sm overflow-hidden mt-1">
+              <div className="h-full bg-red-500 animate-waiting-bar" style={{ animationDuration: '2s' }} />
+            </div>
+            <span className="text-[8px] text-gray-400">Recuperando HP...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Zone and Wave indicators moved to top container */}
+
+
+
+
+    </div>
+  );
 };
 
-      export default GameViewport;
+export default GameViewport;
