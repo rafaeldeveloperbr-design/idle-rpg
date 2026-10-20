@@ -113,7 +113,7 @@ const Drawer: React.FC<DrawerProps> = ({
 
 
       {/* Drawer Panel */}
-      <div className="fixed inset-x-0 top-[55dvh] bottom-16 z-[50] rounded-t-2xl bg-slate-950/95 backdrop-blur-md border-t-2 border-slate-600 flex flex-col min-h-0">
+      <div className="fixed inset-x-0 top-[calc(34dvh+3rem)] bottom-16 z-[50] rounded-t-2xl bg-slate-950/95 backdrop-blur-md border-t-2 border-slate-600 flex flex-col min-h-0">
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700 shrink-0">
           <h2 className="text-lg font-bold text-purple-300 flex items-center gap-2">

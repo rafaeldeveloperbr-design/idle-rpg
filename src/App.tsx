@@ -2215,7 +2215,7 @@ export default function App() {
       </div>
 
       {/* Center: Game Viewport + Skills + HP/XP Bars */}
-      <div className="h-[55dvh] max-h-[550px] min-h-0 shrink-0 sm:flex-1 sm:h-auto sm:max-h-none w-full overflow-hidden relative z-[10] bg-slate-950">
+      <div className={`${activeDrawer ? 'h-[34dvh]' : 'h-[55dvh] max-h-[550px]'} min-h-0 shrink-0 sm:flex-1 sm:h-auto sm:max-h-none w-full overflow-hidden relative z-[10] bg-slate-950`}>
         <div className="w-full h-full relative">
           <ToastContainer toasts={toasts} />
           <GameViewport
