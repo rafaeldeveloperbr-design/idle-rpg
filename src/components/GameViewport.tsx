@@ -20,6 +20,7 @@ interface GameViewportProps {
   damagePopups: DamagePopup[];
   heroHitFlash: boolean;
   enemyHitFlash: boolean;
+  heroAttackCount: number;
   skills: Skill[];
   equippedSkillIds: string[];
   activeBuffs: ActiveBuff[];
@@ -161,6 +162,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
   damagePopups,
   heroHitFlash,
   enemyHitFlash,
+  heroAttackCount,
   skills,
   equippedSkillIds,
   activeBuffs,
@@ -176,20 +178,31 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const isEnemyDead = enemyHp <= 0;
   const [walkFrame, setWalkFrame] = useState(0);
 
-  const [attackFrame, setAttackFrame] = useState(0);
+ const [attackFrame, setAttackFrame] = useState(-1);
 
 useEffect(() => {
-  if (!isAttacking) {
-    setAttackFrame(0);
+  if (!isAttacking || heroAttackCount === 0) {
+    setAttackFrame(-1);
     return;
   }
 
+  setAttackFrame(0);
+
+  let frame = 0;
+
   const timer = setInterval(() => {
-    setAttackFrame(prev => (prev + 1) % 10);
-  }, 100);
+    frame += 1;
+
+    if (frame >= 10) {
+      setAttackFrame(-1);
+      clearInterval(timer);
+    } else {
+      setAttackFrame(frame);
+    }
+  }, 65);
 
   return () => clearInterval(timer);
-}, [isAttacking]);
+}, [heroAttackCount, isAttacking]);
 
   useEffect(() => {
     if (!isMoving) {
@@ -206,7 +219,7 @@ useEffect(() => {
 
   const heroSprite = isMoving
   ? `/sprites/player1/conteudo_${31 + walkFrame}.png`
-  : isAttacking
+  : isAttacking && attackFrame >= 0
     ? `/sprites/player1/conteudo_${11 + attackFrame}.png`
     : '/sprites/player1/conteudo_41.png';
 

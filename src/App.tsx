@@ -953,6 +953,8 @@ export default function App() {
   const [heroHitFlash, setHeroHitFlash] = useState(false);
   const [enemyHitFlash, setEnemyHitFlash] = useState(false);
 
+  const [heroAttackCount, setHeroAttackCount] = useState(0);
+
   // Constants
   const attackRange = 80;
   const enemySpeed = 2;
@@ -2137,6 +2139,8 @@ const speedBoostRemainingSeconds = Math.max(
         if (now - lastHeroAttackRef.current >= heroAttackSpeed / gameSpeedMultiplier) {
           lastHeroAttackRef.current = now;
 
+          setHeroAttackCount(prev => prev + 1);
+
           const isCrit = Math.random() * 100 < combatAttrs.critChance;
           const baseDamage = combatAttrs.attack * attackMultiplier;
           const damage = Math.round(isCrit ? baseDamage * 2 : baseDamage);
@@ -2232,6 +2236,8 @@ const speedBoostRemainingSeconds = Math.max(
           // Trigger hero hit flash
           setHeroHitFlash(true);
           setTimeout(() => setHeroHitFlash(false), 200);
+
+         
 
           setHeroHp((prev) => {
             const newHp = Math.max(0, prev - damage);
@@ -2342,6 +2348,7 @@ const speedBoostRemainingSeconds = Math.max(
             damagePopups={damagePopups}
             heroHitFlash={heroHitFlash}
             enemyHitFlash={enemyHitFlash}
+            heroAttackCount={heroAttackCount}
             skills={skills}
             equippedSkillIds={equippedSkillIds}
             activeBuffs={activeBuffs}
