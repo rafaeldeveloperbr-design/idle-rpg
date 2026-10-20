@@ -4,7 +4,7 @@ import AttributesTab from './tabs/AttributesTab';
 import SkillsTab from './tabs/SkillsTab';
 import InventoryTab from './tabs/InventoryTab';
 import QuestsTab from './tabs/QuestsTab';
-import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../App';
+import type { HeroAttributes, AttributeCosts, Skill, Item, Equipment } from '../types/game';
 import type { Quest } from '../data/questsData';
 
 type DrawerType = 'attributes' | 'skills' | 'inventory' | 'quests' | null;

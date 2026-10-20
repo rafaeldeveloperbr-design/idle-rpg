@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Item, Equipment, HeroAttributes } from '../../App';
-import { GoldIcon } from '../../App';
+import type { Item, Equipment, HeroAttributes } from '../../types/game';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface InventoryTabProps {
   inventory: Item[];

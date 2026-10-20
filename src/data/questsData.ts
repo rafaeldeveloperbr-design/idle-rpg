@@ -1,4 +1,4 @@
-import type { Item } from '../App';
+import type { Item } from '../types/game';
 
 export type QuestObjectiveType = 'kill_monsters' | 'reach_wave' | 'collect_gold' | 'defeat_boss';
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import type { HeroAttributes, AttributeCosts } from '../../App';
-import { GoldIcon } from '../../App';
+import type { HeroAttributes, AttributeCosts } from '../../types/game';
+import { GoldIcon } from '../ui/GoldIcon';
 
 interface AttributesTabProps {
   heroAttributes: HeroAttributes;
