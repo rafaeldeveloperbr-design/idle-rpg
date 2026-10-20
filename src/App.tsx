@@ -1008,6 +1008,29 @@ export default function App() {
       setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
       setCompletedQuestsSinceLastPath(savedData.completedQuestsSinceLastPath || 0);
 
+      if (Array.isArray(savedData.quests)) {
+        setQuests(
+          questsData.map(defaultQuest => {
+            const savedQuest = savedData.quests!.find(
+              quest => quest.id === defaultQuest.id
+            );
+
+            return savedQuest
+              ? {
+                ...defaultQuest,
+                active: Boolean(savedQuest.active) && !savedQuest.completed,
+                completed: Boolean(savedQuest.completed),
+                progress: Math.max(0, Number(savedQuest.progress) || 0),
+                currentGoldAtAccept: savedQuest.currentGoldAtAccept,
+                currentWaveAtAccept: savedQuest.currentWaveAtAccept,
+                currentKillsAtAccept: savedQuest.currentKillsAtAccept,
+                currentBossKillsAtAccept: savedQuest.currentBossKillsAtAccept,
+              }
+              : { ...defaultQuest, active: false, completed: false, progress: 0 };
+          })
+        );
+      }
+
       // Restore premium effects
       setInventoryCapacity(savedData.inventoryCapacity || 20);
       setIsSpeedBoosted(savedData.isSpeedBoosted || false);
@@ -1060,6 +1083,7 @@ export default function App() {
         wave,
         wavesSinceLastEvent,
         completedQuestsSinceLastPath,
+        quests,
         isSpeedBoosted,
         hasNoAds,
         combatHistory: combatHistory.slice(0, 5),
@@ -1105,7 +1129,7 @@ export default function App() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroDiamonds, heroAttributes, attributeCosts, skills, inventory, equipment, inventoryCapacity, currentBiomeId, biomeKills, totalKills,
-    wave, wavesSinceLastEvent, completedQuestsSinceLastPath, isSpeedBoosted, hasNoAds, activePremiumEffects, combatHistory]);
+    wave, wavesSinceLastEvent, completedQuestsSinceLastPath, isSpeedBoosted, hasNoAds, activePremiumEffects, combatHistory, quests]);
 
   // === Reset Game ===
   const resetGame = useCallback(() => {
