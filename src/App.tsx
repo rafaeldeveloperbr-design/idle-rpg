@@ -780,6 +780,18 @@ export default function App() {
       enemies: {
         normal: [
           {
+            id: 'zombie',
+            name: 'Zumbi',
+            type: 'normal',
+            sprite: {
+              bodyColor: 'from-green-700 to-green-900',
+              headColor: 'from-green-500 to-green-700',
+              eyeColor: 'bg-red-500',
+              accentColor: 'border-green-600',
+            },
+            scale: 1.0,
+          },
+          {
             id: 'knight',
             name: 'Cavaleiro Amaldiçoado',
             type: 'normal',

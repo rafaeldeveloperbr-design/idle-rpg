@@ -149,8 +149,14 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
 
 const ENEMY_SPRITES: Record<string, string> = {
   goblin: '/sprites/globin.png',
-};
+  skeleton: '/sprites/skull.png',
 
+  // Preparados para futuros inimigos
+  goblin_boss: '/sprites/globin-boss.png',
+  skeleton_boss: '/sprites/skull-boss.png',
+  zombie: '/sprites/zombie.png',
+  zombie_boss: '/sprites/zombie-boss.png',
+};
 
 const GameViewport: React.FC<GameViewportProps> = ({
   heroX,
@@ -508,7 +514,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
           <div className="relative">
             {/* Hit flash overlay */}
             <div
-              className="w-[64px] h-[80px]"
+              className="w-[80px] h-[100px]"
               role="img"
               aria-label="Herói"
               style={{
