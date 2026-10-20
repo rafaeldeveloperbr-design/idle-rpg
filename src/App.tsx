@@ -998,6 +998,12 @@ export default function App() {
       setTotalKills(savedData.totalKills);
       setWave(savedData.wave);
 
+      setCombatHistory(
+        Array.isArray(savedData.combatHistory)
+          ? savedData.combatHistory.slice(0, 5)
+          : []
+      );
+
       // Restore event management
       setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
       setCompletedQuestsSinceLastPath(savedData.completedQuestsSinceLastPath || 0);
@@ -1056,6 +1062,7 @@ export default function App() {
         completedQuestsSinceLastPath,
         isSpeedBoosted,
         hasNoAds,
+        combatHistory: combatHistory.slice(0, 5),
         activePremiumEffects,
       });
     }, 5000); // Save every 5 seconds
@@ -1096,7 +1103,8 @@ export default function App() {
       clearInterval(saveInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroDiamonds, heroAttributes, attributeCosts, skills, inventory, equipment, inventoryCapacity, currentBiomeId, biomeKills, totalKills, wave, wavesSinceLastEvent, completedQuestsSinceLastPath, isSpeedBoosted, hasNoAds, activePremiumEffects]);
+  }, [heroName, heroHp, heroLevel, heroXp, heroGold, heroDiamonds, heroAttributes, attributeCosts, skills, inventory, equipment, inventoryCapacity, currentBiomeId, biomeKills, totalKills, 
+    wave, wavesSinceLastEvent, completedQuestsSinceLastPath, isSpeedBoosted, hasNoAds, activePremiumEffects, combatHistory]);
 
   // === Reset Game ===
   const resetGame = useCallback(() => {
