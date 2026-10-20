@@ -211,8 +211,8 @@ const GameViewport: React.FC<GameViewportProps> = ({
     }
 
     const timer = setInterval(() => {
-      setWalkFrame(prev => (prev + 1) % 4);
-    }, 120);
+      setWalkFrame(prev => (prev + 1) % 2);
+    }, 220);
 
     return () => clearInterval(timer);
   }, [isMoving]);
@@ -488,7 +488,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Hero - FIXED position (responsive) */}
       <div
-        className={`absolute bottom-12 sm:bottom-16 ${!isMoving && !isAttacking ? 'animate-float' : ''
+        className={`absolute z-10 bottom-12 sm:bottom-16 ${!isMoving && !isAttacking ? 'animate-float' : ''
           } ${heroHitFlash ? 'animate-hero-hit' : ''}`}
         style={{ left: `max(60px, min(${heroX}px, 20%))` }}
       >
@@ -523,7 +523,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Enemy - moves from right to left */}
       <div
-        className={`absolute bottom-12 sm:bottom-16 transition-opacity duration-500 ${isEnemyDead ? 'opacity-0' : ''
+         className={`absolute z-0 bottom-12 sm:bottom-16 transition-opacity duration-500 ${isEnemyDead ? 'opacity-0' : ''
           } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
         style={{
           left: `${enemyX}px`,
