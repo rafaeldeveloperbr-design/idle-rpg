@@ -20,9 +20,9 @@ export const GoldIcon = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' |
     md: 'w-4 h-4 text-[10px]',
     lg: 'w-5 h-5 text-xs'
   };
-  
+
   return (
-    <span 
+    <span
       className={`inline-flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900 font-bold border border-yellow-700 ${sizeClasses[size]} ${className}`}
       style={{ lineHeight: 1 }}
     >
@@ -875,55 +875,55 @@ export default function App() {
   const baseEnemyGold = 10;
   const baseEnemyXp = 15;
   const baseEnemyAttack = 3;
-  
+
   // Scaled enemy stats per wave + biome multiplier + hero level scaling
   const biomeMultiplier = currentBiome.enemyMultiplier;
   const isBoss = isBossWave;
   const bossMultiplier = isBoss ? 5 : 1; // Boss has 5x HP
-  
+
   // Hero level scaling factor (enemies scale with player level)
   const heroLevelScale = 1 + (heroLevel - 1) * 0.15; // +15% per hero level
-  
+
   // Enemy HP: scales with wave, biome, boss, hero level, AND path difficulty
   const enemyMaxHp = Math.floor(
-    (baseEnemyHp + (wave - 1) * 15) * 
-    biomeMultiplier.hp * 
-    bossMultiplier * 
+    (baseEnemyHp + (wave - 1) * 15) *
+    biomeMultiplier.hp *
+    bossMultiplier *
     heroLevelScale *
     pathDifficultyMultiplier.hpMultiplier
   );
-  
+
   // Enemy Attack: smooth logarithmic scaling + path difficulty
   // Formula: base * (1 + log(wave) * 0.5) * biome * level * path difficulty
   // This ensures damage stays between 5-15% of hero max HP per hit
   const waveAttackScale = 1 + Math.log(wave) * 0.5; // Logarithmic growth (much smoother)
   const enemyAttackPower = Math.floor(
-    baseEnemyAttack * 
-    waveAttackScale * 
-    biomeMultiplier.attack * 
+    baseEnemyAttack *
+    waveAttackScale *
+    biomeMultiplier.attack *
     heroLevelScale *
     pathDifficultyMultiplier.attackMultiplier
   );
-  
+
   // Rewards: logarithmic scaling to prevent exponential growth
   // Using sqrt for smoother progression
   const waveRewardMultiplier = 1 + Math.sqrt(wave - 1) * 0.3; // Smoother growth
   const levelRewardMultiplier = 1 + (heroLevel - 1) * 0.1; // Small bonus per level
-  
+
   const enemyGoldReward = Math.floor(
-    baseEnemyGold * 
-    waveRewardMultiplier * 
-    biomeMultiplier.gold * 
-    (isBoss ? 3 : 1) * 
+    baseEnemyGold *
+    waveRewardMultiplier *
+    biomeMultiplier.gold *
+    (isBoss ? 3 : 1) *
     levelRewardMultiplier *
     pathDifficultyMultiplier.rewardMultiplier
   );
-  
+
   const enemyXpReward = Math.floor(
-    baseEnemyXp * 
-    waveRewardMultiplier * 
-    biomeMultiplier.xp * 
-    (isBoss ? 3 : 1) * 
+    baseEnemyXp *
+    waveRewardMultiplier *
+    biomeMultiplier.xp *
+    (isBoss ? 3 : 1) *
     levelRewardMultiplier *
     pathDifficultyMultiplier.rewardMultiplier
   );
@@ -962,7 +962,7 @@ export default function App() {
   // === Load Game on Mount ===
   useEffect(() => {
     const savedData = loadGameData();
-    
+
     if (savedData) {
       console.log('[Load] Restoring saved game...');
       console.log('[Load] Hero Level:', savedData.heroLevel);
@@ -970,7 +970,7 @@ export default function App() {
       console.log('[Load] Hero Gold:', savedData.heroGold);
       console.log('[Load] Current Biome:', savedData.currentBiomeId);
       console.log('[Load] Wave:', savedData.wave);
-      
+
       // Restore hero state
       setHeroName(savedData.heroName || 'Herói');
       setHeroHp(savedData.heroHp);
@@ -978,39 +978,39 @@ export default function App() {
       setHeroXp(savedData.heroXp);
       setHeroGold(savedData.heroGold);
       setHeroDiamonds(savedData.heroDiamonds || 0);
-      
+
       // Restore attributes
       setHeroAttributes(savedData.heroAttributes);
       setAttributeCosts(savedData.attributeCosts);
-      
+
       // Restore skills
       setSkills(savedData.skills);
-      
+
       // Restore inventory & equipment
       setInventory(savedData.inventory);
       setEquipment(savedData.equipment);
-      
+
       // Restore biome & progress
       setCurrentBiomeId(savedData.currentBiomeId);
       setBiomeKills(savedData.biomeKills);
       setTotalKills(savedData.totalKills);
       setWave(savedData.wave);
-      
+
       // Restore event management
       setWavesSinceLastEvent(savedData.wavesSinceLastEvent || 0);
       setCompletedQuestsSinceLastPath(savedData.completedQuestsSinceLastPath || 0);
-      
+
       // Restore premium effects
       setInventoryCapacity(savedData.inventoryCapacity || 20);
       setIsSpeedBoosted(savedData.isSpeedBoosted || false);
       setHasNoAds(savedData.hasNoAds || false);
       setActivePremiumEffects(savedData.activePremiumEffects || []);
-      
+
       // Restore current enemy (spawn random enemy for the biome)
       const restoredBiome = biomes.find(b => b.id === savedData.currentBiomeId) || biomes[0];
       const randomEnemy = restoredBiome.enemies.normal[Math.floor(Math.random() * restoredBiome.enemies.normal.length)];
       setCurrentEnemy(randomEnemy);
-      
+
       setIsFirstTime(false);
       setIsGameStarted(true); // Start the game loop when loading save
       console.log('[Load] Game restored successfully!');
@@ -1032,7 +1032,7 @@ export default function App() {
     const saveInterval = setInterval(() => {
       // Prevent save during reset
       if (isResetting.current) return;
-      
+
       saveGameData({
         heroName,
         heroHp,
@@ -1062,7 +1062,7 @@ export default function App() {
     const handleBeforeUnload = () => {
       // Prevent save during reset
       if (isResetting.current) return;
-      
+
       saveGameData({
         heroName,
         heroHp,
@@ -1100,10 +1100,10 @@ export default function App() {
   const resetGame = useCallback(() => {
     // Set reset flag to prevent auto-save during reset
     isResetting.current = true;
-    
+
     // Clear localStorage immediately
     localStorage.removeItem('idle_rpg_save_v1');
-    
+
     // Force reload to reset all state
     window.location.reload();
   }, []);
@@ -1177,9 +1177,9 @@ export default function App() {
       duration,
       timestamp: Date.now(),
     };
-    
+
     setToasts((prev) => [...prev, newToast]);
-    
+
     // Auto-remove toast after duration
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -1191,20 +1191,20 @@ export default function App() {
     let currentXp = heroXp;
     let currentLevel = heroLevel;
     let leveled = false;
-    
+
     // Loop to handle multiple level ups at once (prevents skipping levels)
     while (currentXp >= currentLevel * 100) {
       currentXp -= currentLevel * 100;
       currentLevel += 1;
       leveled = true;
     }
-    
+
     if (leveled) {
       console.log('[Level Up] Hero leveled up to', currentLevel);
       setHeroLevel(currentLevel);
       setHeroXp(currentXp);
       setHeroHp(heroAttributes.maxHp); // Full heal on level up
-      
+
       // Show level up toast
       addToast(`🌟 LEVEL UP! Você alcançou o Nível ${currentLevel}!`, 'levelup');
     }
@@ -1214,7 +1214,7 @@ export default function App() {
   // === Spawn Random Enemy ===
   const spawnRandomEnemy = useCallback((isBoss: boolean) => {
     const currentBiomeData = biomes.find(b => b.id === currentBiomeId) || biomes[0];
-    
+
     if (isBoss) {
       // Spawn boss
       setCurrentEnemy(currentBiomeData.enemies.boss);
@@ -1231,7 +1231,7 @@ export default function App() {
     setShowPathChoice(false);
     setWavesSinceLastEvent(0); // Reset event counter after path choice
     setCompletedQuestsSinceLastPath(0); // Reset quest completion counter
-    
+
     // Apply difficulty multiplier based on choice
     switch (choice) {
       case 'safe':
@@ -1244,7 +1244,7 @@ export default function App() {
         });
         addToast('🟢 Caminho Seguro escolhido! Dificuldade normal.', 'info');
         break;
-        
+
       case 'challenging':
         setPathDifficultyMultiplier({
           hpMultiplier: 1.3,
@@ -1255,7 +1255,7 @@ export default function App() {
         });
         addToast('🟡 Caminho Desafiador escolhido! +30% dificuldade, +50% recompensas!', 'info');
         break;
-        
+
       case 'deadly':
         setPathDifficultyMultiplier({
           hpMultiplier: 1.8,
@@ -1267,7 +1267,7 @@ export default function App() {
         addToast('🔴 Caminho Mortal escolhido! +80% dificuldade, x2 recompensas, drops épicos!', 'info');
         break;
     }
-    
+
     // Continue with next enemy
     const nextIsBoss = biomeKills > 0 && biomeKills % 10 === 0;
     spawnRandomEnemy(nextIsBoss);
@@ -1303,31 +1303,31 @@ export default function App() {
   const checkAndSpawnNPC = useCallback(() => {
     // EXCLUSIVITY CHECK: Don't spawn NPC if path choice is active
     if (showPathChoice) return;
-    
+
     // EXCLUSIVITY CHECK: Don't spawn NPC if another NPC dialogue is already open
     if (currentNPCQuest !== null) return;
-    
+
     // EXCLUSIVITY CHECK: Don't spawn NPC if there's an active quest being processed
     // (allow active quests to exist, but don't spawn new NPCs while one is being shown)
-    
+
     // SPACING CHECK: Ensure minimum waves between events
     if (wavesSinceLastEvent < MIN_WAVES_BETWEEN_EVENTS) return;
-    
+
     // 20% chance to encounter NPC (reduced from 30% for better pacing)
     if (Math.random() > 0.2) return;
-    
+
     // Find available quests (not completed, not active, level requirement met)
-    const availableQuests = quests.filter(q => 
-      !q.completed && 
-      !q.active && 
+    const availableQuests = quests.filter(q =>
+      !q.completed &&
+      !q.active &&
       heroLevel >= q.unlockedAtLevel
     );
-    
+
     if (availableQuests.length === 0) return;
-    
+
     // Pick random quest
     const randomQuest = availableQuests[Math.floor(Math.random() * availableQuests.length)];
-    
+
     // Show NPC dialogue
     setCurrentNPCQuest(randomQuest);
     setWavesSinceLastEvent(0); // Reset event counter
@@ -1345,8 +1345,8 @@ export default function App() {
       currentKillsAtAccept: quest.objectiveType === 'kill_monsters' ? totalKills : undefined,
       currentBossKillsAtAccept: quest.objectiveType === 'defeat_boss' ? Math.floor(totalKills / 10) : undefined,
     };
-    
-    setQuests(prev => prev.map(q => 
+
+    setQuests(prev => prev.map(q =>
       q.id === quest.id ? questWithReference : q
     ));
     setCurrentNPCQuest(null);
@@ -1362,16 +1362,16 @@ export default function App() {
   const completeQuest = useCallback((questId: string) => {
     const quest = quests.find(q => q.id === questId);
     if (!quest || !quest.active || quest.progress < quest.objectiveTarget) return;
-    
+
     // Mark as completed
-    setQuests(prev => prev.map(q => 
+    setQuests(prev => prev.map(q =>
       q.id === questId ? { ...q, completed: true, active: false } : q
     ));
-    
+
     // Give rewards
     setHeroGold(prev => prev + quest.reward.gold);
     setHeroXp(prev => prev + quest.reward.xp);
-    
+
     // Add item reward if exists
     if (quest.reward.item) {
       const newItem: Item = {
@@ -1380,14 +1380,14 @@ export default function App() {
       };
       setInventory(prev => [...prev, newItem]);
     }
-    
+
     // Increment quest completion counter
     const newQuestCount = completedQuestsSinceLastPath + 1;
     setCompletedQuestsSinceLastPath(newQuestCount);
-    
+
     addToast(`✅ Quest concluída: ${quest.title}!`, 'info');
     addToast(`💰 +${quest.reward.gold} ouro, +${quest.reward.xp} XP`, 'info');
-    
+
     // Check if we should force a path choice (after completing QUESTS_UNTIL_PATH quests)
     if (newQuestCount >= QUESTS_UNTIL_PATH) {
       // Heal hero to 100% when showing path choice
@@ -1401,9 +1401,9 @@ export default function App() {
   const updateQuestProgress = useCallback(() => {
     setQuests(prev => prev.map(quest => {
       if (!quest.active || quest.completed) return quest;
-      
+
       let newProgress = 0;
-      
+
       switch (quest.objectiveType) {
         case 'kill_monsters':
           // Calculate kills since quest was accepted
@@ -1423,7 +1423,7 @@ export default function App() {
           newProgress = Math.max(0, currentBossKills - (quest.currentBossKillsAtAccept || 0));
           break;
       }
-      
+
       return { ...quest, progress: newProgress };
     }));
   }, [totalKills, wave, heroGold]);
@@ -1431,20 +1431,20 @@ export default function App() {
   const spawnNewEnemy = useCallback(() => {
     const newWave = wave + 1;
     setWave(newWave);
-    
+
     // Increment waves since last event
     setWavesSinceLastEvent(prev => prev + 1);
-    
+
     // Track kills for biome progression
     const newBiomeKills = biomeKills + 1;
     const newTotalKills = totalKills + 1;
     setBiomeKills(newBiomeKills);
     setTotalKills(newTotalKills);
-    
+
     // Check if next enemy should be a boss (every 10 kills in biome)
     const nextIsBoss = newBiomeKills > 0 && newBiomeKills % 10 === 0;
     setIsBossWave(nextIsBoss);
-    
+
     // EXCLUSIVITY CHECK: Don't show path choice if NPC dialogue is active
     if (currentNPCQuest !== null) {
       // Skip path choice, just spawn enemy
@@ -1455,18 +1455,18 @@ export default function App() {
       lastEnemyAttackRef.current = Date.now();
       return;
     }
-    
+
     // EXCLUSIVITY CHECK: Don't show path choice if another path choice is already active
     if (showPathChoice) {
       return; // Already showing path choice, don't spawn enemy yet
     }
-    
+
     // Path choice is now triggered by quest completion, not by wave count
     // The completeQuest function will handle showing the path choice modal
-    
+
     // Spawn random enemy based on boss status
     spawnRandomEnemy(nextIsBoss);
-    
+
     setEnemyX(enemySpawnX);
     setGamePhase('approaching');
     lastHeroAttackRef.current = Date.now();
@@ -1509,7 +1509,7 @@ export default function App() {
 
     const now = Date.now();
     const cooldownMs = skill.cooldown * 1000;
-    
+
     // Check if on cooldown
     if (now - skill.lastUsed < cooldownMs) return;
 
@@ -1520,11 +1520,11 @@ export default function App() {
         const baseDamage = heroAttributes.attack * skill.effectValue;
         const isCrit = Math.random() * 100 < heroAttributes.critChance;
         const damage = Math.round(isCrit ? baseDamage * 2 : baseDamage);
-        
+
         spawnDamagePopup(damage, enemyXRef.current, isCrit, false, true);
         setEnemyHitFlash(true);
         setTimeout(() => setEnemyHitFlash(false), 300);
-        
+
         setEnemyHp((prev) => {
           const newHp = prev - damage;
           if (newHp <= 0) {
@@ -1533,19 +1533,19 @@ export default function App() {
             const xpReward = baseEnemyXp + (currentWave - 1) * 8;
             setHeroGold((g) => g + goldReward);
             setHeroXp((x) => x + xpReward);
-            
+
             // Generate item drop
             const droppedItem = generateItemDrop();
             if (droppedItem) {
               setInventory((prev) => [...prev, droppedItem]);
-              
+
               // Show toast for rare/epic items
               if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
                 const rarityEmoji = droppedItem.rarity === 'rare' ? '💎' : '👑';
                 addToast(`${rarityEmoji} Item Encontrado: ${droppedItem.name}!`, 'drop');
               }
             }
-            
+
             // Decrement path difficulty remaining enemies
             if (pathDifficultyMultiplier.remainingEnemies > 0) {
               setPathDifficultyMultiplier(prev => {
@@ -1592,7 +1592,7 @@ export default function App() {
     }
 
     // Update last used time
-    setSkills((prev) => prev.map(s => 
+    setSkills((prev) => prev.map(s =>
       s.id === skillId ? { ...s, lastUsed: now } : s
     ));
   }, [skills, heroAttributes, spawnDamagePopup, spawnNewEnemy]);
@@ -1603,25 +1603,25 @@ export default function App() {
     if (!skill || !skill.unlocked || heroGold < skill.cost) return;
 
     setHeroGold((prev) => prev - skill.cost);
-    setSkills((prev) => prev.map(s => 
-      s.id === skillId 
-        ? { 
-            ...s, 
-            level: s.level + 1,
-            cost: Math.floor(s.cost * 1.3), // Smoother cost growth
-            effectValue: s.effect === 'damage' 
-              ? s.effectValue + 0.25 
-              : s.effect === 'heal'
+    setSkills((prev) => prev.map(s =>
+      s.id === skillId
+        ? {
+          ...s,
+          level: s.level + 1,
+          cost: Math.floor(s.cost * 1.3), // Smoother cost growth
+          effectValue: s.effect === 'damage'
+            ? s.effectValue + 0.25
+            : s.effect === 'heal'
               ? s.effectValue + 0.05
               : s.effectValue + 0.2,
-          }
+        }
         : s
     ));
   }, [skills, heroGold]);
 
   // === Toggle Auto-Cast ===
   const toggleAutoCast = useCallback((skillId: string) => {
-    setSkills((prev) => prev.map(s => 
+    setSkills((prev) => prev.map(s =>
       s.id === skillId ? { ...s, autoCast: !s.autoCast } : s
     ));
   }, []);
@@ -1653,7 +1653,7 @@ export default function App() {
     if (skill.requiredLevel && heroLevel < skill.requiredLevel) return;
 
     setHeroGold(prev => prev - skill.cost);
-    setSkills(prev => prev.map(s => 
+    setSkills(prev => prev.map(s =>
       s.id === skillId ? { ...s, unlocked: true } : s
     ));
 
@@ -1704,13 +1704,13 @@ export default function App() {
     }
 
     setHeroGold(prev => prev - item.sellValue);
-    
+
     // Create new item instance with unique ID
     const newItem: Item = {
       ...item,
       id: `${item.id}_${Date.now()}_${Math.random()}`,
     };
-    
+
     setInventory(prev => [...prev, newItem]);
     addToast(`🛡️ ${item.name} comprado!`, 'info');
   }, [shopItems, heroGold, heroLevel, inventory.length, addToast]);
@@ -1719,23 +1719,23 @@ export default function App() {
   const buyPremiumItem = useCallback((itemId: string) => {
     const item = premiumItems.find(i => i.id === itemId);
     if (!item) return;
-    
+
     // Diamond packs are free (simulated purchase)
     if (item.type === 'diamond_pack') {
       setHeroDiamonds(prev => prev + (item.value || 0));
       addToast(`💎 +${item.value} diamantes adquiridos!`, 'info');
       return;
     }
-    
+
     // Check if player has enough diamonds
     if (heroDiamonds < item.price) {
       addToast('❌ Diamantes insuficientes!', 'info');
       return;
     }
-    
+
     // Deduct diamonds
     setHeroDiamonds(prev => prev - item.price);
-    
+
     // Apply effect based on type
     switch (item.type) {
       case 'speed_boost':
@@ -1748,17 +1748,17 @@ export default function App() {
         }]);
         addToast(`⚡ Velocidade 2x ativada por 1 hora!`, 'info');
         break;
-        
+
       case 'no_ads':
         setHasNoAds(true);
         addToast(`🚫 Anúncios removidos permanentemente!`, 'info');
         break;
-        
+
       case 'revive':
         // Revive is stored as consumable, not immediately applied
         addToast(`❤️ Vida Extra adquirida! Use ao morrer.`, 'info');
         break;
-        
+
       case 'xp_boost':
         setActivePremiumEffects(prev => [...prev, {
           id: `xp_${Date.now()}`,
@@ -1768,7 +1768,7 @@ export default function App() {
         }]);
         addToast(`🍀 Bônus 2x XP/Ouro ativado por 1 hora!`, 'info');
         break;
-        
+
       case 'inventory_expansion':
         setInventoryCapacity(prev => prev + (item.value || 10));
         addToast(`🎒 Inventário expandido em +${item.value} slots!`, 'info');
@@ -1784,10 +1784,10 @@ export default function App() {
       addToast('❌ Você não tem Vida Extra!', 'info');
       return false;
     }
-    
+
     // Remove revive effect
     setActivePremiumEffects(prev => prev.filter(e => e.itemId !== 'revive'));
-    
+
     // Restore HP
     setHeroHp(heroAttributes.maxHp);
     addToast(`❤️ Ressuscitado com vida cheia!`, 'info');
@@ -1807,7 +1807,7 @@ export default function App() {
     let targetRarity: ItemRarity;
     const epicBonus = pathDifficultyMultiplier.dropChanceBonus * 0.5; // Half of bonus goes to epic
     const rareBonus = pathDifficultyMultiplier.dropChanceBonus * 0.3; // 30% goes to rare
-    
+
     if (rarityRoll < 0.6 - rareBonus - epicBonus) targetRarity = 'common';
     else if (rarityRoll < 0.9 - epicBonus + rareBonus) targetRarity = 'rare';
     else targetRarity = 'epic';
@@ -1818,19 +1818,19 @@ export default function App() {
 
     // Pick random item from filtered list
     const template = availableItems[Math.floor(Math.random() * availableItems.length)];
-    
+
     // === Upgrade Level System ===
     // Base probabilities for upgrade levels
     let upgradeLevel = 0;
     const upgradeRoll = Math.random();
-    
+
     // Boss drops have better upgrade chances
     const bossBonus = isBossWave ? 0.15 : 0;
-    
+
     // Biome bonus: higher biomes have better upgrade chances
     const biomeIndex = biomes.findIndex(b => b.id === currentBiomeId);
     const biomeBonus = biomeIndex * 0.05; // +5% per biome tier
-    
+
     // Progressive upgrade chances
     const upgradeChances = [
       0.65 - bossBonus - biomeBonus, // +0: ~65% (reduced by bonuses)
@@ -1840,7 +1840,7 @@ export default function App() {
       0.018, // +4: 1.8%
       0.002, // +5: 0.2% (Legendary)
     ];
-    
+
     let cumulative = 0;
     for (let i = 0; i < upgradeChances.length; i++) {
       cumulative += upgradeChances[i];
@@ -1849,13 +1849,13 @@ export default function App() {
         break;
       }
     }
-    
+
     // Scale bonuses based on wave
     const waveBonus = Math.floor((wave - 1) * 0.1); // +10% per wave
-    
+
     // Apply upgrade level multiplier (each +1 adds 25% to base stats)
     const upgradeMultiplier = 1 + (upgradeLevel * 0.25);
-    
+
     const scaledBonuses: Partial<HeroAttributes> = {};
     Object.entries(template.bonuses).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -1913,7 +1913,7 @@ export default function App() {
 
     // Move to inventory
     setInventory((prev) => [...prev, item]);
-    
+
     // Clear slot
     setEquipment((prev) => ({
       ...prev,
@@ -1940,7 +1940,7 @@ export default function App() {
       critChance: 0,
       regen: 0,
     };
-    
+
     Object.values(equipment).forEach((item) => {
       if (item) {
         (Object.entries(item.bonuses) as [keyof HeroAttributes, number][]).forEach(([key, value]) => {
@@ -1950,7 +1950,7 @@ export default function App() {
         });
       }
     });
-    
+
     return totalBonuses;
   }, [equipment]);
 
@@ -1969,14 +1969,14 @@ export default function App() {
   const handleHeroDeath = useCallback(() => {
     console.log('[Death] Hero has been defeated!');
     setGamePhase('respawning');
-    
+
     // Apply penalty: if died to boss, reduce wave by 1
     if (isBossWave) {
       console.log('[Death] Died to boss - reducing wave by 1');
       setWave((prev) => Math.max(1, prev - 1));
       setIsBossWave(false);
     }
-    
+
     // Reset enemy position after 2 seconds and restore HP
     setTimeout(() => {
       setHeroHp(effectiveAttributes.maxHp);
@@ -1990,7 +1990,7 @@ export default function App() {
   useEffect(() => {
     // Don't run game loop if game hasn't started yet or is paused
     if (!isGameStarted || isPaused) return;
-    
+
     const interval = setInterval(() => {
       const currentPhase = gamePhaseRef.current;
       const currentEnemyX = enemyXRef.current;
@@ -2037,7 +2037,7 @@ export default function App() {
 
           // Spawn damage popup on enemy
           spawnDamagePopup(damage, currentEnemyX, isCrit);
-          
+
           // Trigger enemy hit flash
           setEnemyHitFlash(true);
           setTimeout(() => setEnemyHitFlash(false), 200);
@@ -2049,10 +2049,10 @@ export default function App() {
               const currentWave = waveRef.current;
               const goldReward = baseEnemyGold + (currentWave - 1) * 5;
               const xpReward = baseEnemyXp + (currentWave - 1) * 8;
-              
+
               setHeroGold((g) => g + goldReward);
               setHeroXp((x) => x + xpReward);
-              
+
               // Show boss defeated toast
               if (isBossWave) {
                 addToast('☠️ CHEFÃO DERROTADO! Recompensas Triplicadas!', 'boss');
@@ -2062,7 +2062,7 @@ export default function App() {
               const droppedItem = generateItemDrop();
               if (droppedItem) {
                 setInventory((prev) => [...prev, droppedItem]);
-                
+
                 // Show toast for rare/epic items
                 if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
                   const rarityEmoji = droppedItem.rarity === 'rare' ? '💎' : '👑';
@@ -2101,40 +2101,40 @@ export default function App() {
         if (enemyHpRef.current > 0 && now - lastEnemyAttackRef.current >= enemyAttackSpeed) {
           lastEnemyAttackRef.current = now;
           const currentWave = waveRef.current;
-          
+
           // Recalculate enemy attack with same formula as enemyAttackPower
           const currentBiomeData = biomes.find(b => b.id === currentBiomeId) || biomes[0];
           const currentBiomeMultiplier = currentBiomeData.enemyMultiplier;
           const currentHeroLevelScale = 1 + (heroLevel - 1) * 0.15;
           const currentWaveAttackScale = 1 + Math.log(currentWave) * 0.5; // Logarithmic growth
           const currentEnemyAttack = Math.floor(
-            baseEnemyAttack * 
-            currentWaveAttackScale * 
-            currentBiomeMultiplier.attack * 
+            baseEnemyAttack *
+            currentWaveAttackScale *
+            currentBiomeMultiplier.attack *
             currentHeroLevelScale
           );
-          
+
           // Defense reduces damage by percentage, not flat subtraction
           // Formula: damage = attack * (1 - defense/(defense + 100))
           // This ensures damage is always at least 10% of attack
           const defenseReduction = combatAttrs.defense / (combatAttrs.defense + 100);
           const damage = Math.max(1, Math.round(currentEnemyAttack * (1 - defenseReduction)));
-          
+
           // Spawn damage popup on hero
           spawnDamagePopup(damage, heroX, false);
-          
+
           // Trigger hero hit flash
           setHeroHitFlash(true);
           setTimeout(() => setHeroHitFlash(false), 200);
-          
+
           setHeroHp((prev) => {
             const newHp = Math.max(0, prev - damage);
-            
+
             // Check if hero died
             if (newHp <= 0) {
               handleHeroDeath();
             }
-            
+
             return newHp;
           });
         }
@@ -2152,10 +2152,10 @@ export default function App() {
         // Do nothing during respawn - hero is recovering
         // The setTimeout in handleHeroDeath will handle the respawn logic
       }
-      
+
       // Update quest progress
       updateQuestProgress();
-      
+
       // EXCLUSIVITY CHECK: Only check for NPC encounters if no modals are active
       if (!showPathChoice && currentNPCQuest === null) {
         checkAndSpawnNPC();
@@ -2215,79 +2215,79 @@ export default function App() {
       </div>
 
       {/* Center: Game Viewport + Skills + HP/XP Bars */}
-      <div className="flex-1 w-full overflow-hidden relative z-[10] bg-slate-950">
+      <div className="h-[55dvh] max-h-[550px] min-h-0 shrink-0 sm:flex-1 sm:h-auto sm:max-h-none w-full overflow-hidden relative z-[10] bg-slate-950">
         <div className="w-full h-full relative">
           <ToastContainer toasts={toasts} />
           <GameViewport
-          heroX={heroX}
-          heroName={heroName}
-          heroHp={heroHp}
-          heroMaxHp={heroAttributes.maxHp}
-          heroXp={heroXp}
-          heroMaxXp={xpToNextLevel}
-          enemyX={enemyX}
-          enemyHp={enemyHp}
-          enemyMaxHp={enemyMaxHp}
-          scrollOffset={scrollOffset}
-          gamePhase={gamePhase}
-          wave={wave}
-          damagePopups={damagePopups}
-          heroHitFlash={heroHitFlash}
-          enemyHitFlash={enemyHitFlash}
-          skills={skills}
-          equippedSkillIds={equippedSkillIds}
-          activeBuffs={activeBuffs}
-          onUseSkill={useSkill}
-          currentBiome={currentBiome}
-          currentEnemy={currentEnemy}
-          isBossWave={isBossWave}
-          biomeKills={biomeKills}
-        />
+            heroX={heroX}
+            heroName={heroName}
+            heroHp={heroHp}
+            heroMaxHp={heroAttributes.maxHp}
+            heroXp={heroXp}
+            heroMaxXp={xpToNextLevel}
+            enemyX={enemyX}
+            enemyHp={enemyHp}
+            enemyMaxHp={enemyMaxHp}
+            scrollOffset={scrollOffset}
+            gamePhase={gamePhase}
+            wave={wave}
+            damagePopups={damagePopups}
+            heroHitFlash={heroHitFlash}
+            enemyHitFlash={enemyHitFlash}
+            skills={skills}
+            equippedSkillIds={equippedSkillIds}
+            activeBuffs={activeBuffs}
+            onUseSkill={useSkill}
+            currentBiome={currentBiome}
+            currentEnemy={currentEnemy}
+            isBossWave={isBossWave}
+            biomeKills={biomeKills}
+          />
         </div>
+      </div>
+
+      {/* Future Events / Drops Area */}
+      <div className="flex-1 min-h-0 w-full bg-slate-950 border-t border-slate-800/50 sm:hidden">
       </div>
 
       {/* Bottom: Bottom Bar Fixed */}
       <div className="h-16 w-full shrink-0 z-[30] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
         <button
           onClick={() => handleDrawerToggle('attributes')}
-          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
-            activeDrawer === 'attributes'
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'attributes'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
               : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
-          }`}
+            }`}
         >
           <span className="text-2xl">⚔️</span>
           <span className="text-[10px] font-medium">Atributos</span>
         </button>
         <button
           onClick={() => handleDrawerToggle('skills')}
-          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
-            activeDrawer === 'skills'
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'skills'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
               : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
-          }`}
+            }`}
         >
           <span className="text-2xl">✨</span>
           <span className="text-[10px] font-medium">Skills</span>
         </button>
         <button
           onClick={() => handleDrawerToggle('inventory')}
-          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
-            activeDrawer === 'inventory'
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'inventory'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
               : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
-          }`}
+            }`}
         >
           <span className="text-2xl">🎒</span>
           <span className="text-[10px] font-medium">Bag</span>
         </button>
         <button
           onClick={() => handleDrawerToggle('quests')}
-          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${
-            activeDrawer === 'quests'
+          className={`flex-1 h-full flex flex-col items-center justify-center transition-all ${activeDrawer === 'quests'
               ? 'text-purple-400 bg-purple-900/20 border-t-2 border-purple-500'
               : 'text-gray-400 hover:text-gray-200 hover:bg-slate-800/50'
-          }`}
+            }`}
         >
           <span className="text-2xl">📜</span>
           <span className="text-[10px] font-medium">Quests</span>
