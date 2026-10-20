@@ -85,14 +85,14 @@ const calculateTotalBonus = (item: Item | null): number => {
 
 const isUpgrade = (item: Item, equipment: Equipment): boolean => {
   const equippedItem = equipment[item.slot];
-  
+
   // If slot is empty, any item is an upgrade
   if (!equippedItem) return true;
-  
+
   // Compare total bonuses
   const itemTotal = calculateTotalBonus(item);
   const equippedTotal = calculateTotalBonus(equippedItem);
-  
+
   return itemTotal > equippedTotal;
 };
 
@@ -160,7 +160,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
                 const attrKey = key as keyof HeroAttributes;
                 const equippedValue = equippedItem?.bonuses[attrKey] || 0;
                 const diff = (value as number) - equippedValue;
-                
+
                 return (
                   <div key={key} className="flex items-center justify-between text-sm">
                     <span className="text-gray-300 flex items-center gap-2">
@@ -206,18 +206,25 @@ const ItemModal: React.FC<ItemModalProps> = ({
           <div className="flex flex-col gap-2">
             {isFromInventory ? (
               <>
-                <button
-                  onClick={onEquip}
-                  className="w-full py-3 px-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-md transition-colors text-sm"
-                >
-                  Equipar
-                </button>
-                <button
-                  onClick={onSell}
-                  className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-md transition-colors text-sm flex items-center justify-center gap-1"
-                >
-                  Vender (<GoldIcon size="sm" /> {Math.round(item.sellValue)})
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={onEquip}
+                    className="min-h-[52px] w-full px-2 py-3 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold rounded-md transition-colors text-sm"
+                  >
+                    Equipar
+                  </button>
+
+                  <button
+                    onClick={onSell}
+                    className="min-h-[52px] w-full px-2 py-3 bg-red-700 hover:bg-red-600 active:bg-red-800 text-white font-bold rounded-md transition-colors text-xs flex flex-col items-center justify-center gap-1"
+                  >
+                    <span>Vender</span>
+                    <span className="flex items-center gap-1">
+                      <GoldIcon size="sm" />
+                      {Math.round(item.sellValue)}
+                    </span>
+                  </button>
+                </div>
               </>
             ) : (
               <button
@@ -298,11 +305,10 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
               <button
                 key={slot}
                 onClick={() => item && handleItemClick(item, slot)}
-                className={`w-full border-2 rounded-md p-2 sm:p-3 flex flex-col items-center gap-1.5 transition-colors min-h-[80px] ${
-                  item
+                className={`w-full border-2 rounded-md p-2 sm:p-3 flex flex-col items-center gap-1.5 transition-colors min-h-[80px] ${item
                     ? `${rarityColors[item.rarity]} cursor-pointer hover:border-purple-500`
                     : 'border-[#2d2d5e] bg-[#0a0a12] cursor-default'
-                }`}
+                  }`}
               >
                 <span className="text-xs text-gray-500">{slotLabels[slot]}</span>
                 {item ? (
@@ -330,7 +336,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
           {inventory.map((item) => {
             const isItemUpgrade = isUpgrade(item, equipment);
             const upgradeLevel = item.upgradeLevel || 0;
-            
+
             return (
               <button
                 key={item.id}
@@ -341,21 +347,21 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
                 <div className="absolute bottom-0.5 left-0.5 text-[8px] sm:text-[9px] bg-black/60 rounded px-0.5">
                   {slotIcons[item.slot]}
                 </div>
-                
+
                 {/* Upgrade Indicator - Top Right */}
                 {isItemUpgrade && (
                   <div className="absolute top-0.5 right-0.5 text-[10px] sm:text-xs animate-bounce-subtle">
                     ⬆️
                   </div>
                 )}
-                
+
                 {/* Upgrade Level Badge - Top Left */}
                 {upgradeLevel > 0 && (
                   <div className={`absolute top-0.5 left-0.5 text-[8px] sm:text-[9px] font-bold ${upgradeLevelColors[upgradeLevel]}`}>
                     +{upgradeLevel}
                   </div>
                 )}
-                
+
                 <span className="text-lg sm:text-xl">{item.icon}</span>
                 <span className={`text-[9px] sm:text-xs ${upgradeLevel > 0 ? upgradeLevelColors[upgradeLevel] : rarityTextColors[item.rarity]} text-center leading-tight px-0.5 sm:px-1 font-bold`}>
                   {item.name}
