@@ -131,10 +131,10 @@ const DiamondShopModal: React.FC<DiamondShopModalProps> = ({
                       <div className="text-sm font-bold text-green-400">{pack.realPrice}</div>
                     </div>
                     <button
-                      className="w-full py-2 px-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white text-xs font-bold rounded transition-all"
-                    >
-                      Comprar
-                    </button>
+  className="w-full min-h-[48px] px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 active:from-green-700 active:to-green-800 text-white text-sm font-bold rounded-md flex items-center justify-center transition-all"
+>
+  Comprar
+</button>
                   </div>
                 );
               })}
