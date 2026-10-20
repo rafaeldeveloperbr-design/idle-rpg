@@ -956,7 +956,7 @@ export default function App() {
   const [heroAttackCount, setHeroAttackCount] = useState(0);
 
   // Constants
-  const attackRange = 80;
+  const attackRange = 45;
   const enemySpeed = 2;
   const enemySpawnX = 900; // Spawn off-screen to the right
 
@@ -1118,6 +1118,7 @@ export default function App() {
         wave,
         wavesSinceLastEvent,
         completedQuestsSinceLastPath,
+        quests,
         isSpeedBoosted,
         hasNoAds,
         activePremiumEffects,
@@ -1796,36 +1797,36 @@ export default function App() {
 
     // Apply effect based on type
     switch (item.type) {
-     case 'speed_boost': {
-  const now = Date.now();
+      case 'speed_boost': {
+        const now = Date.now();
 
-  setIsSpeedBoosted(true);
+        setIsSpeedBoosted(true);
 
-  setActivePremiumEffects(prev => {
-    const currentExpiry = prev
-      .filter(effect => effect.itemId === 'speed_boost')
-      .reduce(
-        (latest, effect) => Math.max(latest, effect.expiresAt ?? 0),
-        now
-      );
+        setActivePremiumEffects(prev => {
+          const currentExpiry = prev
+            .filter(effect => effect.itemId === 'speed_boost')
+            .reduce(
+              (latest, effect) => Math.max(latest, effect.expiresAt ?? 0),
+              now
+            );
 
-    const newExpiry =
-      Math.max(now, currentExpiry) + (item.duration ?? 3600) * 1000;
+          const newExpiry =
+            Math.max(now, currentExpiry) + (item.duration ?? 3600) * 1000;
 
-    return [
-      ...prev.filter(effect => effect.itemId !== 'speed_boost'),
-      {
-        id: `speed_${now}`,
-        itemId: 'speed_boost',
-        expiresAt: newExpiry,
-        value: 2,
-      },
-    ];
-  });
+          return [
+            ...prev.filter(effect => effect.itemId !== 'speed_boost'),
+            {
+              id: `speed_${now}`,
+              itemId: 'speed_boost',
+              expiresAt: newExpiry,
+              value: 2,
+            },
+          ];
+        });
 
-  addToast('⚡ Acelerador 2× renovado! +1 hora', 'info');
-  break;
-}
+        addToast('⚡ Acelerador 2× renovado! +1 hora', 'info');
+        break;
+      }
 
       case 'no_ads':
         setHasNoAds(true);
@@ -2083,16 +2084,16 @@ export default function App() {
   const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
 
   const speedBoostExpiresAt = activePremiumEffects
-  .filter(effect => effect.itemId === 'speed_boost')
-  .reduce(
-    (latest, effect) => Math.max(latest, effect.expiresAt ?? 0),
-    0
-  );
+    .filter(effect => effect.itemId === 'speed_boost')
+    .reduce(
+      (latest, effect) => Math.max(latest, effect.expiresAt ?? 0),
+      0
+    );
 
-const speedBoostRemainingSeconds = Math.max(
-  0,
-  Math.ceil((speedBoostExpiresAt - speedBoostNow) / 1000)
-);
+  const speedBoostRemainingSeconds = Math.max(
+    0,
+    Math.ceil((speedBoostExpiresAt - speedBoostNow) / 1000)
+  );
 
   // === Main Game Loop ===
   useEffect(() => {
@@ -2237,7 +2238,7 @@ const speedBoostRemainingSeconds = Math.max(
           setHeroHitFlash(true);
           setTimeout(() => setHeroHitFlash(false), 200);
 
-         
+
 
           setHeroHp((prev) => {
             const newHp = Math.max(0, prev - damage);
