@@ -24,7 +24,7 @@ export default function EnemySprite({
     }
 
     const timer = setInterval(() => {
-      setFrame(previous => (previous + 1) % 4);
+      setFrame(previous => (previous + 1) % (attacking ? 4 : 2));
     }, attacking ? 120 : 220);
 
     return () => clearInterval(timer);
@@ -42,6 +42,7 @@ export default function EnemySprite({
         backgroundSize: '400% 200%',
         backgroundPosition: `${frame * 100 / 3}% ${attacking ? 100 : 0}%`,
         imageRendering: 'pixelated',
+        transform: 'scaleX(-1)',
       }}
     />
   );
