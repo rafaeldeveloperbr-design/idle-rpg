@@ -2309,6 +2309,7 @@ const speedBoostRemainingSeconds = Math.max(
           level={heroLevel}
           gold={heroGold}
           diamonds={heroDiamonds}
+          speedBoostActive={speedBoostActive}
           currentBiome={currentBiome}
           biomes={biomes}
           biomeKills={biomeKills}
