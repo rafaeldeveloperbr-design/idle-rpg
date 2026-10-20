@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../App';
+
 
 type GamePhase = 'approaching' | 'fighting' | 'respawning';
 
@@ -173,6 +174,24 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const isMoving = gamePhase === 'approaching';
   const isAttacking = gamePhase === 'fighting' && enemyHp > 0;
   const isEnemyDead = enemyHp <= 0;
+  const [walkFrame, setWalkFrame] = useState(0);
+
+  useEffect(() => {
+    if (!isMoving) {
+      setWalkFrame(0);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setWalkFrame(prev => (prev + 1) % 10);
+    }, 120);
+
+    return () => clearInterval(timer);
+  }, [isMoving]);
+
+  const heroSprite = isMoving
+    ? `/sprites/player1/conteudo_${31 + walkFrame}.png`
+    : '/sprites/player1/conteudo_41.png';
 
   return (
     <div className={`w-full h-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient}`}>
@@ -453,17 +472,16 @@ const GameViewport: React.FC<GameViewportProps> = ({
             {heroHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
             )}
-            <div
-              className="w-[64px] h-[80px]"
-              style={{
-                backgroundImage: "url('/sprites/boy.png')",
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: '0 0',
-                backgroundSize: '640px 400px',
-                imageRendering: 'pixelated',
-              }}
-            />
-            
+            <div className="w-[64px] h-[80px] flex items-end justify-center">
+              <img
+                src={heroSprite}
+                alt="Herói"
+                className="w-full h-full object-contain object-bottom"
+                style={{ imageRendering: 'pixelated' }}
+                draggable={false}
+              />
+            </div>
+
           </div>
         </div>
       </div>
