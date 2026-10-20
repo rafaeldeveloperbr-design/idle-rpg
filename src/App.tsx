@@ -2152,8 +2152,8 @@ export default function App() {
           });
         }
 
-        // HP Regeneration (every 2 seconds)
-        if (now - lastRegenRef.current >= 2000) {
+        // HP Regeneration (every 1 second)
+        if (now - lastRegenRef.current >= 1000) {
           lastRegenRef.current = now;
           if (combatAttrs.regen > 0 && heroHpRef.current < combatAttrs.maxHp) {
             const healAmount = combatAttrs.regen;
