@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../App';
+import EnemySprite from './EnemySprite';
 
 
 type GamePhase = 'approaching' | 'fighting' | 'respawning';
@@ -145,6 +146,11 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
     </div>
   );
 };
+
+const ENEMY_SPRITES: Record<string, string> = {
+  goblin: '/sprites/globin.png',
+};
+
 
 const GameViewport: React.FC<GameViewportProps> = ({
   heroX,
@@ -523,7 +529,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
 
       {/* Enemy - moves from right to left */}
       <div
-         className={`absolute z-0 bottom-12 sm:bottom-16 transition-opacity duration-500 ${isEnemyDead ? 'opacity-0' : ''
+        className={`absolute z-0 bottom-12 sm:bottom-16 transition-opacity duration-500 ${isEnemyDead ? 'opacity-0' : ''
           } ${enemyHitFlash ? 'animate-hit' : isMoving ? 'animate-walk' : ''}`}
         style={{
           left: `${enemyX}px`,
@@ -558,39 +564,50 @@ const GameViewport: React.FC<GameViewportProps> = ({
             {/* Hit flash overlay */}
             {enemyHitFlash && (
               <div className="absolute inset-0 bg-red-500/50 rounded-lg pointer-events-none animate-flash" style={{ zIndex: 5 }} />
+            )}{ENEMY_SPRITES[currentEnemy.id] ? (
+              <EnemySprite
+                key={currentEnemy.id}
+                src={ENEMY_SPRITES[currentEnemy.id]}
+                moving={isMoving}
+                attacking={isAttacking}
+              />
+            ) : (
+              <>
+                {/* Enemy Body */}
+                <div className={`w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border-2 ${currentEnemy.sprite.accentColor} rounded-t-md relative`}>
+                  {/* Shading overlay for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 rounded-t-md pointer-events-none" />
+                  {/* Head */}
+                  <div className={`absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b ${currentEnemy.sprite.headColor} border-2 ${currentEnemy.sprite.accentColor} rounded-sm`}>
+                    {/* Eyes */}
+                    <div className={`absolute top-1.5 left-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                    <div className={`absolute top-1.5 right-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
+                    {/* Ears/Horns (only for some enemies) */}
+                    {currentEnemy.id !== 'skeleton' && currentEnemy.id !== 'golem' && (
+                      <>
+                        <div className={`absolute -left-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[-15deg]`} />
+                        <div className={`absolute -right-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[15deg]`} />
+                      </>
+                    )}
+                    {/* Mouth */}
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-gray-900 rounded-sm" />
+                  </div>
+                  {/* Weapon */}
+                  <div className="absolute -left-4 top-4 w-3 h-8 bg-gradient-to-b from-amber-700 to-amber-900 border border-amber-950 rounded-sm">
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-3 bg-amber-800 border border-amber-950 rounded-sm" />
+                  </div>
+                </div>
+                {/* Legs */}
+                <div className="flex justify-center gap-0.5">
+                  <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
+                  <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
+                </div>
+              </>
             )}
-            {/* Enemy Body */}
-            <div className={`w-9 h-12 sm:w-10 sm:h-14 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border-2 ${currentEnemy.sprite.accentColor} rounded-t-md relative`}>
-              {/* Shading overlay for depth */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 rounded-t-md pointer-events-none" />
-              {/* Head */}
-              <div className={`absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-b ${currentEnemy.sprite.headColor} border-2 ${currentEnemy.sprite.accentColor} rounded-sm`}>
-                {/* Eyes */}
-                <div className={`absolute top-1.5 left-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
-                <div className={`absolute top-1.5 right-1 w-2 h-2 ${currentEnemy.sprite.eyeColor} rounded-full`} />
-                {/* Ears/Horns (only for some enemies) */}
-                {currentEnemy.id !== 'skeleton' && currentEnemy.id !== 'golem' && (
-                  <>
-                    <div className={`absolute -left-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[-15deg]`} />
-                    <div className={`absolute -right-2 top-0 w-2 h-3 bg-gradient-to-b ${currentEnemy.sprite.headColor} border ${currentEnemy.sprite.accentColor} rounded-sm rotate-[15deg]`} />
-                  </>
-                )}
-                {/* Mouth */}
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-gray-900 rounded-sm" />
-              </div>
-              {/* Weapon */}
-              <div className="absolute -left-4 top-4 w-3 h-8 bg-gradient-to-b from-amber-700 to-amber-900 border border-amber-950 rounded-sm">
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-3 bg-amber-800 border border-amber-950 rounded-sm" />
-              </div>
-            </div>
-            {/* Legs */}
-            <div className="flex justify-center gap-0.5">
-              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-left' : ''}`} />
-              <div className={`w-3 h-2.5 bg-gradient-to-b ${currentEnemy.sprite.bodyColor} border border-black/30 rounded-b-sm ${isMoving ? 'animate-leg-right' : ''}`} />
-            </div>
           </div>
         </div>
       </div>
+
 
       {/* Bottom HUD: HP Bar + Skill Bar + XP Bar */}
       <div className="absolute bottom-2 left-0 right-0 flex items-center justify-between px-1 gap-1 z-20">
