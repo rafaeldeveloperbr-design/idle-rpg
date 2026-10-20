@@ -2042,13 +2042,23 @@ export default function App() {
     }, 2000);
   }, [isBossWave, effectiveAttributes.maxHp, enemySpawnX]);
 
-  const speedBoostActive = activePremiumEffects.some(
-    effect =>
-      effect.itemId === 'speed_boost' &&
-      (effect.expiresAt ?? 0) > Date.now()
-  );
+  const [speedBoostNow, setSpeedBoostNow] = useState(() => Date.now());
 
-  const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
+useEffect(() => {
+  const timer = setInterval(() => {
+    setSpeedBoostNow(Date.now());
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, []);
+
+const speedBoostActive = activePremiumEffects.some(
+  effect =>
+    effect.itemId === 'speed_boost' &&
+    (effect.expiresAt ?? 0) > speedBoostNow
+);
+
+const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
 
   // === Main Game Loop ===
   useEffect(() => {
@@ -2225,6 +2235,8 @@ export default function App() {
         checkAndSpawnNPC();
       }
     }, 30);
+
+    gameSpeedMultiplier
 
     return () => clearInterval(interval);
   }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused]);
