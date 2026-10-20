@@ -2044,21 +2044,21 @@ export default function App() {
 
   const [speedBoostNow, setSpeedBoostNow] = useState(() => Date.now());
 
-useEffect(() => {
-  const timer = setInterval(() => {
-    setSpeedBoostNow(Date.now());
-  }, 1000);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSpeedBoostNow(Date.now());
+    }, 1000);
 
-  return () => clearInterval(timer);
-}, []);
+    return () => clearInterval(timer);
+  }, []);
 
-const speedBoostActive = activePremiumEffects.some(
-  effect =>
-    effect.itemId === 'speed_boost' &&
-    (effect.expiresAt ?? 0) > speedBoostNow
-);
+  const speedBoostActive = activePremiumEffects.some(
+    effect =>
+      effect.itemId === 'speed_boost' &&
+      (effect.expiresAt ?? 0) > speedBoostNow
+  );
 
-const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
+  const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
 
   // === Main Game Loop ===
   useEffect(() => {
@@ -2236,11 +2236,10 @@ const gameSpeedMultiplier = speedBoostActive ? 2 : 1;
       }
     }, 30);
 
-    gameSpeedMultiplier
-
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused, gameSpeedMultiplier]);
 
+  
   // === Consistency Check ===
   useEffect(() => {
     console.log('[Consistency Check] Game State:');
