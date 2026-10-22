@@ -1016,7 +1016,12 @@ export default function App() {
   const [heroAttackCount, setHeroAttackCount] = useState(0);
 
   // Constants
-  const attackRange = 45;
+  // Colisão horizontal aproximada dos corpos, sem contar armas e efeitos.
+const heroBodyRight = 74;
+const enemyBodyLeft = 58 - 23 * currentEnemy.scale;
+const collisionGap = 6;
+
+const attackRange = heroBodyRight + collisionGap - enemyBodyLeft;
   const enemySpeed = 2;
   const enemySpawnX = 900; // Spawn off-screen to the right
 
@@ -2171,10 +2176,16 @@ export default function App() {
 
       if (currentPhase === 'approaching') {
         if (distance > attackRange) {
-          setEnemyX((prev) => prev - enemySpeed * gameSpeedMultiplier);
-          setScrollOffset((prev) => prev + enemySpeed * 0.5 * gameSpeedMultiplier);
-        } else {
-          setGamePhase('fighting');
+  const movement = Math.min(
+    enemySpeed * gameSpeedMultiplier,
+    distance - attackRange
+  );
+
+  setEnemyX(prev => Math.max(heroX + attackRange, prev - movement));
+  setScrollOffset(prev => prev + movement * 0.5);
+} else {
+  setEnemyX(heroX + attackRange);
+  setGamePhase('fighting');
           lastHeroAttackRef.current = now;
           lastEnemyAttackRef.current = now;
           lastRegenRef.current = now;
