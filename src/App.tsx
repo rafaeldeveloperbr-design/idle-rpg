@@ -1611,7 +1611,6 @@ export default function App() {
         case 'defense': newAttrs.defense += 3; break;
         case 'maxHp':
           newAttrs.maxHp += 20;
-          setHeroHp((hp) => hp + 20);
           break;
         case 'speed': newAttrs.speed += 2; break;
         case 'critChance': newAttrs.critChance += 1; break;
@@ -1619,6 +1618,9 @@ export default function App() {
       }
       return newAttrs;
     });
+    if (attribute === 'maxHp') {
+      setHeroHp(hp => hp + 20);
+    }
 
     setAttributeCosts((prev) => ({
       ...prev,
@@ -2336,14 +2338,14 @@ export default function App() {
       ) {
         lastRegenRef.current = now;
 
-        if (combatAttrs.regen > 0 && heroHpRef.current > 0) {
-          const healAmount = combatAttrs.regen;
+        const maxHp = combatAttrs.maxHp;
+        const currentHp = heroHpRef.current;
 
-          setHeroHp(prev => Math.min(combatAttrs.maxHp, prev + healAmount));
+        if (combatAttrs.regen > 0 && currentHp > 0 && currentHp < maxHp) {
+          const healAmount = Math.min(combatAttrs.regen, maxHp - currentHp);
 
-          if (heroHpRef.current < combatAttrs.maxHp) {
-            spawnDamagePopup(healAmount, heroX, false, true);
-          }
+          setHeroHp(prev => Math.min(maxHp, prev + healAmount));
+          spawnDamagePopup(healAmount, heroX, false, true);
         }
       }
 
