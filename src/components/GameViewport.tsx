@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { DamagePopup, Skill, ActiveBuff, Biome, Enemy } from '../App';
 import EnemySprite from './EnemySprite';
+import CharacterFrame from './CharacterFrame';
 
 
 type GamePhase = 'approaching' | 'fighting' | 'respawning';
@@ -148,14 +149,12 @@ const SkillBar: React.FC<SkillBarProps> = ({ skills, activeBuffs, onUseSkill }) 
 };
 
 const ENEMY_SPRITES: Record<string, string> = {
-  goblin: '/sprites/globin.png',
-  skeleton: '/sprites/skull.png',
-
-  // Preparados para futuros inimigos
-  goblin_boss: '/sprites/globin-boss.png',
-  skeleton_boss: '/sprites/skull-boss.png',
-  zombie: '/sprites/zombie.png',
-  zombie_boss: '/sprites/zombie-boss.png',
+  goblin: '/sprites/globin',
+  skeleton: '/sprites/skull',
+  zombie: '/sprites/zombie',
+  goblin_boss: '/sprites/globin-boss',
+  skeleton_boss: '/sprites/skull-boss',
+  zombie_boss: '/sprites/zombie-boss',
 };
 
 const GameViewport: React.FC<GameViewportProps> = ({
@@ -230,12 +229,10 @@ const GameViewport: React.FC<GameViewportProps> = ({
   }, [isMoving]);
 
   const heroFrame = isMoving
-    ? walkFrame
+    ? walkFrame + 1
     : isAttacking && attackFrame >= 0
-      ? attackFrame
+      ? attackFrame + 4
       : 1;
-
-  const heroRow = !isMoving && isAttacking && attackFrame >= 0 ? 1 : 0;
 
   return (
     <div className={`w-full h-full relative overflow-hidden bg-gradient-to-b ${currentBiome.theme.skyGradient}`}>
@@ -513,17 +510,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
           </div>
           <div className="relative">
             {/* Hit flash overlay */}
-            <div
-              className="w-[80px] h-[100px]"
-              role="img"
-              aria-label="Herói"
-              style={{
-                backgroundImage: "url('/sprites/boy.png')",
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '400% 200%',
-                backgroundPosition: `${heroFrame * 100 / 3}% ${heroRow * 100}%`,
-                imageRendering: 'pixelated',
-              }}
+            <CharacterFrame
+              src={`/sprites/boy/${heroFrame}.png`}
+              width={80}
+              height={100}
+              alt="Herói"
             />
 
           </div>

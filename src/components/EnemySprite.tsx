@@ -1,49 +1,46 @@
 import { useEffect, useState } from 'react';
+import CharacterFrame from './CharacterFrame';
 
 type EnemySpriteProps = {
-    src: string;
-    moving: boolean;
-    attacking: boolean;
-    width?: number;
-    height?: number;
+  src: string;
+  moving: boolean;
+  attacking: boolean;
+  width?: number;
+  height?: number;
 };
 
 export default function EnemySprite({
-    src,
-    moving,
-    attacking,
-    width = 77,
-    height = 96,
+  src,
+  moving,
+  attacking,
+  width = 77,
+  height = 96,
 }: EnemySpriteProps) {
-    const [frame, setFrame] = useState(0);
+  const [frame, setFrame] = useState(1);
 
-    useEffect(() => {
-        if (!moving && !attacking) {
-            setFrame(0);
-            return;
-        }
+  useEffect(() => {
+    setFrame(attacking ? 4 : 1);
 
-        const timer = setInterval(() => {
-            setFrame(previous => (previous + 1) % (attacking ? 4 : 2));
-        }, attacking ? 120 : 220);
+    if (!moving && !attacking) return;
 
-        return () => clearInterval(timer);
-    }, [moving, attacking]);
+    const timer = setInterval(() => {
+      setFrame(previous =>
+        attacking
+          ? previous >= 7 ? 4 : previous + 1
+          : previous >= 3 ? 1 : previous + 1
+      );
+    }, attacking ? 120 : 220);
 
-    return (
-        <div
-            role="img"
-            aria-label="Inimigo"
-            style={{
-                width,
-                height,
-                backgroundImage: `url('${src}')`,
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '400% 200%',
-                backgroundPosition: `${frame * 100 / 3}% ${attacking ? 100 : 0}%`,
-                imageRendering: 'pixelated',
-                transform: 'scaleX(-1)',
-            }}
-        />
-    );
+    return () => clearInterval(timer);
+  }, [moving, attacking, src]);
+
+  return (
+    <CharacterFrame
+      src={`${src}/${frame}.png`}
+      width={width}
+      height={height}
+      flipped
+      alt="Inimigo"
+    />
+  );
 }
