@@ -2110,6 +2110,9 @@ export default function App() {
     critChance: heroAttributes.critChance + equipmentBonuses.critChance,
     regen: heroAttributes.regen + equipmentBonuses.regen,
   };
+  useEffect(() => {
+    setHeroHp(prev => Math.min(prev, effectiveAttributes.maxHp));
+  }, [effectiveAttributes.maxHp]);
 
   // === Hero Death Handler ===
   const handleHeroDeath = useCallback(() => {
@@ -2420,7 +2423,7 @@ export default function App() {
             heroX={heroX}
             heroName={heroName}
             heroHp={heroHp}
-            heroMaxHp={heroAttributes.maxHp}
+            heroMaxHp={effectiveAttributes.maxHp}
             heroXp={heroXp}
             heroMaxXp={xpToNextLevel}
             enemyX={enemyX}
