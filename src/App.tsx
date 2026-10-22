@@ -2323,18 +2323,28 @@ export default function App() {
           });
         }
 
-        // HP Regeneration (every 1 second)
-        if (now - lastRegenRef.current >= 1000) {
-          lastRegenRef.current = now;
-          if (combatAttrs.regen > 0 && heroHpRef.current < combatAttrs.maxHp) {
-            const healAmount = combatAttrs.regen;
-            setHeroHp((prev) => Math.min(combatAttrs.maxHp, prev + healAmount));
-            spawnDamagePopup(healAmount, heroX, false, true);
-          }
-        }
+
       } else if (currentPhase === 'respawning') {
         // Do nothing during respawn - hero is recovering
         // The setTimeout in handleHeroDeath will handle the respawn logic
+      }
+
+      // HP Regeneration (every 1 second, while alive)
+      if (
+        currentPhase !== 'respawning' &&
+        now - lastRegenRef.current >= 1000
+      ) {
+        lastRegenRef.current = now;
+
+        if (combatAttrs.regen > 0 && heroHpRef.current > 0) {
+          const healAmount = combatAttrs.regen;
+
+          setHeroHp(prev => Math.min(combatAttrs.maxHp, prev + healAmount));
+
+          if (heroHpRef.current < combatAttrs.maxHp) {
+            spawnDamagePopup(healAmount, heroX, false, true);
+          }
+        }
       }
 
       // Update quest progress
