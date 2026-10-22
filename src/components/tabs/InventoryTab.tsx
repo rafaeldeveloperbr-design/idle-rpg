@@ -330,8 +330,9 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
     if (!selectedItem) return;
 
     const item = selectedItem.item;
+    const comparison = compareItems(item, equipment);
 
-    if (item.rarity === 'rare' || item.rarity === 'epic') {
+    if (comparison === 'better') {
       setItemPendingSale(item);
       return;
     }
