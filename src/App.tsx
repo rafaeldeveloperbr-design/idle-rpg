@@ -1017,11 +1017,11 @@ export default function App() {
 
   // Constants
   // Colisão horizontal aproximada dos corpos, sem contar armas e efeitos.
-const heroBodyRight = 74;
-const enemyBodyLeft = 58 - 23 * currentEnemy.scale;
-const collisionGap = 6;
+  const heroBodyRight = 74;
+  const enemyBodyLeft = 58 - 23 * currentEnemy.scale;
+  const collisionGap = 6;
 
-const attackRange = heroBodyRight + collisionGap - enemyBodyLeft;
+  const attackRange = heroBodyRight + collisionGap - enemyBodyLeft;
   const enemySpeed = 2;
   const enemySpawnX = 900; // Spawn off-screen to the right
 
@@ -2176,16 +2176,16 @@ const attackRange = heroBodyRight + collisionGap - enemyBodyLeft;
 
       if (currentPhase === 'approaching') {
         if (distance > attackRange) {
-  const movement = Math.min(
-    enemySpeed * gameSpeedMultiplier,
-    distance - attackRange
-  );
+          const movement = Math.min(
+            enemySpeed * gameSpeedMultiplier,
+            distance - attackRange
+          );
 
-  setEnemyX(prev => Math.max(heroX + attackRange, prev - movement));
-  setScrollOffset(prev => prev + movement * 0.5);
-} else {
-  setEnemyX(heroX + attackRange);
-  setGamePhase('fighting');
+          setEnemyX(prev => Math.max(heroX + attackRange, prev - movement));
+          setScrollOffset(prev => prev + movement * 0.5);
+        } else {
+          setEnemyX(heroX + attackRange);
+          setGamePhase('fighting');
           lastHeroAttackRef.current = now;
           lastEnemyAttackRef.current = now;
           lastRegenRef.current = now;
@@ -2434,7 +2434,7 @@ const attackRange = heroBodyRight + collisionGap - enemyBodyLeft;
       </div>
 
       {/* Combat Activity History */}
-      <div className="flex-1 min-h-0 w-full overflow-y-auto bg-slate-950 border-t border-purple-900/50 px-3 py-3 sm:hidden">
+      <div className="flex-1 min-h-0 w-full overflow-y-auto bg-slate-950 border-t border-purple-900/50 px-3 py-3">
         <div className="rounded-lg border border-purple-800/60 bg-slate-900/80 px-3 py-3 shadow-md">
           <h3 className="text-sm font-bold text-purple-300 mb-2 leading-relaxed">
             📜 Atividades Recentes
