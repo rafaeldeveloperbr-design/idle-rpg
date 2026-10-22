@@ -222,7 +222,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
     }
 
     const timer = setInterval(() => {
-      setWalkFrame(prev => (prev + 1) % 2);
+      setWalkFrame(prev => (prev + 1) % 3);
     }, 220);
 
     return () => clearInterval(timer);
