@@ -6,6 +6,7 @@ interface DiamondShopModalProps {
   premiumItems: PremiumItem[];
   heroDiamonds: number;
   speedBoostRemainingSeconds: number;
+  xpBoostRemainingSeconds: number;
   onBuyItem: (itemId: string) => void;
   onClose: () => void;
 }
@@ -14,6 +15,7 @@ const DiamondShopModal: React.FC<DiamondShopModalProps> = ({
   premiumItems,
   heroDiamonds,
   speedBoostRemainingSeconds,
+  xpBoostRemainingSeconds,
   onBuyItem,
   onClose,
 }) => {
@@ -80,6 +82,11 @@ const DiamondShopModal: React.FC<DiamondShopModalProps> = ({
                       {item.type === 'speed_boost' && speedBoostRemainingSeconds > 0 && (
                         <div className="mb-2 rounded-md border border-yellow-500/40 bg-yellow-950/40 px-3 py-2 text-xs font-bold text-yellow-300">
                           ⚡ 2× ativo — {formatRemainingTime(speedBoostRemainingSeconds)}
+                        </div>
+                      )}
+                      {item.type === 'xp_boost' && xpBoostRemainingSeconds > 0 && (
+                        <div className="mb-2 rounded-md border border-yellow-500/40 bg-yellow-950/40 px-3 py-2 text-xs font-bold text-yellow-300">
+                          2× XP/Ouro ativo — {formatRemainingTime(xpBoostRemainingSeconds)}
                         </div>
                       )}
                       {item.duration && (

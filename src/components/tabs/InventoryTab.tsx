@@ -156,9 +156,9 @@ const ItemModal: React.FC<ItemModalProps> = ({
     equal: 'text-gray-400',
   };
   return (
-    <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="absolute inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-[#0f0f1a] border-2 border-purple-500/70 rounded-lg max-w-sm w-full shadow-[0_0_30px_rgba(139,92,246,0.4)]"
+        className="bg-[#0f0f1a] border-2 border-purple-500/70 rounded-lg max-w-sm w-full max-h-full overflow-y-auto shadow-[0_0_30px_rgba(139,92,246,0.4)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -457,8 +457,8 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
       )}
       {/* Sale Confirmation Modal */}
       {itemPendingSale && (
-        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-[#15152b] border-2 border-purple-500 rounded-lg p-5 shadow-[0_0_30px_rgba(168,85,247,0.3)] text-center">
+        <div className="absolute inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm max-h-full overflow-y-auto bg-[#15152b] border-2 border-purple-500 rounded-lg p-5 shadow-[0_0_30px_rgba(168,85,247,0.3)] text-center">
             <h3 className="text-sm font-bold text-yellow-300 mb-4">
               ⚠️ Confirmar venda
             </h3>

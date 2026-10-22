@@ -208,7 +208,7 @@ export default function App() {
   const [isSpeedBoosted, setIsSpeedBoosted] = useState(false);
   const [hasNoAds, setHasNoAds] = useState(false);
   const [activePremiumEffects, setActivePremiumEffects] = useState<ActivePremiumEffect[]>([]);
-  const [inventoryCapacity, setInventoryCapacity] = useState(20); // Can be expanded with premium items
+  const [inventoryCapacity, setInventoryCapacity] = useState(10); // Can be expanded with premium items
 
   // === Modal States ===
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
@@ -643,7 +643,13 @@ export default function App() {
   ];
 
   // === Inventory System ===
-  const [inventory, setInventory] = useState<Item[]>([]);
+  const [inventory, updateInventory] = useState<Item[]>([]);
+  const inventoryRef = useRef<Item[]>([]);
+  const setInventory = useCallback((update: Item[] | ((items: Item[]) => Item[])) => {
+    const next = typeof update === 'function' ? update(inventoryRef.current) : update;
+    inventoryRef.current = next;
+    updateInventory(next);
+  }, []);
   const [equipment, setEquipment] = useState<Equipment>({
     weapon: null,
     armor: null,
@@ -1056,7 +1062,11 @@ export default function App() {
       setSkills(savedData.skills);
 
       // Restore inventory & equipment
-      setInventory(savedData.inventory);
+      const capacity = Math.max(10, Math.floor(savedData.inventoryCapacity || 20));
+      setInventoryCapacity(capacity);
+      const discarded = savedData.inventory.slice(0, Math.max(0, savedData.inventory.length - capacity));
+      setInventory(savedData.inventory.slice(-capacity));
+      discarded.forEach(item => addToast(`Inventário cheio: ${item.name} foi descartado.`, 'info'));
       setEquipment(savedData.equipment);
 
       // Restore biome & progress
@@ -1100,7 +1110,6 @@ export default function App() {
       }
 
       // Restore premium effects
-      setInventoryCapacity(savedData.inventoryCapacity || 20);
       setIsSpeedBoosted(savedData.isSpeedBoosted || false);
       setHasNoAds(savedData.hasNoAds || false);
       setActivePremiumEffects(savedData.activePremiumEffects || []);
@@ -1291,6 +1300,18 @@ export default function App() {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, duration);
   }, []);
+
+  // Array order records entry order; equipped items live outside this array.
+  const addInventoryItem = useCallback((item: Item) => {
+    const items = [...inventoryRef.current, item];
+    const discarded = items.splice(0, Math.max(0, items.length - inventoryCapacity));
+    setInventory(items);
+    discarded.forEach(oldItem => addToast(`Inventário cheio: ${oldItem.name} foi descartado.`, 'info'));
+  }, [inventoryCapacity, setInventory, addToast]);
+
+  const combatRewardMultiplier = useCallback(() => activePremiumEffects.some(
+    effect => effect.itemId === 'xp_boost' && (effect.expiresAt ?? 0) > Date.now()
+  ) ? 2 : 1, [activePremiumEffects]);
 
   // === Level Up Logic ===
   useEffect(() => {
@@ -1486,7 +1507,7 @@ export default function App() {
         ...quest.reward.item,
         id: `quest_item_${Date.now()}_${Math.random()}`,
       };
-      setInventory(prev => [...prev, newItem]);
+      addInventoryItem(newItem);
     }
 
     // Increment quest completion counter
@@ -1503,7 +1524,7 @@ export default function App() {
       setShowPathChoice(true);
       addToast(`🛤️ Bifurcação disponível! Escolha seu caminho.`, 'info');
     }
-  }, [quests, addToast, completedQuestsSinceLastPath, heroAttributes.maxHp]);
+  }, [quests, addToast, addInventoryItem, completedQuestsSinceLastPath, heroAttributes.maxHp]);
 
   // Complete quests automatically when their objectives are reached
   useEffect(() => {
@@ -1651,19 +1672,22 @@ export default function App() {
         setEnemyHitFlash(true);
         setTimeout(() => setEnemyHitFlash(false), 300);
 
-        setEnemyHp((prev) => {
-          const newHp = prev - damage;
+        (() => {
+          if (enemyHpRef.current <= 0) return;
+          const newHp = enemyHpRef.current - damage;
+          enemyHpRef.current = Math.max(0, newHp);
           if (newHp <= 0) {
             const currentWave = waveRef.current;
-            const goldReward = baseEnemyGold + (currentWave - 1) * 5;
-            const xpReward = baseEnemyXp + (currentWave - 1) * 8;
+            const rewardMultiplier = combatRewardMultiplier();
+            const goldReward = (baseEnemyGold + (currentWave - 1) * 5) * rewardMultiplier;
+            const xpReward = (baseEnemyXp + (currentWave - 1) * 8) * rewardMultiplier;
             setHeroGold((g) => g + goldReward);
             setHeroXp((x) => x + xpReward);
 
             // Generate item drop
             const droppedItem = generateItemDrop();
             if (droppedItem) {
-              setInventory((prev) => [...prev, droppedItem]);
+              addInventoryItem(droppedItem);
 
               // Show toast for rare/epic items
               if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
@@ -1691,10 +1715,11 @@ export default function App() {
 
             // Spawn next enemy immediately
             spawnNewEnemy();
-            return 0;
+            setEnemyHp(0);
+            return;
           }
-          return newHp;
-        });
+          setEnemyHp(newHp);
+        })();
         break;
       }
       case 'heal': {
@@ -1721,7 +1746,7 @@ export default function App() {
     setSkills((prev) => prev.map(s =>
       s.id === skillId ? { ...s, lastUsed: now } : s
     ));
-  }, [skills, heroAttributes, spawnDamagePopup, spawnNewEnemy]);
+  }, [skills, heroAttributes, spawnDamagePopup, spawnNewEnemy, combatRewardMultiplier, addInventoryItem]);
 
   // === Upgrade Skill Function ===
   const upgradeSkill = useCallback((skillId: string) => {
@@ -1824,10 +1849,6 @@ export default function App() {
     if (!item) return;
     if (heroGold < item.sellValue) return;
     if (heroLevel < (item.requiredLevel || 1)) return;
-    if (inventory.length >= inventoryCapacity) {
-      addToast('⚠️ Inventário cheio!', 'info');
-      return;
-    }
 
     setHeroGold(prev => prev - item.sellValue);
 
@@ -1837,9 +1858,9 @@ export default function App() {
       id: `${item.id}_${Date.now()}_${Math.random()}`,
     };
 
-    setInventory(prev => [...prev, newItem]);
+    addInventoryItem(newItem);
     addToast(`🛡️ ${item.name} comprado!`, 'info');
-  }, [shopItems, heroGold, heroLevel, inventory.length, addToast]);
+  }, [shopItems, heroGold, heroLevel, addInventoryItem, addToast]);
 
   // === Buy Premium Item ===
   const buyPremiumItem = useCallback((itemId: string) => {
@@ -1906,7 +1927,7 @@ export default function App() {
         break;
 
       case 'xp_boost':
-        setActivePremiumEffects(prev => [...prev, {
+        setActivePremiumEffects(prev => [...prev.filter(effect => effect.itemId !== 'xp_boost'), {
           id: `xp_${Date.now()}`,
           itemId: item.id,
           expiresAt: Date.now() + (item.duration || 0) * 1000,
@@ -2042,7 +2063,7 @@ export default function App() {
     // If there's already an item in that slot, unequip it first
     const currentEquipped = equipment[item.slot];
     if (currentEquipped) {
-      setInventory((prev) => [...prev, currentEquipped]);
+      addInventoryItem(currentEquipped);
     }
 
     // Equip new item
@@ -2050,7 +2071,7 @@ export default function App() {
       ...prev,
       [item.slot]: item,
     }));
-  }, [inventory, equipment]);
+  }, [inventory, equipment, addInventoryItem]);
 
   // === Unequip Item ===
   const unequipItem = useCallback((slot: EquipmentSlot) => {
@@ -2058,14 +2079,14 @@ export default function App() {
     if (!item) return;
 
     // Move to inventory
-    setInventory((prev) => [...prev, item]);
+    addInventoryItem(item);
 
     // Clear slot
     setEquipment((prev) => ({
       ...prev,
       [slot]: null,
     }));
-  }, [equipment]);
+  }, [equipment, addInventoryItem]);
 
   // === Sell Item ===
   const sellItem = useCallback((itemId: string) => {
@@ -2165,6 +2186,10 @@ export default function App() {
     Math.ceil((speedBoostExpiresAt - speedBoostNow) / 1000)
   );
 
+  const xpBoostRemainingSeconds = Math.max(0, Math.ceil((activePremiumEffects
+    .filter(effect => effect.itemId === 'xp_boost')
+    .reduce((latest, effect) => Math.max(latest, effect.expiresAt ?? 0), 0) - speedBoostNow) / 1000));
+
   // === Main Game Loop ===
   useEffect(() => {
     // Don't run game loop if game hasn't started yet or is paused
@@ -2229,13 +2254,16 @@ export default function App() {
           setEnemyHitFlash(true);
           setTimeout(() => setEnemyHitFlash(false), 200);
 
-          setEnemyHp((prev) => {
-            const newHp = prev - damage;
+          (() => {
+            if (enemyHpRef.current <= 0) return;
+            const newHp = enemyHpRef.current - damage;
+            enemyHpRef.current = Math.max(0, newHp);
 
             if (newHp <= 0) {
               const currentWave = waveRef.current;
-              const goldReward = baseEnemyGold + (currentWave - 1) * 5;
-              const xpReward = baseEnemyXp + (currentWave - 1) * 8;
+              const rewardMultiplier = combatRewardMultiplier();
+              const goldReward = (baseEnemyGold + (currentWave - 1) * 5) * rewardMultiplier;
+              const xpReward = (baseEnemyXp + (currentWave - 1) * 8) * rewardMultiplier;
 
               setHeroGold((g) => g + goldReward);
               setHeroXp((x) => x + xpReward);
@@ -2248,7 +2276,7 @@ export default function App() {
               // Generate item drop
               const droppedItem = generateItemDrop();
               if (droppedItem) {
-                setInventory((prev) => [...prev, droppedItem]);
+                addInventoryItem(droppedItem);
 
                 // Show toast for rare/epic items
                 if (droppedItem.rarity === 'rare' || droppedItem.rarity === 'epic') {
@@ -2278,10 +2306,11 @@ export default function App() {
               // Spawn next enemy immediately
               spawnNewEnemy();
 
-              return 0;
+              setEnemyHp(0);
+              return;
             }
-            return newHp;
-          });
+            setEnemyHp(newHp);
+          })();
         }
 
         // Enemy attacks hero
@@ -2362,7 +2391,7 @@ export default function App() {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused, gameSpeedMultiplier]);
+  }, [heroX, attackRange, enemySpeed, heroAttackSpeed, enemyAttackSpeed, spawnNewEnemy, spawnDamagePopup, useSkill, activeBuffs, skills, generateItemDrop, effectiveAttributes, handleHeroDeath, updateQuestProgress, checkAndSpawnNPC, showPathChoice, currentNPCQuest, isGameStarted, isPaused, gameSpeedMultiplier, combatRewardMultiplier, addInventoryItem]);
 
 
   // === Consistency Check ===
@@ -2375,7 +2404,7 @@ export default function App() {
     console.log('  - Current Biome:', currentBiomeId);
     console.log('  - Wave:', wave);
     console.log('  - Enemy HP:', enemyHp, '/', enemyMaxHp);
-    console.log('  - Inventory:', inventory.length, '/20');
+    console.log('  - Inventory:', inventory.length, '/', inventoryCapacity);
     console.log('  - Equipment:', {
       weapon: equipment.weapon?.name || 'Empty',
       armor: equipment.armor?.name || 'Empty',
@@ -2384,7 +2413,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950">
+    <div className="flex flex-col h-dvh w-full overflow-hidden bg-slate-950">
       {/* Game Paused Overlay */}
       {!isGameStarted && !showCharacterCreation && (
         <div className="fixed inset-0 bg-black/80 z-[90] flex items-center justify-center">
@@ -2397,7 +2426,7 @@ export default function App() {
       )}
 
       {/* Top: HUD/Header */}
-      <div className="relative h-12 w-full shrink-0 z-[60]">
+      <div className="relative min-h-12 w-full shrink-0 z-[60]">
         <PlayerStatus
           level={heroLevel}
           gold={heroGold}
@@ -2416,7 +2445,7 @@ export default function App() {
       </div>
 
       {/* Center: Game Viewport + Skills + HP/XP Bars */}
-      <div className={`${activeDrawer ? 'h-[34dvh]' : 'h-[55dvh] max-h-[550px]'} min-h-0 shrink-0 sm:flex-1 sm:h-auto sm:max-h-none w-full overflow-hidden relative z-[10] bg-slate-950`}>
+      <div className="flex-[3] min-h-0 min-w-0 w-full overflow-hidden relative z-[10] bg-slate-950">
         <div className="w-full h-full relative">
           <ToastContainer toasts={toasts} />
           <GameViewport
@@ -2449,33 +2478,58 @@ export default function App() {
       </div>
 
       {/* Combat Activity History */}
-      <div className="flex-1 min-h-0 w-full overflow-y-auto bg-slate-950 border-t border-purple-900/50 px-3 py-3">
-        <div className="rounded-lg border border-purple-800/60 bg-slate-900/80 px-3 py-3 shadow-md">
-          <h3 className="text-sm font-bold text-purple-300 mb-2 leading-relaxed">
-            📜 Atividades Recentes
-          </h3>
+      <section className="relative flex-[2] min-h-0 min-w-0 w-full overflow-hidden bg-slate-950 border-t border-purple-900/50" aria-label="Painel inferior">
+        {activeDrawer ? (
+          <Drawer
+            activeDrawer={activeDrawer}
+            onClose={() => setActiveDrawer(null)}
+            heroAttributes={heroAttributes}
+            attributeCosts={attributeCosts}
+            heroGold={heroGold}
+            onUpgradeAttribute={upgradeAttribute}
+            skills={skills}
+            equippedSkillIds={equippedSkillIds}
+            onUpgradeSkill={upgradeSkill}
+            onToggleAutoCast={toggleAutoCast}
+            onEquipSkill={equipSkill}
+            inventory={inventory}
+            equipment={equipment}
+            inventoryCapacity={inventoryCapacity}
+            onEquipItem={equipItem}
+            onUnequipItem={unequipItem}
+            onSellItem={sellItem}
+            quests={quests}
+            onCompleteQuest={completeQuest}
+          />
+        ) : (
+          <div className="h-full overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3">
+            <div className="rounded-lg border border-purple-800/60 bg-slate-900/80 px-3 py-3 shadow-md">
+              <h3 className="text-sm font-bold text-purple-300 mb-2 leading-relaxed">
+                📜 Atividades Recentes
+              </h3>
 
-          {combatHistory.length === 0 ? (
-            <p className="text-xs text-gray-500">
-              Nenhum evento registrado ainda.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {combatHistory.map((event) => (
-                <div
-                  key={event.id}
-                  className="rounded-md border border-slate-700/80 bg-slate-950 px-3 py-2.5 text-xs leading-relaxed text-gray-200 break-words"
-                >
-                  {event.message}
+              {combatHistory.length === 0 ? (
+                <p className="text-xs text-gray-500">
+                  Nenhum evento registrado ainda.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  {combatHistory.map((event) => (
+                    <div
+                      key={event.id}
+                      className="rounded-md border border-slate-700/80 bg-slate-950 px-3 py-2.5 text-xs leading-relaxed text-gray-200 break-words"
+                    >
+                      {event.message}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </section>
 
-
-      {/* Bottom: Bottom Bar Fixed */}
+      {/* Bottom: Bottom Bar */}
       <div className="relative h-16 w-full shrink-0 z-[60] bg-slate-900 border-t border-slate-700 flex items-center justify-around">
         <button
           onClick={() => handleDrawerToggle('attributes')}
@@ -2519,29 +2573,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* Drawer Portal */}
-      <Drawer
-        activeDrawer={activeDrawer}
-        onClose={() => setActiveDrawer(null)}
-        heroAttributes={heroAttributes}
-        attributeCosts={attributeCosts}
-        heroGold={heroGold}
-        onUpgradeAttribute={upgradeAttribute}
-        skills={skills}
-        equippedSkillIds={equippedSkillIds}
-        onUpgradeSkill={upgradeSkill}
-        onToggleAutoCast={toggleAutoCast}
-        onEquipSkill={equipSkill}
-        inventory={inventory}
-        equipment={equipment}
-        inventoryCapacity={inventoryCapacity}
-        onEquipItem={equipItem}
-        onUnequipItem={unequipItem}
-        onSellItem={sellItem}
-        quests={quests}
-        onCompleteQuest={completeQuest}
-      />
-
       {/* Character Creation Modal (First Time) */}
       {showCharacterCreation && (
         <CharacterCreationModal onStartAdventure={handleStartAdventure} />
@@ -2583,6 +2614,7 @@ export default function App() {
           heroDiamonds={heroDiamonds}
           onBuyItem={buyPremiumItem}
           speedBoostRemainingSeconds={speedBoostRemainingSeconds}
+          xpBoostRemainingSeconds={xpBoostRemainingSeconds}
           onClose={() => setShowDiamondShop(false)}
         />
       )}

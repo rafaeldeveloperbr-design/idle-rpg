@@ -39,24 +39,25 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
   const lockedSkills = skills.filter(s => !s.unlocked);
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-2 sm:p-4" onClick={onClose}>
       <div 
-        className="bg-[#0f0f1a] border-2 border-yellow-500/70 rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(234,179,8,0.4)]"
+        className="bg-[#0f0f1a] border-2 border-yellow-500/70 rounded-lg max-w-2xl w-full max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] min-h-0 overflow-hidden flex flex-col shadow-[0_0_40px_rgba(234,179,8,0.4)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-yellow-500/30">
-          <h2 className="text-lg font-bold text-yellow-300 flex items-center gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-2 p-3 sm:p-4 shrink-0 border-b border-yellow-500/30">
+          <h2 className="text-sm sm:text-lg font-bold text-yellow-300 flex items-center gap-2">
             <span>🏪</span> Mercado do Mercador
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <div className="flex items-center gap-1.5 bg-[#1a1a2e] px-3 py-1.5 border border-yellow-500/50 rounded-sm">
               <GoldIcon size="md" />
               <span className="text-xs text-yellow-400 font-bold">{heroGold.toLocaleString()}</span>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center"
+              aria-label="Fechar mercado"
+              className="text-gray-400 hover:text-white text-2xl leading-none min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center"
             >
               ×
             </button>
@@ -64,41 +65,41 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-yellow-500/30">
+        <div className="grid grid-cols-3 shrink-0 border-b border-yellow-500/30">
           <button
             onClick={() => setActiveTab('skills')}
-            className={`flex-1 py-3 text-sm transition-all border-b-2 ${
+            className={`min-w-0 min-h-[44px] px-1 py-2 text-[8px] sm:text-xs break-words flex flex-col sm:flex-row items-center justify-center gap-1 transition-all border-b-2 ${
               activeTab === 'skills'
                 ? 'text-yellow-300 border-yellow-500 bg-yellow-900/20'
                 : 'text-gray-500 border-transparent hover:text-gray-300'
             }`}
           >
-            ⚔️ Habilidades
+            <span aria-hidden="true">⚔️</span><span>Habilidades</span>
           </button>
           <button
             onClick={() => setActiveTab('consumables')}
-            className={`flex-1 py-3 text-sm transition-all border-b-2 ${
+            className={`min-w-0 min-h-[44px] px-1 py-2 text-[8px] sm:text-xs break-words flex flex-col sm:flex-row items-center justify-center gap-1 transition-all border-b-2 ${
               activeTab === 'consumables'
                 ? 'text-yellow-300 border-yellow-500 bg-yellow-900/20'
                 : 'text-gray-500 border-transparent hover:text-gray-300'
             }`}
           >
-            🧪 Consumíveis
+            <span aria-hidden="true">🧪</span><span>Consumíveis</span>
           </button>
           <button
             onClick={() => setActiveTab('equipment')}
-            className={`flex-1 py-3 text-sm transition-all border-b-2 ${
+            className={`min-w-0 min-h-[44px] px-1 py-2 text-[8px] sm:text-xs break-words flex flex-col sm:flex-row items-center justify-center gap-1 transition-all border-b-2 ${
               activeTab === 'equipment'
                 ? 'text-yellow-300 border-yellow-500 bg-yellow-900/20'
                 : 'text-gray-500 border-transparent hover:text-gray-300'
             }`}
           >
-            🛡️ Equipamentos
+            <span aria-hidden="true">🛡️</span><span>Equipamentos</span>
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain p-3 sm:p-4 [overflow-wrap:anywhere]">
           {activeTab === 'skills' && (
             <div className="space-y-4">
               {/* Equipped Skills Section */}
@@ -110,9 +111,11 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                     const skill = skills.find(s => s.id === skillId);
                     
                     return (
-                      <div
+                      <button
+                        type="button"
+                        disabled={!skill}
                         key={slot}
-                        className={`border-2 rounded-md p-3 flex flex-col items-center gap-1 min-h-[100px] ${
+                        className={`border-2 rounded-md p-2 sm:p-3 flex flex-col items-center gap-1 min-h-[100px] min-w-0 w-full ${
                           skill
                             ? 'border-purple-500 bg-purple-900/20 cursor-pointer hover:bg-purple-900/30'
                             : 'border-[#2d2d5e] bg-[#0a0a12]'
@@ -128,7 +131,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                         ) : (
                           <span className="text-xs text-gray-600">Slot Vazio</span>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -152,15 +155,15 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                           }`}
                         >
                           <span className="text-2xl">{skill.icon}</span>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
                               <span className="text-sm text-gray-200 font-bold">{skill.name}</span>
                               <span className="text-[10px] text-blue-300">Nv.{skill.level}</span>
                             </div>
                             <p className="text-xs text-gray-400 mb-2">{skill.description}</p>
                             <button
                               onClick={() => onEquipSkill(skill.id)}
-                              className={`text-xs px-3 py-1 rounded-sm transition-colors ${
+                              className={`text-xs min-w-[44px] min-h-[44px] w-full sm:w-auto px-3 py-2 rounded-sm transition-colors ${
                                 isEquipped
                                   ? 'bg-red-600 hover:bg-red-500 text-white'
                                   : 'bg-purple-600 hover:bg-purple-500 text-white'
@@ -197,8 +200,8 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                           }`}
                         >
                           <span className="text-2xl">{skill.icon}</span>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
                               <span className="text-sm text-gray-200 font-bold">{skill.name}</span>
                             </div>
                             <p className="text-xs text-gray-400 mb-2">{skill.description}</p>
@@ -207,14 +210,14 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                                 🔒 Desbloqueia no Nv. {levelRequired}
                               </p>
                             )}
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                               <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'} flex items-center gap-1`}>
                                 <GoldIcon size="sm" /> {Math.round(skill.cost)}
                               </span>
                               <button
                                 onClick={() => onBuySkill(skill.id)}
                                 disabled={!canBuy}
-                                className={`text-xs px-3 py-1 rounded-sm transition-colors ${
+                                className={`text-xs min-w-[44px] min-h-[44px] w-full sm:w-auto px-3 py-2 rounded-sm transition-colors ${
                                   canBuy
                                     ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
                                     : 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -250,7 +253,7 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                     }`}
                   >
                     <span className="text-3xl">{consumable.icon}</span>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="text-sm text-gray-200 font-bold mb-1">{consumable.name}</div>
                       <p className="text-xs text-gray-400 mb-2">{consumable.description}</p>
                       {!levelMet && (
@@ -258,14 +261,14 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                           🔒 Desbloqueia no Nv. {consumable.requiredLevel}
                         </p>
                       )}
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className={`text-xs ${canAfford ? 'text-green-400' : 'text-red-400'} flex items-center gap-1`}>
                           <GoldIcon size="sm" /> {Math.round(consumable.cost)}
                         </span>
                         <button
                           onClick={() => onBuyConsumable(consumable.id)}
                           disabled={!canBuy}
-                          className={`text-xs px-3 py-1 rounded-sm transition-colors ${
+                          className={`text-xs min-w-[44px] min-h-[44px] w-full sm:w-auto px-3 py-2 rounded-sm transition-colors ${
                             canBuy
                               ? 'bg-green-600 hover:bg-green-500 text-white'
                               : 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -283,17 +286,17 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
 
           {activeTab === 'equipment' && (
             <div>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h3 className="text-sm text-gray-300">Catálogo de Equipamentos</h3>
                 <span className="text-xs text-gray-400">
-                  Inventário: {inventoryCount}/20
+                  Inventário: {inventoryCount}/{inventoryCapacity}
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {shopItems.map((item) => {
                   const canAfford = heroGold >= item.sellValue;
                   const levelMet = heroLevel >= (item.requiredLevel || 1);
-                  const canBuy = canAfford && levelMet && inventoryCount < 20;
+                  const canBuy = canAfford && levelMet;
                   
                   const rarityColors = {
                     common: 'border-gray-500/50 bg-gray-900/10',
@@ -329,8 +332,8 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                       }`}
                     >
                       <span className="text-3xl">{item.icon}</span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className={`text-sm font-bold ${rarityTextColors[item.rarity]}`}>
                             {item.name}
                           </span>
@@ -367,18 +370,18 @@ const MerchantShop: React.FC<MerchantShopProps> = ({
                         
                         {inventoryCount >= inventoryCapacity && (
                           <p className="text-[10px] text-orange-400 mb-2">
-                            ⚠️ Inventário cheio!
+                            ⚠️ Inventário cheio: o item mais antigo será descartado.
                           </p>
                         )}
                         
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'} flex items-center gap-1`}>
                             <GoldIcon size="sm" /> {Math.round(item.sellValue)}
                           </span>
                           <button
                             onClick={() => onBuyItem(item.id)}
                             disabled={!canBuy}
-                            className={`text-xs px-3 py-1 rounded-sm transition-colors ${
+                            className={`text-xs min-w-[44px] min-h-[44px] w-full sm:w-auto px-3 py-2 rounded-sm transition-colors ${
                               canBuy
                                 ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
                                 : 'bg-gray-700 text-gray-500 cursor-not-allowed'

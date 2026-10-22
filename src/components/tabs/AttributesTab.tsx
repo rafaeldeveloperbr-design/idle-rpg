@@ -90,14 +90,14 @@ const AttributesTab: React.FC<AttributesTabProps> = ({
               <span className="text-xs text-gray-500 flex-1 leading-relaxed">
                 {attr.description}
               </span>
-              <div className="flex items-center justify-between gap-1 mt-auto pt-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 mt-auto pt-2">
                 <span className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'} flex items-center gap-1`}>
                   <GoldIcon size="sm" /> {Math.round(cost)}
                 </span>
                 <button
                   onClick={() => onUpgradeAttribute(attr.key)}
                   disabled={!canAfford}
-                  className={`pixel-btn text-xs sm:text-sm min-w-[64px] min-h-[40px] px-3 py-2 rounded-md flex items-center justify-center shrink-0 ${canAfford
+                  className={`pixel-btn text-xs sm:text-sm min-w-[64px] min-h-[44px] px-3 py-2 rounded-md flex items-center justify-center shrink-0 ${canAfford
                     ? 'text-green-300 hover:border-green-400'
                     : 'text-gray-600 cursor-not-allowed opacity-50'
                     }`}

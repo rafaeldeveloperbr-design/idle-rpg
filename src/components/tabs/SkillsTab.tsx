@@ -127,7 +127,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
               )}
 
               {/* Actions */}
-              <div className="flex items-center justify-between mt-2 gap-2">
+              <div className="flex flex-wrap items-center justify-between mt-2 gap-2">
                 {/* Equip/Unequip button */}
                 <button
                   onClick={() => onEquipSkill(skill.id)}

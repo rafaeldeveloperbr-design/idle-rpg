@@ -36,9 +36,9 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
   const [showBiomeSelector, setShowBiomeSelector] = useState(false);
 
   return (
-    <header className="w-full h-full px-2 sm:px-4 bg-[#1a1a2e] border-b-2 border-[#2d2d5e] flex items-center">
+    <header className="w-full min-h-12 px-2 sm:px-4 bg-[#1a1a2e] border-b-2 border-[#2d2d5e] flex items-center">
       {/* Single Row Layout */}
-      <div className="flex items-center gap-1 sm:gap-3 justify-between w-full">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] md:flex md:flex-nowrap items-center gap-1 sm:gap-3 justify-between w-full">
         {/* Left: Level + Speed Boost */}
         <div className="flex items-center gap-1 shrink-0">
           <span className="text-[10px] sm:text-[11px] text-yellow-400 whitespace-nowrap bg-[#0f0f1a] px-1.5 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm font-bold">
@@ -56,7 +56,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
         </div>
 
         {/* Center: Gold and Diamonds */}
-        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+        <div className="col-span-2 md:col-auto justify-self-end flex items-center gap-1 sm:gap-3 shrink-0">
           {/* Gold Counter */}
           <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0f0f1a] px-2 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm">
             <GoldIcon size="sm" />
@@ -72,7 +72,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
           {/* Diamond Shop Button */}
           <button
             onClick={onOpenDiamondShop}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-cyan-600 to-blue-700 border border-cyan-400 rounded-sm hover:from-cyan-500 hover:to-blue-600 transition-colors shadow-[0_0_8px_rgba(34,211,238,0.3)]"
+            className="flex items-center justify-center w-11 h-11 shrink-0 bg-gradient-to-br from-cyan-600 to-blue-700 border border-cyan-400 rounded-sm hover:from-cyan-500 hover:to-blue-600 transition-colors shadow-[0_0_8px_rgba(34,211,238,0.3)]"
             title="Loja de Diamantes"
           >
             <span className="text-xs sm:text-sm">💎</span>
@@ -80,10 +80,10 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
         </div>
 
         {/* Right: Biome Selector */}
-        <div className="relative min-w-0">
+        <div className="relative col-span-2 md:col-auto min-w-[44px] w-full flex-1 max-w-[140px]">
           <button
             onClick={() => setShowBiomeSelector(!showBiomeSelector)}
-            className="flex items-center gap-1 bg-[#0f0f1a] px-1.5 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors min-w-0 max-w-[140px]"
+            className="flex items-center gap-1 bg-[#0f0f1a] px-1.5 sm:px-3 py-1 sm:py-1.5 border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors min-w-0 min-h-[44px] w-full"
           >
             <span className="text-xs sm:text-sm">{currentBiome.icon}</span>
             <span className="text-[8px] sm:text-[10px] text-purple-300 truncate">{currentBiome.name}</span>
@@ -167,11 +167,11 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 justify-self-end">
           {/* Merchant Shop Button */}
           <button
             onClick={onOpenMerchant}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-yellow-500 transition-colors"
+            className="flex items-center justify-center w-11 h-11 shrink-0 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-yellow-500 transition-colors"
             title="Mercado"
           >
             <span className="text-sm sm:text-base">🏪</span>
@@ -180,7 +180,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({
           {/* Settings Button */}
           <button
             onClick={onOpenSettings}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
+            className="flex items-center justify-center w-11 h-11 shrink-0 bg-[#0f0f1a] border border-[#2d2d5e] rounded-sm hover:border-purple-500 transition-colors"
             title="Configurações"
           >
             <span className="text-sm sm:text-base">⚙️</span>
