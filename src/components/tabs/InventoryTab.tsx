@@ -78,22 +78,40 @@ const slotIcons: Record<string, string> = {
 };
 
 // === Utility Functions ===
-const calculateTotalBonus = (item: Item | null): number => {
-  if (!item) return 0;
-  return Object.values(item.bonuses).reduce((sum, value) => sum + (value as number), 0);
+type ItemComparison = 'better' | 'worse' | 'mixed' | 'equal';
+
+const attributeWeights: Record<keyof HeroAttributes, number> = {
+  attack: 3,
+  defense: 2,
+  maxHp: 0.2,
+  speed: 2,
+  critChance: 3,
+  regen: 2,
 };
 
-const isUpgrade = (item: Item, equipment: Equipment): boolean => {
-  const equippedItem = equipment[item.slot];
+const calculateItemPower = (item: Item): number => {
+  return (Object.keys(attributeWeights) as (keyof HeroAttributes)[])
+    .reduce(
+      (total, attr) =>
+        total + (item.bonuses[attr] ?? 0) * attributeWeights[attr],
+      0
+    );
+};
 
-  // If slot is empty, any item is an upgrade
-  if (!equippedItem) return true;
+const compareItems = (
+  item: Item,
+  equipment: Equipment
+): ItemComparison => {
+  const equipped = equipment[item.slot];
 
-  // Compare total bonuses
-  const itemTotal = calculateTotalBonus(item);
-  const equippedTotal = calculateTotalBonus(equippedItem);
+  if (!equipped) return 'better';
 
-  return itemTotal > equippedTotal;
+  const difference = calculateItemPower(item) - calculateItemPower(equipped);
+
+  if (difference > 0.01) return 'better';
+  if (difference < -0.01) return 'worse';
+
+  return 'equal';
 };
 
 // === Item Modal Component ===
@@ -116,6 +134,27 @@ const ItemModal: React.FC<ItemModalProps> = ({
   onSell,
   onClose,
 }) => {
+  const comparison = equippedItem
+    ? compareItems(item, {
+      weapon: item.slot === 'weapon' ? equippedItem : null,
+      armor: item.slot === 'armor' ? equippedItem : null,
+      accessory: item.slot === 'accessory' ? equippedItem : null,
+    })
+    : 'better';
+
+  const comparisonLabels = {
+    better: '⬆️ Melhor que o equipado',
+    worse: '⬇️ Pior que o equipado',
+    mixed: '⚖️ Atributos diferentes',
+    equal: '➖ Atributos equivalentes',
+  };
+
+  const comparisonColors = {
+    better: 'text-green-400',
+    worse: 'text-red-400',
+    mixed: 'text-yellow-400',
+    equal: 'text-gray-400',
+  };
   return (
     <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div
@@ -152,6 +191,11 @@ const ItemModal: React.FC<ItemModalProps> = ({
 
         {/* Content */}
         <div className="p-4">
+          {isFromInventory && (
+            <div className={`mb-3 text-sm font-bold ${comparisonColors[comparison]}`}>
+              {comparisonLabels[comparison]}
+            </div>
+          )}
           {/* Item Attributes */}
           <div className="mb-4">
             <h4 className="text-sm text-gray-400 mb-2">Atributos:</h4>
@@ -350,7 +394,8 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
         </div>
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {inventory.map((item) => {
-            const isItemUpgrade = isUpgrade(item, equipment);
+            const comparison = compareItems(item, equipment);
+            const isItemUpgrade = comparison === 'better';
             const upgradeLevel = item.upgradeLevel || 0;
 
             return (
@@ -401,7 +446,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
       {selectedItem && (
         <ItemModal
           item={selectedItem.item}
-          equippedItem={selectedItem.fromSlot ? equipment[selectedItem.fromSlot] : null}
+          equippedItem={equipment[selectedItem.item.slot]}
           isFromInventory={selectedItem.fromSlot === null}
           onEquip={handleEquip}
           onUnequip={handleUnequip}
@@ -424,7 +469,15 @@ const InventoryTab: React.FC<InventoryTabProps> = ({
             <p className="text-sm font-bold text-purple-300 mb-3">
               {itemPendingSale.name}
             </p>
-
+            <p className="text-xs text-gray-300 mb-3">
+              {compareItems(itemPendingSale, equipment) === 'better'
+                ? '⬆️ Este item é melhor que o equipado!'
+                : compareItems(itemPendingSale, equipment) === 'mixed'
+                  ? '⚖️ Este item possui vantagens e desvantagens.'
+                  : compareItems(itemPendingSale, equipment) === 'equal'
+                    ? '➖ Este item possui atributos equivalentes.'
+                    : '⬇️ Este item é inferior ao equipado.'}
+            </p>
             <p className="text-xs text-yellow-400 mb-5">
               💰 {Math.round(itemPendingSale.sellValue)} de ouro
             </p>
