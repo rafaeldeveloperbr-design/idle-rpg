@@ -512,8 +512,8 @@ const GameViewport: React.FC<GameViewportProps> = ({
             {/* Hit flash overlay */}
             <CharacterFrame
               src={`/sprites/boy/${heroFrame}.png`}
-              width={80}
-              height={100}
+              width={120}
+  height={150}
               alt="Herói"
             />
 

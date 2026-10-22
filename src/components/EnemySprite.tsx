@@ -13,8 +13,8 @@ export default function EnemySprite({
   src,
   moving,
   attacking,
-  width = 77,
-  height = 96,
+  width = 116,
+height = 144,
 }: EnemySpriteProps) {
   const [frame, setFrame] = useState(1);
 
