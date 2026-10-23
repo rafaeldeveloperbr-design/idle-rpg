@@ -30,12 +30,6 @@ interface DrawerProps {
   onCompleteQuest: (questId: string) => void;
 }
 
-const drawerTitles: Record<string, { icon: string; label: string }> = {
-  attributes: { icon: '⚔️', label: 'Atributos' },
-  skills: { icon: '✨', label: 'Skills' },
-  inventory: { icon: '🎒', label: 'Bag' },
-  quests: { icon: '📜', label: 'Quests' },
-};
 
 const Drawer: React.FC<DrawerProps> = ({
   activeDrawer,
@@ -105,33 +99,12 @@ const Drawer: React.FC<DrawerProps> = ({
     }
   };
 
-  const title = drawerTitles[activeDrawer];
-
   return (
     <>
 
-
-      {/* Drawer Panel */}
-      <div className="relative h-full w-full overflow-hidden bg-slate-950/95 border-t-2 border-slate-600 flex flex-col min-h-0 min-w-0">
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between gap-2 px-3 py-1 border-b border-slate-700 shrink-0">
-          <h2 className="text-lg font-bold text-purple-300 flex items-center gap-2">
-            <span className="text-2xl">{title.icon}</span>
-            <span>{title.label}</span>
-          </h2>
-          <button
-            onClick={onClose}
-            aria-label="Fechar painel"
-            className="text-gray-400 hover:text-white text-2xl leading-none min-w-[44px] min-h-[44px] flex items-center justify-center"
-          >
-            ✖
-          </button>
-        </div>
-
-        {/* Drawer Content */}
-        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain [overflow-wrap:anywhere]">
-          {renderContent()}
-        </div>
+      {/* Drawer Content */}
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain [overflow-wrap:anywhere]">
+        {renderContent()}
       </div>
     </>
   );
